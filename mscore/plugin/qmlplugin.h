@@ -13,8 +13,6 @@
 #ifndef __QMLPLUGIN_H__
 #define __QMLPLUGIN_H__
 
-#include "config.h"
-
 #include "libmscore/mscore.h"
 #include "libmscore/musescoreCore.h"
 #include "libmscore/utils.h"
@@ -60,6 +58,9 @@ class QmlPlugin : public QQuickItem {
       QString _filePath;            // the path of the source file, without file name
       MuseScoreCore* msc()             { return MuseScoreCore::mscoreCore; }
       const MuseScoreCore* msc() const { return MuseScoreCore::mscoreCore; }
+
+   public slots:
+      virtual void endCmd(const QMap<QString, QVariant>&) = 0;
 
    public:
       QmlPlugin(QQuickItem* parent = 0);

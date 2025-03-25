@@ -26,6 +26,8 @@
 #include "spanner.h"
 #include "undo.h"
 #include "fermata.h"
+#include "symbol.h"
+#include "image.h"
 
 namespace Ms {
 
@@ -35,50 +37,87 @@ namespace Ms {
 
 static void undoChangeBarLineType(BarLine* bl, BarLineType barType, bool allStaves)
       {
+      if (barType == bl->barLineType())
+            return;
+
       Measure* m = bl->measure();
       if (!m)
             return;
 
-      if (barType == BarLineType::START_REPEAT) {
+      bool keepStartRepeat = false;
+
+      if (barType == BarLineType::START_REPEAT && bl->segment()->segmentType() != SegmentType::BeginBarLine) {
             m = m->nextMeasure();
-            if (!m)
+            if (!m) // we were in last measure
                   return;
             }
       else if (bl->barLineType() == BarLineType::START_REPEAT) {
-            if (barType != BarLineType::END_REPEAT)
-                  m->undoChangeProperty(Pid::REPEAT_START, false);
-            m = m->prevMeasure();
+            if (m->isFirstInSystem()) {
+                  if (barType != BarLineType::END_REPEAT) {
+                        for (Score* lscore : m->score()->scoreList()) {
+                              Measure* lmeasure = lscore->tick2measure(m->tick());
+                              if (lmeasure)
+                                  lmeasure->undoChangeProperty(Pid::REPEAT_START, false);
+                              }
+                        }
+                  return;
+                  }
+
+            m = m->prevMeasureMM();
             if (!m)
                   return;
+
+            bl = const_cast<BarLine*>(m->endBarLine());
+            if (!bl)
+                  return;
+
+            if (barType == BarLineType::END_REPEAT)
+                  keepStartRepeat = true;
             }
+
+      // when setting barline type on mmrest, set for underlying measure (and linked staves)
+      // createMMRest will then set for the mmrest directly
+      Measure* m2 = m->isMMRest() ? m->mmRestLast() : m;
 
       switch (barType) {
             case BarLineType::END:
             case BarLineType::NORMAL:
             case BarLineType::DOUBLE:
             case BarLineType::BROKEN:
-            case BarLineType::DOTTED: {
+            case BarLineType::DOTTED:
+            case BarLineType::REVERSE_END:
+            case BarLineType::HEAVY:
+            case BarLineType::DOUBLE_HEAVY: {
+                  if (m->nextMeasureMM() && m->nextMeasureMM()->isFirstInSystem())
+                        keepStartRepeat = true;
+
                   Segment* segment = bl->segment();
                   SegmentType segmentType = segment->segmentType();
                   if (segmentType == SegmentType::EndBarLine) {
-                        // when setting barline type on mmrest, set for underlying measure (and linked staves)
-                        // createMMRest will then set for the mmrest directly
-                        Measure* m2 = m->isMMRest() ? m->mmRestLast() : m;
-
-                        bool generated;
+                        bool generated = false;
                         if (bl->barLineType() == barType)
                               generated = bl->generated();  // no change: keep current status
                         else if (!bl->generated() && (barType == BarLineType::NORMAL))
                               generated = true;             // currently non-generated, changing to normal: assume generated
-                        else
-                              generated = false;            // otherwise assume non-generated
 
                         if (allStaves) {
                               // use all staves of master score; we will take care of parts in loop through linked staves below
-                              m2 = bl->masterScore()->tick2measure(m2->tick());
-                              if (!m2)
-                                    return;     // should never happen
-                              segment = m2->undoGetSegment(segment->segmentType(), segment->tick());
+                              Score* mScore = bl->masterScore();
+                              if (mScore->styleB(Sid::createMultiMeasureRests)) {
+                                    m2 = mScore->tick2measureMM(m2->tick());
+                                    if (!m2)
+                                          return;
+                                    segment = m2->undoGetSegment(segment->segmentType(), segment->tick());
+                                    m2 = m2->isMMRest() ? m2->mmRestLast() : m2;
+                                    if (!m2)
+                                          return;
+                                    }
+                              else {
+                                    m2 = mScore->tick2measure(m2->tick());
+                                    if (!m2)
+                                          return;
+                                    segment = m2->undoGetSegment(segment->segmentType(), segment->tick());
+                                    }
                               }
                         const std::vector<Element*>& elist = allStaves ? segment->elist() : std::vector<Element*> { bl };
                         for (Element* e : elist) {
@@ -101,6 +140,10 @@ static void undoChangeBarLineType(BarLine* bl, BarLineType barType, bool allStav
                                           continue;
 
                                     lmeasure->undoChangeProperty(Pid::REPEAT_END, false);
+
+                                    Measure* nextMeasure = lmeasure->nextMeasure();
+                                    if (nextMeasure && !keepStartRepeat)
+                                          nextMeasure->undoChangeProperty(Pid::REPEAT_START, false);
                                     Segment* lsegment = lmeasure->undoGetSegmentR(SegmentType::EndBarLine, lmeasure->ticks());
                                     BarLine* lbl = toBarLine(lsegment->element(ltrack));
                                     if (!lbl) {
@@ -130,20 +173,22 @@ static void undoChangeBarLineType(BarLine* bl, BarLineType barType, bool allStav
                               }
                         }
                   else if (segmentType == SegmentType::BeginBarLine) {
-                        Segment* segment1 = m->undoGetSegmentR(SegmentType::BeginBarLine, Fraction(0, 1));
-                        for (Element* e : segment1->elist()) {
-                              if (e) {
-                                    e->score()->undo(new ChangeProperty(e, Pid::GENERATED, false, PropertyFlags::NOSTYLE));
-                                    e->score()->undo(new ChangeProperty(e, Pid::BARLINE_TYPE, QVariant::fromValue(barType), PropertyFlags::NOSTYLE));
-                                    // set generated flag before and after so it sticks on type change and also works on undo/redo
-                                    e->score()->undo(new ChangeProperty(e, Pid::GENERATED, false, PropertyFlags::NOSTYLE));
+                        for (Score* lscore : m2->score()->scoreList()) {
+                              Measure* lmeasure = lscore->tick2measure(m2->tick());
+                              Segment* segment1 = lmeasure->undoGetSegmentR(SegmentType::BeginBarLine, Fraction(0, 1));
+                              for (Element* e : segment1->elist()) {
+                                    if (e) {
+                                          lscore->score()->undo(new ChangeProperty(e, Pid::GENERATED, false, PropertyFlags::NOSTYLE));
+                                          lscore->score()->undo(new ChangeProperty(e, Pid::BARLINE_TYPE, QVariant::fromValue(barType), PropertyFlags::NOSTYLE));
+                                          // set generated flag before and after so it sticks on type change and also works on undo/redo
+                                          lscore->score()->undo(new ChangeProperty(e, Pid::GENERATED, false, PropertyFlags::NOSTYLE));
+                                          }
                                     }
                               }
                         }
                   }
                   break;
             case BarLineType::START_REPEAT: {
-                  Measure* m2 = m->isMMRest() ? m->mmRestFirst() : m;
                   for (Score* lscore : m2->score()->scoreList()) {
                         Measure* lmeasure = lscore->tick2measure(m2->tick());
                         if (lmeasure)
@@ -152,7 +197,6 @@ static void undoChangeBarLineType(BarLine* bl, BarLineType barType, bool allStav
                   }
                   break;
             case BarLineType::END_REPEAT: {
-                  Measure* m2 = m->isMMRest() ? m->mmRestLast() : m;
                   for (Score* lscore : m2->score()->scoreList()) {
                         Measure* lmeasure = lscore->tick2measure(m2->tick());
                         if (lmeasure)
@@ -161,7 +205,6 @@ static void undoChangeBarLineType(BarLine* bl, BarLineType barType, bool allStav
                   }
                   break;
             case BarLineType::END_START_REPEAT: {
-                  Measure* m2 = m->isMMRest() ? m->mmRestLast() : m;
                   for (Score* lscore : m2->score()->scoreList()) {
                         Measure* lmeasure = lscore->tick2measure(m2->tick());
                         if (lmeasure) {
@@ -184,6 +227,7 @@ class BarLineEditData : public ElementEditData {
    public:
       qreal yoff1;
       qreal yoff2;
+      virtual EditDataType type() override      { return EditDataType::BarLineEditData; }
       };
 
 //---------------------------------------------------------
@@ -191,14 +235,17 @@ class BarLineEditData : public ElementEditData {
 //---------------------------------------------------------
 
 const std::vector<BarLineTableItem> BarLine::barLineTable {
-      { BarLineType::NORMAL,           QT_TRANSLATE_NOOP("Palette", "Normal barline"),   "normal" },
-      { BarLineType::DOUBLE,           QT_TRANSLATE_NOOP("Palette", "Double barline"),   "double" },
-      { BarLineType::START_REPEAT,     QT_TRANSLATE_NOOP("Palette", "Start repeat"),     "start-repeat" },
-      { BarLineType::END_REPEAT,       QT_TRANSLATE_NOOP("Palette", "End repeat"),       "end-repeat" },
-      { BarLineType::BROKEN,           QT_TRANSLATE_NOOP("Palette", "Dashed barline"),   "dashed" },
-      { BarLineType::END,              QT_TRANSLATE_NOOP("Palette", "Final barline"),    "end" },
-      { BarLineType::END_START_REPEAT, QT_TRANSLATE_NOOP("Palette", "End-start repeat"), "end-start-repeat" },
-      { BarLineType::DOTTED,           QT_TRANSLATE_NOOP("Palette", "Dotted barline"),   "dotted" },
+      { BarLineType::NORMAL,           Sym::symUserNames[int(SymId::barlineSingle)],        "normal" },
+      { BarLineType::DOUBLE,           Sym::symUserNames[int(SymId::barlineDouble)],        "double" },
+      { BarLineType::START_REPEAT,     Sym::symUserNames[int(SymId::repeatLeft)],           "start-repeat" },
+      { BarLineType::END_REPEAT,       Sym::symUserNames[int(SymId::repeatRight)],          "end-repeat" },
+      { BarLineType::BROKEN,           Sym::symUserNames[int(SymId::barlineDashed)],        "dashed" },
+      { BarLineType::END,              Sym::symUserNames[int(SymId::barlineFinal)],         "end" },
+      { BarLineType::END_START_REPEAT, Sym::symUserNames[int(SymId::repeatRightLeft)],      "end-start-repeat" },
+      { BarLineType::DOTTED,           Sym::symUserNames[int(SymId::barlineDotted)],        "dotted" },
+      { BarLineType::REVERSE_END,      Sym::symUserNames[int(SymId::barlineReverseFinal)],  "reverse-end" },
+      { BarLineType::HEAVY,            Sym::symUserNames[int(SymId::barlineHeavy)],         "heavy" },
+      { BarLineType::DOUBLE_HEAVY,     Sym::symUserNames[int(SymId::barlineHeavyHeavy)],    "double-heavy" },
       };
 
 //---------------------------------------------------------
@@ -220,7 +267,7 @@ QString BarLine::userTypeName(BarLineType t)
       {
       for (const auto& i : barLineTable) {
            if (i.type == t)
-                 return qApp->translate("Palette", i.userName);
+                 return qApp->translate("symUserNames", i.userName);
            }
       return QString();
       }
@@ -292,7 +339,7 @@ BarLine::BarLine(const BarLine& bl)
       y2           = bl.y2;
 
       for (Element* e : bl._el)
-            _el.push_back(e->clone());
+            add(e->clone());
       }
 
 BarLine::~BarLine()
@@ -379,10 +426,23 @@ int nextVisibleSpannedStaff(const BarLine* bl)
       int nstaves = score->nstaves();
       int staffIdx = bl->staffIdx();
       Segment* segment = bl->segment();
-      for (int i = staffIdx + 1; i < nstaves; ++i)  {
+      for (int i = staffIdx + 1; i < nstaves; ++i) {
             Staff* s = score->staff(i);
-            if (s->part()->show() && bl->measure()->visible(i))
-                  return i;
+            if (s->part()->show()) {
+                  // span/show bar line if this measure is visible 
+                  if (bl->measure()->visible(i))
+                        return i;
+                  // or if this is an endBarLine and:
+                  if (segment && segment->isEndBarLineType()) {
+                        // ...this measure contains a (cutaway) courtesy clef only
+                        if (bl->measure()->isCutawayClef(i))
+                              return i;
+                        // ...or next measure is both visible and in the same system
+                        Measure* nm = bl->measure()->nextMeasure();
+                        if ((nm ? nm->visible(i) : false) && (nm ? nm->system() == bl->measure()->system() : false))
+                              return i;
+                        }
+                  }
             BarLine* nbl = toBarLine(segment->element(i * VOICES));
             if (!nbl || !nbl->spanStaff())
                   break;
@@ -428,7 +488,7 @@ void BarLine::getY() const
 
       int from    = _spanFrom;
       int to      = _spanTo;
-      int oneLine = st1->lines() == 1;
+      int oneLine = st1->lines() <= 1;
       if (oneLine && _spanFrom == 0) {
             from = BARLINE_SPAN_1LINESTAFF_FROM;
             if (!_spanStaff || (staffIdx1 == nstaves - 1))
@@ -465,10 +525,15 @@ void BarLine::drawDots(QPainter* painter, qreal x) const
       else {
             const StaffType* st = staffType();
 
-            //workaround to make new Bravura font work correctly with repeatDots
-            qreal offset = score()->scoreFont()->name() == "Bravura" ? 0 : 0.5 * score()->spatium() * mag();
+            //workaround to make Emmentaler, Gonville and MuseJazz font work correctly with repeatDots
+            qreal offset = (score()->scoreFont()->name() == "Emmentaler" || score()->scoreFont()->name() == "Gonville" || score()->scoreFont()->name() == "MuseJazz") ? 0.5 * score()->spatium() * mag() : 0;
             y1l          = st->doty1() * _spatium + offset;
             y2l          = st->doty2() * _spatium + offset;
+            
+            //adjust for staffType offset
+            qreal stYOffset = st->yoffset().val() * _spatium;
+            y1l             += stYOffset;
+            y2l             += stYOffset;
             }
       drawSymbol(SymId::repeatDot, painter, QPointF(x, y1l));
       drawSymbol(SymId::repeatDot, painter, QPointF(x, y2l));
@@ -558,17 +623,47 @@ void BarLine::draw(QPainter* painter) const
 
                   qreal lw2 = score()->styleP(Sid::endBarWidth) * mag();
                   painter->setPen(QPen(curColor(), lw2, Qt::SolidLine, Qt::FlatCap));
-                  x  += score()->styleP(Sid::endBarDistance) * mag();
+                  x += ((lw * .5) + (score()->styleP(Sid::endBarDistance) * .5) + (lw2 * .5)) * mag();
                   painter->drawLine(QLineF(x, y1, x, y2));
                   }
                   break;
 
             case BarLineType::DOUBLE: {
-                  qreal lw2 = score()->styleP(Sid::doubleBarWidth)    * mag();
+                  qreal lw = score()->styleP(Sid::doubleBarWidth) * mag();
+                  painter->setPen(QPen(curColor(), lw, Qt::SolidLine, Qt::FlatCap));
+                  qreal x = lw * .5;
+                  painter->drawLine(QLineF(x, y1, x, y2));
+                  x += ((lw * .5) + (score()->styleP(Sid::doubleBarDistance) * .67) + (lw * .5)) * mag();
+                  painter->drawLine(QLineF(x, y1, x, y2));
+                  }
+                  break;
+
+            case BarLineType::REVERSE_END: {
+                  qreal lw = score()->styleP(Sid::endBarWidth) * mag();
+                  painter->setPen(QPen(curColor(), lw, Qt::SolidLine, Qt::FlatCap));
+                  qreal x = lw * .5;
+                  painter->drawLine(QLineF(x, y1, x, y2));
+
+                  qreal lw2 = score()->styleP(Sid::barWidth) * mag();
+                  painter->setPen(QPen(curColor(), lw2, Qt::SolidLine, Qt::FlatCap));
+                  x += ((lw * .5) + (score()->styleP(Sid::endBarDistance) * .5) + (lw2 * .5)) * mag();
+                  painter->drawLine(QLineF(x, y1, x, y2));
+                  }
+                  break;
+
+            case BarLineType::HEAVY: {
+                  qreal lw = score()->styleP(Sid::endBarWidth) * mag();
+                  painter->setPen(QPen(curColor(), lw, Qt::SolidLine, Qt::FlatCap));
+                  painter->drawLine(QLineF(lw * .5, y1, lw * .5, y2));
+                  }
+                  break;
+
+            case BarLineType::DOUBLE_HEAVY: {
+                  qreal lw2 = score()->styleP(Sid::endBarWidth)    * mag();
                   painter->setPen(QPen(curColor(), lw2, Qt::SolidLine, Qt::FlatCap));
                   qreal x = lw2 * .5;
                   painter->drawLine(QLineF(x, y1, x, y2));
-                  x += score()->styleP(Sid::doubleBarDistance) * mag();
+                  x += ((lw2 * .5) + (score()->styleP(Sid::endBarDistance) * .5) + (lw2 * .5)) * mag();
                   painter->drawLine(QLineF(x, y1, x, y2));
                   }
                   break;
@@ -581,11 +676,10 @@ void BarLine::draw(QPainter* painter) const
 
                   qreal lw = score()->styleP(Sid::barWidth) * mag();
                   painter->setPen(QPen(curColor(), lw, Qt::SolidLine, Qt::FlatCap));
-                  x  += score()->styleP(Sid::endBarDistance) * mag();
+                  x += ((lw2 * .5) + (score()->styleP(Sid::endBarDistance) * .5) + (lw * .5)) * mag();
                   painter->drawLine(QLineF(x, y1, x, y2));
 
-                  x += score()->styleP(Sid::repeatBarlineDotSeparation) * mag();
-                  x -= symBbox(SymId::repeatDot).width() * .5;
+                  x += ((lw * .5) + (score()->styleP(Sid::repeatBarlineDotSeparation) * .67)) * mag();
                   drawDots(painter, x);
 
                   if (score()->styleB(Sid::repeatBarTips))
@@ -600,13 +694,12 @@ void BarLine::draw(QPainter* painter) const
                   qreal x = 0.0; // symBbox(SymId::repeatDot).width() * .5;
                   drawDots(painter, x);
 
-                  x += score()->styleP(Sid::repeatBarlineDotSeparation) * mag();
-                  x += symBbox(SymId::repeatDot).width() * .5;
+                  x += symBbox(SymId::repeatDot).width();
+                  x += ((score()->styleP(Sid::repeatBarlineDotSeparation) *.67) + (lw * .5)) * mag();
                   painter->drawLine(QLineF(x, y1, x, y2));
 
-                  x  += score()->styleP(Sid::endBarDistance) * mag();
-
                   qreal lw2 = score()->styleP(Sid::endBarWidth) * mag();
+                  x += ((lw * .5) + (score()->styleP(Sid::endBarDistance) * .5) + (lw2 * .5)) * mag();
                   painter->setPen(QPen(curColor(), lw2, Qt::SolidLine, Qt::FlatCap));
                   painter->drawLine(QLineF(x, y1, x, y2));
 
@@ -621,13 +714,12 @@ void BarLine::draw(QPainter* painter) const
                   qreal x = 0.0; // symBbox(SymId::repeatDot).width() * .5;
                   drawDots(painter, x);
 
-                  x += score()->styleP(Sid::repeatBarlineDotSeparation) * mag();
-                  x += symBbox(SymId::repeatDot).width() * .5;
+                  x += symBbox(SymId::repeatDot).width();
+                  x += ((score()->styleP(Sid::repeatBarlineDotSeparation) * .67) + (lw * .5)) * mag();
                   painter->drawLine(QLineF(x, y1, x, y2));
 
-                  x  += score()->styleP(Sid::endBarDistance) * mag();
-
                   qreal lw2 = score()->styleP(Sid::endBarWidth) * mag();
+                  x += ((lw * .5) + (score()->styleP(Sid::endBarDistance) * .5) + (lw2 * .5)) * mag();
                   painter->setPen(QPen(curColor(), lw2, Qt::SolidLine, Qt::FlatCap));
                   painter->drawLine(QLineF(x, y1, x, y2));
 
@@ -635,11 +727,10 @@ void BarLine::draw(QPainter* painter) const
                         drawTips(painter, true, x + lw2 * .5);
 
                   painter->setPen(QPen(curColor(), lw, Qt::SolidLine, Qt::FlatCap));
-                  x  += score()->styleP(Sid::endBarDistance) * mag();
+                  x  += ((lw2 * .5) + (score()->styleP(Sid::endBarDistance) * .5) + (lw * .5)) * mag();
                   painter->drawLine(QLineF(x, y1, x, y2));
 
-                  x += score()->styleP(Sid::repeatBarlineDotSeparation) * mag();
-                  x -= symBbox(SymId::repeatDot).width() * .5;
+                  x += ((lw * .5) + (score()->styleP(Sid::repeatBarlineDotSeparation) * .67)) * mag();
                   drawDots(painter, x);
 
                   if (score()->styleB(Sid::repeatBarTips))
@@ -648,11 +739,11 @@ void BarLine::draw(QPainter* painter) const
                   break;
             }
       Segment* s = segment();
-      if (s && s->isEndBarLineType() && !score()->printing() && score()->showUnprintable()) {
+      if (s && s->isEndBarLineType() && !score()->printing()) {
             Measure* m = s->measure();
             if (m->isIrregular() && score()->markIrregularMeasures() && !m->isMMRest()) {
                   painter->setPen(MScore::layoutBreakColor);
-                  QFont f("FreeSerif");
+                  QFont f("Edwin");
                   f.setPointSizeF(12 * spatium() * MScore::pixelRatio / SPATIUM20);
                   f.setBold(true);
                   QString str = m->ticks() > m->timesig() ? "+" : "-";
@@ -679,6 +770,24 @@ void BarLine::drawEditMode(QPainter* p, EditData& ed)
       p->translate(-pos);
       y1 -= bed->yoff1;
       y2 -= bed->yoff2;
+      }
+
+//---------------------------------------------------------
+//   playTick
+//---------------------------------------------------------
+
+Fraction BarLine::playTick() const
+      {
+      // Play from the start of the measure to the right of the barline, unless this is the last barline in either the entire score or the system,
+      // in which case we should play from the start of the measure to the left of the barline.
+      const auto measure = findMeasure();
+      if (measure) {
+            const auto nextMeasure = findMeasure()->next();
+            if (!nextMeasure || (nextMeasure->system() != measure->system()))
+                  return measure->tick();
+            }
+
+      return tick();
       }
 
 //---------------------------------------------------------
@@ -725,6 +834,22 @@ void BarLine::read(XmlReader& e)
                   a->read(e);
                   add(a);
                   }
+            else if (tag == "Symbol") {
+                  Symbol* s = new Symbol(score());
+                  s->setTrack(track());
+                  s->read(e);
+                  add(s);
+                  }
+            else if (tag == "Image") {
+                  if (MScore::noImages)
+                        e.skipCurrentElement();
+                  else {
+                        Image* image = new Image(score());
+                        image->setTrack(track());
+                        image->read(e);
+                        add(image);
+                        }
+                  }
             else if (!Element::readProperties(e))
                   e.unknown();
             }
@@ -741,7 +866,7 @@ bool BarLine::acceptDrop(EditData& data) const
             return true;
             }
       else {
-            return ((type == ElementType::ARTICULATION || type == ElementType::FERMATA)
+            return ((type == ElementType::ARTICULATION || type == ElementType::FERMATA || type == ElementType::SYMBOL || type == ElementType::IMAGE)
                && segment()
                && segment()->isEndBarLineType());
             }
@@ -805,6 +930,12 @@ Element* BarLine::drop(EditData& data)
             score()->undoAddElement(atr);
             return atr;
             }
+      else if (e->isSymbol() || e->isImage()) {
+            e->setParent(this);
+            e->setTrack(track());
+            score()->undoAddElement(e);
+            return e;
+            }
       else if (e->isFermata()) {
             e->setPlacement(track() & 1 ? Placement::BELOW : Placement::ABOVE);
             for (Element* el: segment()->annotations())
@@ -830,17 +961,22 @@ Element* BarLine::drop(EditData& data)
       }
 
 //---------------------------------------------------------
-//   updateGrips
+//   gripsPositions
 //---------------------------------------------------------
 
-void BarLine::updateGrips(EditData& ed) const
+std::vector<QPointF> BarLine::gripsPositions(const EditData& ed) const
       {
       const BarLineEditData* bed = static_cast<const BarLineEditData*>(ed.getData(this));
 
       qreal lw = score()->styleP(Sid::barWidth) * staff()->mag(tick());
       getY();
-      ed.grip[0].translate(QPointF(lw * .5, y1 + bed->yoff1) + pagePos());
-      ed.grip[1].translate(QPointF(lw * .5, y2 + bed->yoff2) + pagePos());
+
+      const QPointF pp = pagePos();
+
+      return {
+            QPointF(lw * .5, y1 + bed->yoff1) + pp,
+            QPointF(lw * .5, y2 + bed->yoff2) + pp
+            };
       }
 
 //---------------------------------------------------------
@@ -849,9 +985,6 @@ void BarLine::updateGrips(EditData& ed) const
 
 void BarLine::startEdit(EditData& ed)
       {
-      ed.grips   = 2;
-      ed.curGrip = Grip::END;
-
       BarLineEditData* bed = new BarLineEditData();
       bed->e     = this;
       bed->yoff1 = 0;
@@ -1074,7 +1207,7 @@ void BarLine::endEditDrag(EditData& ed)
 #if 0       // TODO
       if (shiftDrag) {                    // if precision dragging
             newSpanFrom = _spanFrom;
-            if (yoff1 != 0.0) {
+            if (!qFuzzyIsNull(yoff1)) {
                   // round bar line top coord to nearest line of 1st staff (in half line dist units)
                   newSpanFrom = ((int)floor(y1 / (staff()->lineDistance(tick()) * spatium()) + 0.5 )) * 2;
                   // min = 1 line dist above 1st staff line | max = 1 line dist below last staff line
@@ -1087,7 +1220,7 @@ void BarLine::endEditDrag(EditData& ed)
                   }
 
             newSpanTo = _spanTo;
-            if (yoff2 != 0.0) {
+            if (!qFuzzyIsNull(yoff2)) {
                   // round bar line bottom coord to nearest line of 2nd staff (in half line dist units)
                   qreal staff2TopY = systTopY + syst->staff(staffIdx2)->y();
                   newSpanTo = ((int)floor( (ay2 - staff2TopY) / (staff2->lineDistance(tick()) * spatium()) + 0.5 )) * 2;
@@ -1106,7 +1239,7 @@ void BarLine::endEditDrag(EditData& ed)
             newSpanTo   = 0;
             }
 
-      bool localDrag = ed.control() || segment()->isBarLine();
+      bool localDrag = ed.control() || segment()->isBarLineType();
       if (localDrag) {
             Segment* s = segment();
             for (int staffIdx = staffIdx1; staffIdx < staffIdx2; ++staffIdx) {
@@ -1132,6 +1265,9 @@ void BarLine::endEditDrag(EditData& ed)
             staff()->undoChangeProperty(Pid::STAFF_BARLINE_SPAN_FROM, newSpanFrom);
             staff()->undoChangeProperty(Pid::STAFF_BARLINE_SPAN_TO,   newSpanTo);
             }
+
+      bed->yoff1 = 0.0;
+      bed->yoff2 = 0.0;
       }
 
 //---------------------------------------------------------
@@ -1145,28 +1281,41 @@ qreal BarLine::layoutWidth(Score* score, BarLineType type)
       qreal w {0.0};
       switch (type) {
             case BarLineType::DOUBLE:
-                  w = score->styleP(Sid::doubleBarWidth) + score->styleP(Sid::doubleBarDistance);
+                  w = (score->styleP(Sid::doubleBarWidth) * 2)
+                     + (score->styleP(Sid::doubleBarDistance) * .67);
+                  break;
+            case BarLineType::DOUBLE_HEAVY:
+                  w = (score->styleP(Sid::endBarWidth) * 2)
+                     + (score->styleP(Sid::endBarDistance) * .5);
                   break;
             case BarLineType::END_START_REPEAT:
-                  w = score->styleP(Sid::endBarDistance) * 2
-                     + score->styleP(Sid::repeatBarlineDotSeparation) * 2
-                     + dotwidth;
+                  w = score->styleP(Sid::endBarWidth)
+                     + (score->styleP(Sid::barWidth) * 2)
+                     + (score->styleP(Sid::endBarDistance) * 2 * .5)
+                     + (score->styleP(Sid::repeatBarlineDotSeparation) * .67 * 2)
+                     + (dotwidth * 2);
                   break;
             case BarLineType::START_REPEAT:
             case BarLineType::END_REPEAT:
-                  w = score->styleP(Sid::endBarWidth) * .5
-                     + score->styleP(Sid::endBarDistance)
-                     + score->styleP(Sid::repeatBarlineDotSeparation)
-                     + dotwidth * .5;
+                  w = score->styleP(Sid::endBarWidth)
+                     + score->styleP(Sid::barWidth)
+                     + (score->styleP(Sid::endBarDistance) * .5)
+                     + (score->styleP(Sid::repeatBarlineDotSeparation) * .67)
+                     + dotwidth;
                   break;
             case BarLineType::END:
-                  w = (score->styleP(Sid::endBarWidth) + score->styleP(Sid::barWidth)) * .5
-                     + score->styleP(Sid::endBarDistance);
+            case BarLineType::REVERSE_END:
+                  w = score->styleP(Sid::endBarWidth)
+                     + score->styleP(Sid::barWidth)
+                     + (score->styleP(Sid::endBarDistance) * .5);
                   break;
             case BarLineType::BROKEN:
             case BarLineType::NORMAL:
             case BarLineType::DOTTED:
                   w = score->styleP(Sid::barWidth);
+                  break;
+            case BarLineType::HEAVY:
+                  w = score->styleP(Sid::endBarWidth);
                   break;
             }
       return w;
@@ -1230,7 +1379,7 @@ void BarLine::layout()
       setPos(QPointF());
       // barlines hidden on this staff
       if (staff() && segment()) {
-            if ((!staff()->staffType(tick())->showBarlines() && segment()->segmentType() == SegmentType::EndBarLine)
+            if ((!staff()->staffTypeForElement(this)->showBarlines() && segment()->segmentType() == SegmentType::EndBarLine)
                 || (staff()->hideSystemBarLine() && segment()->segmentType() == SegmentType::BeginBarLine)) {
                   setbbox(QRectF());
                   return;
@@ -1298,7 +1447,7 @@ void BarLine::layout2()
       {
       // barlines hidden on this staff
       if (staff() && segment()) {
-            if ((!staff()->staffType(tick())->showBarlines() && segment()->segmentType() == SegmentType::EndBarLine)
+            if ((!staff()->staffTypeForElement(this)->showBarlines() && segment()->segmentType() == SegmentType::EndBarLine)
                 || (staff()->hideSystemBarLine() && segment()->segmentType() == SegmentType::BeginBarLine)) {
                   setbbox(QRectF());
                   return;
@@ -1359,11 +1508,33 @@ Shape BarLine::shape() const
 void BarLine::scanElements(void* data, void (*func)(void*, Element*), bool all)
       {
       // if no width (staff has bar lines turned off) and not all requested, do nothing
-      if (width() == 0.0 && !all)
+      if (qFuzzyIsNull(width()) && !all)
             return;
       func(data, this);
       for (Element* e : _el)
             e->scanElements(data, func, all);
+      }
+
+//---------------------------------------------------------
+//   setTrack
+//---------------------------------------------------------
+
+void BarLine::setTrack(int t)
+      {
+      Element::setTrack(t);
+      for (Element* e : _el)
+            e->setTrack(t);
+      }
+
+//---------------------------------------------------------
+//   setScore
+//---------------------------------------------------------
+
+void BarLine::setScore(Score* s)
+      {
+      Element::setScore(s);
+      for (Element* e : _el)
+            e->setScore(s);
       }
 
 //---------------------------------------------------------
@@ -1375,6 +1546,8 @@ void BarLine::add(Element* e)
       e->setParent(this);
       switch (e->type()) {
             case ElementType::ARTICULATION:
+            case ElementType::SYMBOL:
+            case ElementType::IMAGE:
                   _el.push_back(e);
                   setGenerated(false);
                   break;
@@ -1393,6 +1566,8 @@ void BarLine::remove(Element* e)
       {
       switch(e->type()) {
             case ElementType::ARTICULATION:
+            case ElementType::SYMBOL:
+            case ElementType::IMAGE:
                   if (!_el.remove(e))
                         qDebug("BarLine::remove(): cannot find %s", e->name());
                   break;
@@ -1518,7 +1693,7 @@ Pid BarLine::propertyId(const QStringRef& name) const
 
 Element* BarLine::nextSegmentElement()
       {
-      return segment()->firstInNextSegments(score()->inputState().prevTrack() / VOICES);
+      return segment()->firstInNextSegments(staffIdx());    //score()->inputState().prevTrack() / VOICES);
       }
 
 //---------------------------------------------------------
@@ -1527,7 +1702,7 @@ Element* BarLine::nextSegmentElement()
 
 Element* BarLine::prevSegmentElement()
       {
-      return segment()->lastInPrevSegments(score()->inputState().prevTrack() / VOICES);
+      return segment()->lastInPrevSegments(staffIdx());     //score()->inputState().prevTrack() / VOICES);
       }
 
 //---------------------------------------------------------
@@ -1536,7 +1711,7 @@ Element* BarLine::prevSegmentElement()
 
 QString BarLine::accessibleInfo() const
       {
-      return QString("%1: %2").arg(Element::accessibleInfo()).arg(BarLine::userTypeName(barLineType()));
+      return QString("%1: %2").arg(Element::accessibleInfo(), BarLine::userTypeName(barLineType()));
       }
 
 //---------------------------------------------------------
@@ -1551,14 +1726,14 @@ QString BarLine::accessibleExtraInfo() const
       for (const Element* e : *el()) {
             if (!score()->selectionFilter().canSelect(e))
                   continue;
-            rez = QString("%1 %2").arg(rez).arg(e->screenReaderInfo());
+            rez = QString("%1 %2").arg(rez, e->screenReaderInfo());
             }
 
       for (const Element* e : seg->annotations()) {
             if (!score()->selectionFilter().canSelect(e))
                   continue;
             if (e->track() == track())
-                  rez = QString("%1 %2").arg(rez).arg(e->screenReaderInfo());
+                  rez = QString("%1 %2").arg(rez, e->screenReaderInfo());
             }
       Measure* m = seg->measure();
 
@@ -1567,11 +1742,11 @@ QString BarLine::accessibleExtraInfo() const
             for (const Element* e : m->el()) {
                   if (!score()->selectionFilter().canSelect(e)) continue;
                   if (e->type() == ElementType::JUMP)
-                        rez= QString("%1 %2").arg(rez).arg(e->screenReaderInfo());
+                        rez= QString("%1 %2").arg(rez, e->screenReaderInfo());
                   if (e->type() == ElementType::MARKER) {
                         const Marker* m1 = toMarker(e);
                         if (m1->markerType() == Marker::Type::FINE)
-                              rez = QString("%1 %2").arg(rez).arg(e->screenReaderInfo());
+                              rez = QString("%1 %2").arg(rez, e->screenReaderInfo());
                         }
 
                   }
@@ -1584,7 +1759,7 @@ QString BarLine::accessibleExtraInfo() const
                         if (e->isMarker()) {
                               if (toMarker(e)->markerType() == Marker::Type::FINE)
                                     continue; //added above^
-                              rez = QString("%1 %2").arg(rez).arg(e->screenReaderInfo());
+                              rez = QString("%1 %2").arg(rez, e->screenReaderInfo());
                               }
                         }
                   }
@@ -1599,9 +1774,9 @@ QString BarLine::accessibleExtraInfo() const
                   continue;
             if (s->type() == ElementType::VOLTA) {
                   if (s->tick() == tick)
-                        rez = QObject::tr("%1 Start of %2").arg(rez).arg(s->screenReaderInfo());
+                        rez = QObject::tr("%1 Start of %2").arg(rez, s->screenReaderInfo());
                   if (s->tick2() == tick)
-                        rez = QObject::tr("%1 End of %2").arg(rez).arg(s->screenReaderInfo());
+                        rez = QObject::tr("%1 End of %2").arg(rez, s->screenReaderInfo());
                   }
             }
       return rez;

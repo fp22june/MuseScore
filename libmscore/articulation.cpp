@@ -42,13 +42,13 @@ static const ElementStyle articulationStyle {
 Articulation::Articulation(Score* s)
    : Element(s, ElementFlag::MOVABLE)
       {
-      initElementStyle(&articulationStyle);
       _symId         = SymId::noSym;
       _anchor        = ArticulationAnchor::TOP_STAFF;
       _direction     = Direction::AUTO;
       _up            = true;
       _ornamentStyle = MScore::OrnamentStyle::DEFAULT;
       setPlayArticulation(true);
+      initElementStyle(&articulationStyle);
       }
 
 Articulation::Articulation(SymId id, Score* s)
@@ -76,6 +76,8 @@ int Articulation::subtype() const
       QString s = Sym::id2name(_symId);
       if (s.endsWith("Below"))
             return int(Sym::name2id(s.left(s.size() - 5) + "Above"));
+      else if (s.endsWith("Turned"))
+            return int(Sym::name2id(s.left(s.size() - 6)));
       else
             return int(_symId);
       }
@@ -92,6 +94,16 @@ void Articulation::setUp(bool val)
       if (s.endsWith(!dup ? "Above" : "Below")) {
             QString s2 = s.left(s.size() - 5) + (dup ? "Above" : "Below");
             _symId = Sym::name2id(s2);
+            }
+      else if (s.endsWith("Turned")) {
+            QString s2 = dup ? s.left(s.size() - 6) : s;
+            _symId = Sym::name2id(s2);
+            }
+      else if (!dup) {
+            QString s2 = s + "Turned";
+            SymId sym = Sym::name2id(s2);
+            if (sym != SymId::noSym)
+                  _symId = sym;
             }
       }
 
@@ -122,6 +134,14 @@ bool Articulation::readProperties(XmlReader& e)
             SymId id = Sym::name2id(s);
             if (id == SymId::noSym)
                   id = oldArticulationNames2SymId(s);       // compatibility hack for "old" 3.0 scores
+            if (id == SymId::noSym || s == "ornamentMordentInverted") // SMuFL < 1.30
+                  id = SymId::ornamentMordent;
+
+            QString programVersion = masterScore()->mscoreVersion();
+            if (!programVersion.isEmpty() && programVersion < "3.6") {
+                  if (id == SymId::noSym || s == "ornamentMordent") // SMuFL < 1.30 and MuseScore < 3.6
+                        id = SymId::ornamentShortTrill;
+                  }
             setSymId(id);
             }
       else if (tag == "channel") {
@@ -272,12 +292,14 @@ bool Articulation::layoutCloseToNote() const
       }
 
 //---------------------------------------------------------
-//   dragAnchor
+//   dragAnchorLines
 //---------------------------------------------------------
 
-QLineF Articulation::dragAnchor() const
+QVector<QLineF> Articulation::dragAnchorLines() const
       {
-      return QLineF(canvasPos(), parent()->canvasPos());
+      QVector<QLineF> result;
+      result << QLineF(canvasPos(), parent()->canvasPos());
+      return result;
       }
 
 //---------------------------------------------------------
@@ -412,6 +434,12 @@ Articulation::AnchorGroup Articulation::anchorGroup(SymId symId)
             case SymId::luteFingeringRHThird:
                   return AnchorGroup::LUTE_FINGERING;
 
+            case SymId::tremoloDivisiDots2:
+            case SymId::tremoloDivisiDots3:
+            case SymId::tremoloDivisiDots4:
+            case SymId::tremoloDivisiDots6:
+                  return AnchorGroup::ARTICULATION;
+
             default:
                   break;
             }
@@ -435,6 +463,10 @@ const char* Articulation::symId2ArticulationName(SymId symId)
 
             case SymId::articStaccatoAbove:
             case SymId::articStaccatoBelow:
+            case SymId::tremoloDivisiDots2:
+            case SymId::tremoloDivisiDots3:
+            case SymId::tremoloDivisiDots4:
+            case SymId::tremoloDivisiDots6:
                   return "staccato";
 
             case SymId::articAccentStaccatoAbove:
@@ -474,8 +506,8 @@ const char* Articulation::symId2ArticulationName(SymId symId)
             case SymId::stringsHarmonic:
                   return "harmonic";
 
-            case SymId::ornamentMordentInverted:
-                  return "mordent-inverted";
+            case SymId::ornamentMordent:
+                  return "mordent";
 
             default:
                   return "---";
@@ -522,6 +554,8 @@ Sid Articulation::getPropertyStyle(Pid id) const
                               return Sid::articulationAnchorOther;
                         }
                   }
+                  Q_ASSERT(false); // should never be reached
+                  Q_FALLTHROUGH();
             default:
                   return Sid::NOSTYLE;
             }
@@ -566,7 +600,9 @@ bool Articulation::isStaccato() const
       {
       return _symId == SymId::articStaccatoAbove        || _symId == SymId::articStaccatoBelow
           || _symId == SymId::articMarcatoStaccatoAbove || _symId == SymId::articMarcatoStaccatoBelow
-          || _symId == SymId::articAccentStaccatoAbove  || _symId == SymId::articAccentStaccatoBelow;
+          || _symId == SymId::articAccentStaccatoAbove || _symId == SymId::articAccentStaccatoBelow
+          || _symId == SymId::tremoloDivisiDots2 || _symId == SymId::tremoloDivisiDots3
+          || _symId == SymId::tremoloDivisiDots4 || _symId == SymId::tremoloDivisiDots6;
       }
 
 bool Articulation::isAccent() const
@@ -602,12 +638,41 @@ bool Articulation::isLuteFingering() const
       }
 
 //---------------------------------------------------------
+//   isOrnament
+//---------------------------------------------------------
+
+bool Articulation::isOrnament() const
+      {
+      return _symId == SymId::ornamentTurn
+          || _symId == SymId::ornamentTurnInverted
+          || _symId == SymId::ornamentTurnSlash
+          || _symId == SymId::ornamentTrill
+          || _symId == SymId::brassMuteClosed
+          || _symId == SymId::ornamentMordent
+          || _symId == SymId::ornamentShortTrill
+          || _symId == SymId::ornamentTremblement
+          || _symId == SymId::ornamentPrallMordent
+          || _symId == SymId::ornamentLinePrall
+          || _symId == SymId::ornamentUpPrall
+          || _symId == SymId::ornamentUpMordent
+          || _symId == SymId::ornamentPrecompMordentUpperPrefix
+          || _symId == SymId::ornamentDownMordent
+          || _symId == SymId::ornamentPrallUp
+          || _symId == SymId::ornamentPrallDown
+          || _symId == SymId::ornamentPrecompSlide
+          || _symId == SymId::ornamentShake3
+          || _symId == SymId::ornamentShakeMuffat1
+          || _symId == SymId::ornamentTremblementCouperin
+          || _symId == SymId::ornamentPinceCouperin;
+      }
+
+//---------------------------------------------------------
 //   accessibleInfo
 //---------------------------------------------------------
 
 QString Articulation::accessibleInfo() const
       {
-      return QString("%1: %2").arg(Element::accessibleInfo()).arg(userName());
+      return QString("%1: %2").arg(Element::accessibleInfo(), userName());
       }
 
 //---------------------------------------------------------
@@ -625,7 +690,7 @@ void Articulation::doAutoplace()
       if (autoplace() && parent()) {
             Segment* s = segment();
             Measure* m = measure();
-            int si     = staffIdx();
+            int si     = vStaffIdx();
 
             qreal sp = score()->spatium();
             qreal md = minDistance().val() * sp;
@@ -653,7 +718,7 @@ void Articulation::doAutoplace()
                         // user moved element within the skyline
                         // we may need to adjust minDistance, yd, and/or offset
                         //bool inStaff = placeAbove() ? r.bottom() + rebase > 0.0 : r.top() + rebase < staff()->height();
-                        if (rebaseMinDistance(md, yd, sp, rebase, true))
+                        if (rebaseMinDistance(md, yd, sp, rebase, above, true))
                               r.translate(0.0, rebase);
                         }
                   rypos() += yd;

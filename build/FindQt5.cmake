@@ -6,6 +6,7 @@ set(_components
     Test
     Qml
     Quick
+    QuickControls2
     QuickWidgets
     Xml
     XmlPatterns
@@ -18,14 +19,23 @@ set(_components
     LinguistTools
     Help
   )
-if (USE_WEBENGINE)
-  set(_components
-    ${_components}
-    WebEngine
-    WebEngineCore
-    WebEngineWidgets
-	)
-endif(USE_WEBENGINE)
+
+if (WIN32)
+    set(_components
+      ${_components}
+      WinExtras
+      )
+endif(WIN32)
+
+find_package(Qt5Core ${QT_MIN_VERSION} REQUIRED)
+
+if (Qt5Core_VERSION VERSION_GREATER_EQUAL 5.12.0)
+    set(_components
+      ${_components}
+      QuickTemplates2
+      )
+endif(Qt5Core_VERSION VERSION_GREATER_EQUAL 5.12.0)
+
 foreach(_component ${_components})
   find_package(Qt5${_component})
   list(APPEND QT_LIBRARIES ${Qt5${_component}_LIBRARIES})

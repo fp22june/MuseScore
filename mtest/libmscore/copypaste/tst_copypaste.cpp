@@ -11,14 +11,16 @@
 //=============================================================================
 
 #include <QtTest/QtTest>
-#include "mtest/testutils.h"
-#include "libmscore/score.h"
-#include "libmscore/measure.h"
-#include "libmscore/segment.h"
-#include "libmscore/chordrest.h"
+
 #include "libmscore/chord.h"
-#include "libmscore/xml.h"
+#include "libmscore/chordrest.h"
 #include "libmscore/durationtype.h"
+#include "libmscore/measure.h"
+#include "libmscore/score.h"
+#include "libmscore/segment.h"
+#include "libmscore/xml.h"
+
+#include "mtest/testutils.h"
 
 #define DIR QString("libmscore/copypaste/")
 
@@ -36,6 +38,9 @@ class TestCopyPaste : public QObject, public MTest
       void copypastestaff(const char*);
       void copypastevoice(const char*, int);
       void copypastetuplet(const char*);
+      void copypasteSplitNoteOverBarDrumStave();
+      void copypastetremolo();
+      void copypastenote(const QString&, Fraction = Fraction(1, 1));
 
    private slots:
       void initTestCase();
@@ -64,6 +69,8 @@ class TestCopyPaste : public QObject, public MTest
       void copypaste23() { copypaste("23"); }       // full measure tuplet 10/8
       void copypaste24() { copypaste("24"); }       // more complex non reduced tuplet
       void copypaste25() { copypaste("25"); }       // copy full measure rest
+      void copypaste26() { copypaste("26"); }       // Copy chords (#298541)
+      void copypaste27() { copypaste("27"); }       // Paste after local time signature (#18940)
 
       void copypastestaff50() { copypastestaff("50"); }       // staff & slurs
 
@@ -71,6 +78,19 @@ class TestCopyPaste : public QObject, public MTest
 
       void copyPasteTuplet01() { copypastetuplet("01"); }
       void copyPasteTuplet02() { copypastetuplet("02"); }
+      void copypasteQtrNoteOntoWholeRest() { copypastenote("01"); }
+      void copypasteQtrNoteOntoWholeNote() { copypastenote("02"); }
+      void copypasteQtrNoteOntoQtrRest() { copypastenote("03"); }
+      void copypasteQtrNoteOntoQtrNote() { copypastenote("04"); }
+      void copypasteWholeNoteOntoQtrNote() { copypastenote("05"); }
+      void copypasteWholeNoteOntoQtrRest() { copypastenote("06"); }
+      void copypasteQtrNoteOntoTriplet() { copypastenote("07"); }
+      void copypasteWholeNoteOntoTriplet() { copypastenote("08"); }
+      void copypasteQtrNoteIntoChord() { copypastenote("09"); }
+      void copypasteQtrNoteOntoMMRest() { copypastenote("10"); }
+      void copypasteQtrNoteDoubleDuration() { copypastenote("11", Fraction(2, 1)); }
+      void copyPasteNoteDrumStaff() { copypastenote("12"); }
+      void copyPasteTremolo01() { copypastetremolo(); }
       };
 
 //---------------------------------------------------------
@@ -114,7 +134,7 @@ void TestCopyPaste::copypaste(const char* idx)
       score->select(m4->first()->element(0));
 
       score->startCmd();
-      score->cmdPaste(mimeData,0);
+      score->cmdPaste(mimeData, 0);
       score->endCmd();
 
       QVERIFY(saveCompareScore(score, QString("copypaste%1.mscx").arg(idx),
@@ -149,7 +169,7 @@ void TestCopyPaste::copypastestaff(const char* idx)
       score->select(m2, SelectType::RANGE, 1);
 
       score->startCmd();
-      score->cmdPaste(mimeData,0);
+      score->cmdPaste(mimeData, 0);
       score->endCmd();
 
       QVERIFY(saveCompareScore(score, QString("copypaste%1.mscx").arg(idx),
@@ -179,7 +199,7 @@ void TestCopyPaste::copyPastePartial()
       score->select(m1->first(SegmentType::ChordRest)->element(0));
 
       score->startCmd();
-      score->cmdPaste(mimeData,0);
+      score->cmdPaste(mimeData, 0);
       score->endCmd();
 
       QVERIFY(saveCompareScore(score, QString("copypaste_partial_01.mscx"),
@@ -214,7 +234,7 @@ void TestCopyPaste::copyPaste2Voice()
       score->select(secondCRSeg->element(0));
 
       score->startCmd();
-      score->cmdPaste(mimeData,0);
+      score->cmdPaste(mimeData, 0);
       score->endCmd();
 
       QVERIFY(saveCompareScore(score, QString("copypaste13.mscx"),
@@ -254,7 +274,7 @@ void TestCopyPaste::copypastevoice(const char* idx, int voice)
       score->select(m2->first()->element(0));
 
       score->startCmd();
-      score->cmdPaste(mimeData,0);
+      score->cmdPaste(mimeData, 0);
       score->endCmd();
 
       QVERIFY(saveCompareScore(score, QString("copypaste%1.mscx").arg(idx),
@@ -292,7 +312,7 @@ void TestCopyPaste::copyPaste2Voice5()
       score->select(dest);
 
       score->startCmd();
-      score->cmdPaste(mimeData,0);
+      score->cmdPaste(mimeData, 0);
       score->endCmd();
 
       QVERIFY(saveCompareScore(score, QString("copypaste17.mscx"),
@@ -328,7 +348,7 @@ void TestCopyPaste::copyPasteOnlySecondVoice()
       score->select(m2,SelectType::RANGE);
 
       score->startCmd();
-      score->cmdPaste(mimeData,0);
+      score->cmdPaste(mimeData, 0);
       score->endCmd();
 
       QVERIFY(saveCompareScore(score, QString("copypaste18.mscx"),
@@ -366,7 +386,7 @@ void TestCopyPaste::copypaste2Voice6()
       score->select(dest);
 
       score->startCmd();
-      score->cmdPaste(mimeData,0);
+      score->cmdPaste(mimeData, 0);
       score->endCmd();
 
       QVERIFY(saveCompareScore(score, QString("copypaste20.mscx"),
@@ -400,12 +420,123 @@ void TestCopyPaste::copypastetuplet(const char* idx)
       Element* dest = m2->first(SegmentType::ChordRest)->element(0);
       score->select(dest);
       score->startCmd();
-      score->cmdPaste(mimeData,0);
+      score->cmdPaste(mimeData, 0);
       score->endCmd();
 
       QVERIFY(saveCompareScore(score, QString("copypaste_tuplet_%1.mscx").arg(idx),
          DIR + QString("copypaste_tuplet_%1-ref.mscx").arg(idx)));
       delete score;
+      }
+
+void TestCopyPaste::copypasteSplitNoteOverBarDrumStave()
+      {
+      // Copy first note m2 to last note m1
+      MasterScore* score = readScore(DIR + "copypasteSplit04.mscx");
+      QVERIFY(score);
+
+      Measure* m1 = score->firstMeasure();
+      Measure* m2 = m1->nextMeasure();
+
+      QVERIFY(m1);
+      QVERIFY(m2);
+
+      Segment* s = m2->first(SegmentType::ChordRest);
+      score->select(toChord(s->element(0))->notes().at(0));
+      QMimeData* mimeData = new QMimeData;
+      mimeData->setData(score->selection().mimeType(), score->selection().mimeData());
+      ChordRest* cr = m1->findChordRest(Fraction(7, 8), 0);
+      score->select(cr->isChord() ? toChord(cr)->upNote() : static_cast<Element*>(cr));
+      score->startCmd();
+      QApplication::clipboard()->setMimeData(mimeData);
+      score->cmdPaste(mimeData, 0);
+      score->endCmd();
+
+      QVERIFY(saveCompareScore(score, QString("copypasteSplit04.mscx"),
+         DIR + "copypasteSplit04-ref.mscx"));
+}
+
+//---------------------------------------------------------
+//   copypastetremolo
+//   copy-paste of tremolo between two notes
+//---------------------------------------------------------
+
+void TestCopyPaste::copypastetremolo()
+      {
+      MasterScore* score = readScore(DIR + QString("copypaste_tremolo.mscx"));
+      Measure* m1 = score->firstMeasure();
+      Measure* m2 = m1->nextMeasure();
+      Measure* m3 = m2->nextMeasure();
+
+      QVERIFY(m1 != 0);
+      QVERIFY(m2 != 0);
+      QVERIFY(m3 != 0);
+
+      // create a range selection on 2nd to 3rd beat (voice 1) of first measure
+      SegmentType segTypeCR = SegmentType::ChordRest;
+      Segment* s = m1->first(segTypeCR)->next1(segTypeCR);
+      score->select(static_cast<Ms::Chord*>(s->element(1))->notes().at(0));
+      s = s->next1(segTypeCR);
+      score->select(s->element(1), SelectType::RANGE);
+
+      QVERIFY(score->selection().canCopy());
+      QString mimeType = score->selection().mimeType();
+      QVERIFY(!mimeType.isEmpty());
+      QMimeData* mimeData = new QMimeData;
+      mimeData->setData(mimeType, score->selection().mimeData());
+      QApplication::clipboard()->setMimeData(mimeData);
+
+      //paste to second measure
+      score->select(m2->first()->element(0));
+
+      score->startCmd();
+      score->cmdPaste(mimeData, 0);
+      score->endCmd();
+
+      // create a range selection on 2nd to 4th beat (voice 0) of first measure
+      s = m1->first(segTypeCR)->next1(segTypeCR);
+      score->select(static_cast<Ms::Chord*>(s->element(0))->notes().at(0));
+      s = s->next1(segTypeCR)->next1(segTypeCR);
+      score->select(s->element(0), SelectType::RANGE);
+
+      QVERIFY(score->selection().canCopy());
+      mimeType = score->selection().mimeType();
+      QVERIFY(!mimeType.isEmpty());
+      mimeData->setData(mimeType, score->selection().mimeData());
+      QApplication::clipboard()->setMimeData(mimeData);
+
+      //paste to third measure
+      score->select(m3->first()->element(0));
+
+      score->startCmd();
+      score->cmdPaste(mimeData, 0);
+      score->endCmd();
+
+      QVERIFY(saveCompareScore(score, QString("copypaste_tremolo.mscx"),
+         DIR + QString("copypaste_tremolo-ref.mscx")));
+      delete score;
+      }
+
+void TestCopyPaste::copypastenote(const QString& idx, Fraction scale)
+      {
+      score = readScore(DIR + "copypasteNote" + idx + ".mscx");
+      QVERIFY(score);
+
+      Measure* m1 = score->firstMeasure();
+      Measure* m2 = m1->nextMeasure();
+
+      QVERIFY(m1);
+      QVERIFY(m2);
+
+      Segment* s = m2->first(SegmentType::ChordRest);
+      score->select(toChord(s->element(0))->notes().at(0));
+      QMimeData mimeData;
+      mimeData.setData(score->selection().mimeType(), score->selection().mimeData());
+      ChordRest* cr = m1->first(SegmentType::ChordRest)->nextChordRest(0);
+      score->select(cr->isChord() ? toChord(cr)->upNote() : static_cast<Element*>(cr));
+      score->startCmd();
+      score->cmdPaste(&mimeData, 0, scale);
+      score->endCmd();
+      QVERIFY(saveCompareScore(score, "copypasteNote" + idx + ".mscx", DIR + "copypasteNote" + idx + "-ref.mscx"));
       }
 
 QTEST_MAIN(TestCopyPaste)

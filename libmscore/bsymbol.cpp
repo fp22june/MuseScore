@@ -10,14 +10,13 @@
 //  the file LICENCE.GPL
 //=============================================================================
 
-#include "score.h"
-#include "image.h"
-#include "xml.h"
-#include "staff.h"
-#include "segment.h"
-#include "page.h"
-#include "system.h"
 #include "measure.h"
+#include "page.h"
+#include "score.h"
+#include "segment.h"
+#include "staff.h"
+#include "system.h"
+#include "xml.h"
 
 namespace Ms {
 
@@ -92,6 +91,7 @@ void BSymbol::add(Element* e)
       {
       if (e->isSymbol() || e->isImage()) {
             e->setParent(this);
+            e->setTrack(track());
             _leafs.append(e);
             toBSymbol(e)->setZ(z() - 1);    // draw on top of parent
             }
@@ -164,7 +164,7 @@ void BSymbol::layout()
             setOffset(.0, .0);
             setPos(.0, .0);
             }
-      for (Element* e : _leafs)
+      for (Element* e : qAsConst(_leafs))
             e->layout();
       }
 
@@ -184,12 +184,12 @@ QRectF BSymbol::drag(EditData& ed)
       qreal _spatium = spatium();
       if (ed.hRaster) {
             qreal hRaster = _spatium / MScore::hRaster();
-            int n = lrint(x / hRaster);
+            int n = (int)lrint(x / hRaster);
             x = hRaster * n;
             }
       if (ed.vRaster) {
             qreal vRaster = _spatium / MScore::vRaster();
-            int n = lrint(y / vRaster);
+            int n = (int)lrint(y / vRaster);
             y = vRaster * n;
             }
 
@@ -202,20 +202,12 @@ QRectF BSymbol::drag(EditData& ed)
       }
 
 //---------------------------------------------------------
-//   dragAnchor
+//   dragAnchorLines
 //---------------------------------------------------------
 
-QLineF BSymbol::dragAnchor() const
+QVector<QLineF> BSymbol::dragAnchorLines() const
       {
-      if (parent() && parent()->type() == ElementType::SEGMENT) {
-            System* system = segment()->measure()->system();
-            qreal y        = system->staffCanvasYpage(staffIdx());
-            QPointF anchor(segment()->canvasPos().x(), y);
-            return QLineF(canvasPos(), anchor);
-            }
-      else {
-            return QLineF(canvasPos(), parent()->canvasPos());
-            }
+      return genericDragAnchorLines();
       }
 
 //---------------------------------------------------------

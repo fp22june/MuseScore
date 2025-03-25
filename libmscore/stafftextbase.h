@@ -13,9 +13,9 @@
 #ifndef __STAFFTEXTBASE_H__
 #define __STAFFTEXTBASE_H__
 
-#include "text.h"
 #include "part.h"
 #include "staff.h"
+#include "textbase.h"
 
 namespace Ms {
 
@@ -51,7 +51,7 @@ class StaffTextBase : public TextBase  {
       Segment* segment() const;
       QString channelName(int voice) const                { return _channelNames[voice]; }
       void setChannelName(int v, const QString& s)        { _channelNames[v] = s;        }
-      void setSwingParameters(int unit, int ratio)        {  _swingParameters.swingUnit = unit; _swingParameters.swingRatio = ratio; }
+      void setSwingParameters(int unit, int ratio)        { _swingParameters.swingUnit = unit; _swingParameters.swingRatio = ratio; }
       const QList<ChannelActions>* channelActions() const { return &_channelActions;    }
       QList<ChannelActions>* channelActions()             { return &_channelActions;    }
       const SwingParameters* swingParameters() const      { return &_swingParameters;   }

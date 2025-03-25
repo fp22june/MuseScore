@@ -10,15 +10,15 @@
 //  the file LICENCE.GPL
 //=============================================================================
 
-#include "symbol.h"
-#include "sym.h"
-#include "xml.h"
-#include "system.h"
-#include "staff.h"
+#include "image.h"
 #include "measure.h"
 #include "page.h"
 #include "score.h"
-#include "image.h"
+#include "staff.h"
+#include "system.h"
+#include "symbol.h"
+#include "sym.h"
+#include "xml.h"
 
 namespace Ms {
 
@@ -49,6 +49,16 @@ QString Symbol::symName() const
       }
 
 //---------------------------------------------------------
+//   accessibleInfo
+//---------------------------------------------------------
+
+QString Symbol::accessibleInfo() const
+      {
+      return QString("%1: %2").arg(Element::accessibleInfo(), Sym::id2name(_sym));
+      }
+
+
+//---------------------------------------------------------
 //   layout
 //    height() and width() should return sensible
 //    values when calling this method
@@ -59,7 +69,6 @@ void Symbol::layout()
       // foreach(Element* e, leafs())     done in BSymbol::layout() ?
       //      e->layout();
       setbbox(_scoreFont ? _scoreFont->bbox(_sym, magS()) : symBbox(_sym));
-      QPointF o(offset());
       qreal w = width();
       QPointF p;
       if (align() & Align::BOTTOM)

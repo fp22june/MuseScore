@@ -13,8 +13,10 @@
 #ifndef __ARTICULATION_H__
 #define __ARTICULATION_H__
 
+#include "chordrest.h"
 #include "element.h"
 #include "mscore.h"
+#include "sym.h"
 
 namespace Ms {
 
@@ -23,8 +25,6 @@ class Segment;
 class Measure;
 class System;
 class Page;
-
-enum class SymId;
 
 //---------------------------------------------------------
 //   ArticulationInfo
@@ -65,7 +65,7 @@ class Articulation final : public Element {
       MScore::OrnamentStyle _ornamentStyle;     // for use in ornaments such as trill
       bool _playArticulation;
 
-      virtual void draw(QPainter*) const;
+      void draw(QPainter*) const;
 
       enum class AnchorGroup {
             ARTICULATION,
@@ -77,36 +77,37 @@ class Articulation final : public Element {
    public:
       Articulation(Score*);
       Articulation(SymId, Score*);
+      Articulation(const Articulation&) = default;
       Articulation &operator=(const Articulation&) = delete;
 
-      virtual Articulation* clone() const override   { return new Articulation(*this); }
-      virtual ElementType type() const override    { return ElementType::ARTICULATION; }
+      Articulation* clone() const override   { return new Articulation(*this); }
+      ElementType type() const override    { return ElementType::ARTICULATION; }
 
-      virtual qreal mag() const override;
+      qreal mag() const override;
 
       SymId symId() const                       { return _symId; }
       void setSymId(SymId id);
-      virtual int subtype() const override;
+      int subtype() const override;
       QString userName() const;
       const char* articulationName() const;  // type-name of articulation; used for midi rendering
       static const char* symId2ArticulationName(SymId symId);
 
-      virtual void layout() override;
+      void layout() override;
       bool layoutCloseToNote() const;
 
-      virtual void read(XmlReader&) override;
-      virtual void write(XmlWriter& xml) const override;
-      virtual bool readProperties(XmlReader&) override;
+      void read(XmlReader&) override;
+      void write(XmlWriter& xml) const override;
+      bool readProperties(XmlReader&) override;
 
-      virtual QLineF dragAnchor() const override;
+      QVector<QLineF> dragAnchorLines() const override;
 
-      virtual QVariant getProperty(Pid propertyId) const override;
-      virtual bool setProperty(Pid propertyId, const QVariant&) override;
-      virtual QVariant propertyDefault(Pid) const override;
-      virtual void resetProperty(Pid id) override;
+      QVariant getProperty(Pid propertyId) const override;
+      bool setProperty(Pid propertyId, const QVariant&) override;
+      QVariant propertyDefault(Pid) const override;
+      void resetProperty(Pid id) override;
       Sid getPropertyStyle(Pid id) const override;
 
-      virtual Pid propertyId(const QStringRef& xmlName) const override;
+      Pid propertyId(const QStringRef& xmlName) const override;
 
       bool up() const                       { return _up; }
       void setUp(bool val);
@@ -139,8 +140,10 @@ class Articulation final : public Element {
       bool isAccent() const;
       bool isMarcato() const;
       bool isLuteFingering() const;
+      bool isOrnament() const;
 
       void doAutoplace();
+      int vStaffIdx() const override { return chordRest()->vStaffIdx(); }
       };
 
 }     // namespace Ms

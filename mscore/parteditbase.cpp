@@ -17,18 +17,22 @@
 //  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //=============================================================================
 
+#include <accessibletoolbutton.h>
+#include <qmessagebox.h>
+
 #include "musescore.h"
 #include "parteditbase.h"
+#include "preferences.h"
+#include "seq.h"
+#include "synthcontrol.h"
+
 #include "libmscore/score.h"
 #include "libmscore/part.h"
-#include "mixer.h"
-#include "seq.h"
 #include "libmscore/undo.h"
-#include "synthcontrol.h"
-#include "synthesizer/msynthesizer.h"
-#include "preferences.h"
-#include <qmessagebox.h>
-#include <accessibletoolbutton.h>
+
+#include "mixer/mixer.h"
+
+#include "audio/midi/msynthesizer.h"
 
 namespace Ms {
 
@@ -213,7 +217,7 @@ void PartEdit::patchChanged(int n, bool syncControls)
 
 void PartEdit::volChanged(double val, bool syncControls)
       {
-      int iv = lrint(val);
+      int iv = (int)lrint(val);
       seq->setController(channel->channel(), CTRL_VOLUME, iv);
       channel->setVolume(iv);
       sync(syncControls);
@@ -225,7 +229,7 @@ void PartEdit::volChanged(double val, bool syncControls)
 
 void PartEdit::panChanged(double val, bool syncControls)
       {
-      int iv = lrint(val);
+      int iv = (int)lrint(val);
       seq->setController(channel->channel(), CTRL_PANPOT, iv);
       channel->setPan(iv);
       sync(syncControls);
@@ -237,7 +241,7 @@ void PartEdit::panChanged(double val, bool syncControls)
 
 void PartEdit::reverbChanged(double val, bool syncControls)
       {
-      int iv = lrint(val);
+      int iv = (int)lrint(val);
       seq->setController(channel->channel(), CTRL_REVERB_SEND, iv);
       channel->setReverb(iv);
       sync(syncControls);
@@ -249,7 +253,7 @@ void PartEdit::reverbChanged(double val, bool syncControls)
 
 void PartEdit::chorusChanged(double val, bool syncControls)
       {
-      int iv = lrint(val);
+      int iv = (int)lrint(val);
       seq->setController(channel->channel(), CTRL_CHORUS_SEND, iv);
       channel->setChorus(iv);
       sync(syncControls);
@@ -542,7 +546,7 @@ void PartEdit::midiChannelChanged(int)
             }
 
       // Update MIDI Out ports
-      int maxPort = max(p, part->score()->masterScore()->midiPortCount());
+      int maxPort = std::max(p, part->score()->masterScore()->midiPortCount());
       part->score()->masterScore()->setMidiPortCount(maxPort);
       if (seq->driver() && (preferences.getBool(PREF_IO_JACK_USEJACKMIDI) || preferences.getBool(PREF_IO_ALSA_USEALSAAUDIO)))
             seq->driver()->updateOutPortCount(maxPort + 1);

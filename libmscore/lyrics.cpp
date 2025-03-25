@@ -10,18 +10,18 @@
 //  the file LICENCE.GPL
 //=============================================================================
 
-#include "lyrics.h"
 
-#include "chord.h"
+//#include "chord.h"
+#include "measure.h"
+#include "lyrics.h"
 #include "score.h"
+#include "segment.h"
+#include "staff.h"
 #include "sym.h"
 #include "system.h"
-#include "xml.h"
-#include "staff.h"
-#include "segment.h"
-#include "undo.h"
 #include "textedit.h"
-#include "measure.h"
+#include "undo.h"
+#include "xml.h"
 
 namespace Ms {
 
@@ -113,7 +113,8 @@ void Lyrics::read(XmlReader& e)
       if (!isStyled(Pid::OFFSET) && !e.pasteMode()) {
             // fix offset for pre-3.1 scores
             // 3.0: y offset was meaningless if autoplace is set
-            if (autoplace() && score()->mscoreVersion() < "3.1") {
+            QString version = masterScore()->mscoreVersion();
+            if (autoplace() && !version.isEmpty() && version < "3.1") {
                   QPointF off = propertyDefault(Pid::OFFSET).toPointF();
                   ryoffset() = off.y();
                   }
@@ -177,6 +178,18 @@ void Lyrics::remove(Element* el)
       if (el->isLyricsLine()) {
             // only if separator still exists and is the right one
             if (_separator && el == _separator) {
+#if 0
+                  // clear melismaEnd flag from end cr
+                  // find end cr from melisma itself, as ticks for lyrics may not be accurate at this point
+                  // note this clearing this might be premature, as there may be other lyrics that still end there
+                  // also, at this point we can't be sure if this is a melisma or a dash
+                  // but the flag will be regenerated on next layout
+                  Element* e = _separator->endElement();
+                  if (!e)
+                        e = score()->findCRinStaff(_separator->tick2(), track());
+                  if (e && e->isChordRest())
+                        toChordRest(e)->setMelismaEnd(false);
+#endif
                   // Lyrics::remove() and LyricsLine::removeUnmanaged() call each other;
                   // be sure each finds a clean context
                   LyricsLine* separ = _separator;
@@ -259,12 +272,12 @@ void Lyrics::layout()
             }
 
       bool styleDidChange = false;
-      if ((_no & 1) && !_even) {
+      if (isEven() && !_even) {
             initTid(Tid::LYRICS_EVEN, /* preserveDifferent */ true);
             _even             = true;
             styleDidChange    = true;
             }
-      if (!(_no & 1) && _even) {
+      if (!isEven() && _even) {
             initTid(Tid::LYRICS_ODD, /* preserveDifferent */ true);
             _even             = false;
             styleDidChange    = true;
@@ -273,9 +286,15 @@ void Lyrics::layout()
       if (styleDidChange)
             styleChanged();
 
-      if (isMelisma() || hasNumber)
-            if (isStyled(Pid::ALIGN)) {
+      if (isMelisma() || hasNumber) {
+            // use the melisma style alignment setting
+            if (isStyled(Pid::ALIGN))
                   setAlign(score()->styleV(Sid::lyricsMelismaAlign).value<Align>());
+            }
+      else {
+            // use the text style alignment setting
+            if (isStyled(Pid::ALIGN))
+                  setAlign(propertyDefault(Pid::ALIGN).value<Align>());
             }
       QPointF o(propertyDefault(Pid::OFFSET).toPointF());
       rxpos() = o.x();
@@ -344,6 +363,14 @@ void Lyrics::layout()
                   _separator = 0;
                   }
             }
+
+      if (_ticks.isNotZero()) {
+            // set melisma end
+            ChordRest* ecr = score()->findCR(endTick(), track());
+            if (ecr)
+                  ecr->setMelismaEnd(true);
+            }
+
       }
 
 //---------------------------------------------------------
@@ -373,14 +400,13 @@ void Lyrics::layout2(int nAbove)
 void Lyrics::paste(EditData& ed)
       {
       MuseScoreView* scoreview = ed.view;
-#if defined(Q_OS_MAC) || defined(Q_OS_WIN)
-      QClipboard::Mode mode = QClipboard::Clipboard;
-#else
-      QClipboard::Mode mode = QClipboard::Selection;
-#endif
-      QString txt = QApplication::clipboard()->text(mode);
+      QString txt = QApplication::clipboard()->text();
       QString regex = QString("[^\\S") + QChar(0xa0) + QChar(0x202F) + "]+";
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
+      QStringList sl = txt.split(QRegExp(regex), Qt::SkipEmptyParts);
+#else
       QStringList sl = txt.split(QRegExp(regex), QString::SkipEmptyParts);
+#endif
       if (sl.empty())
             return;
 
@@ -429,7 +455,7 @@ void Lyrics::paste(EditData& ed)
       score()->endCmd();
       txt = sl.join(" ");
 
-      QApplication::clipboard()->setText(txt, mode);
+      QApplication::clipboard()->setText(txt);
       if (minus)
             scoreview->lyricsMinus();
       else if (underscore)
@@ -485,7 +511,9 @@ Element* Lyrics::drop(EditData& data)
 void Lyrics::endEdit(EditData& ed)
       {
       TextBase::endEdit(ed);
-      score()->setLayoutAll();
+      triggerLayout();
+      if (_separator)
+            _separator->triggerLayout();
       }
 
 //---------------------------------------------------------
@@ -494,6 +522,12 @@ void Lyrics::endEdit(EditData& ed)
 
 void Lyrics::removeFromScore()
       {
+      if (_ticks.isNotZero()) {
+            // clear melismaEnd flag from end cr
+            ChordRest* ecr = score()->findCR(endTick(), track());
+            if (ecr)
+                  ecr->setMelismaEnd(false);
+            }
       if (_separator) {
             _separator->removeUnmanaged();
             delete _separator;
@@ -533,6 +567,18 @@ bool Lyrics::setProperty(Pid propertyId, const QVariant& v)
                   _syllabic = Syllabic(v.toInt());
                   break;
             case Pid::LYRIC_TICKS:
+                  if (_ticks.isNotZero()) {
+                        // clear melismaEnd flag from previous end cr
+                        // this might be premature, as there may be other melismas ending there
+                        // but flag will be generated correctly on layout
+                        // TODO: after inserting a measure,
+                        // endTick info is wrong.
+                        // Somehow we need to fix this.
+                        // See https://musescore.org/en/node/285304 and https://musescore.org/en/node/311289
+                        ChordRest* ecr = score()->findCR(endTick(), track());
+                        if (ecr)
+                              ecr->setMelismaEnd(false);
+                        }
                   _ticks = v.value<Fraction>();
                   break;
             case Pid::VERSE:
@@ -555,7 +601,7 @@ QVariant Lyrics::propertyDefault(Pid id) const
       {
       switch (id) {
             case Pid::SUB_STYLE:
-                  return int((_no & 1) ? Tid::LYRICS_EVEN : Tid::LYRICS_ODD);
+                  return int(isEven() ? Tid::LYRICS_EVEN : Tid::LYRICS_ODD);
             case Pid::PLACEMENT:
                   return score()->styleV(Sid::lyricsPlacement);
             case Pid::SYLLABIC:
@@ -571,17 +617,6 @@ QVariant Lyrics::propertyDefault(Pid id) const
             default:
                   return TextBase::propertyDefault(id);
             }
-      }
-
-//---------------------------------------------------------
-//   getPropertyStyle
-//---------------------------------------------------------
-
-Sid Lyrics::getPropertyStyle(Pid pid) const
-      {
-      if (pid == Pid::OFFSET)
-            return placeAbove() ? Sid::lyricsPosAbove : Sid::lyricsPosBelow;
-      return TextBase::getPropertyStyle(pid);
       }
 
 //---------------------------------------------------------

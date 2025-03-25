@@ -18,57 +18,54 @@
 //=============================================================================
 
 #include "debugger.h"
-#include "musescore.h"
 #include "icons.h"
-#include "globals.h"
-#include "libmscore/element.h"
-#include "libmscore/page.h"
-#include "libmscore/segment.h"
-#include "libmscore/score.h"
-#include "libmscore/rest.h"
-#include "libmscore/note.h"
-#include "libmscore/chord.h"
-#include "libmscore/measure.h"
-#include "libmscore/text.h"
-#include "libmscore/hairpin.h"
-#include "libmscore/beam.h"
-#include "libmscore/tuplet.h"
-#include "libmscore/clef.h"
-#include "libmscore/barline.h"
-#include "libmscore/hook.h"
-#include "libmscore/dynamic.h"
-#include "libmscore/slur.h"
-#include "libmscore/tie.h"
-#include "libmscore/lyrics.h"
-#include "libmscore/volta.h"
-#include "libmscore/line.h"
-#include "libmscore/textline.h"
-#include "libmscore/system.h"
-#include "libmscore/arpeggio.h"
-#include "libmscore/tremolo.h"
-#include "libmscore/articulation.h"
-#include "libmscore/ottava.h"
-#include "libmscore/bend.h"
-#include "libmscore/stem.h"
-#include "libmscore/iname.h"
+#include "musescore.h"
+
 #include "libmscore/accidental.h"
-#include "libmscore/keysig.h"
-#include "libmscore/sig.h"
-#include "libmscore/notedot.h"
-#include "libmscore/spacer.h"
-#include "libmscore/box.h"
-#include "libmscore/fret.h"
-#include "libmscore/harmony.h"
-#include "libmscore/stemslash.h"
-#include "libmscore/ledgerline.h"
-#include "libmscore/pitchspelling.h"
-#include "libmscore/chordlist.h"
+#include "libmscore/arpeggio.h"
+#include "libmscore/articulation.h"
+#include "libmscore/barline.h"
+#include "libmscore/beam.h"
 #include "libmscore/bracket.h"
-#include "libmscore/bracketItem.h"
-#include "libmscore/trill.h"
-#include "libmscore/timesig.h"
-#include "libmscore/systemdivider.h"
+#include "libmscore/box.h"
+#include "libmscore/chord.h"
+#include "libmscore/chordlist.h"
+#include "libmscore/clef.h"
+#include "libmscore/dynamic.h"
+#include "libmscore/element.h"
+#include "libmscore/fret.h"
+#include "libmscore/hairpin.h"
+#include "libmscore/harmony.h"
+#include "libmscore/hook.h"
+#include "libmscore/iname.h"
+#include "libmscore/keysig.h"
+#include "libmscore/ledgerline.h"
+#include "libmscore/line.h"
+#include "libmscore/lyrics.h"
+#include "libmscore/measure.h"
 #include "libmscore/measurenumber.h"
+#include "libmscore/note.h"
+#include "libmscore/notedot.h"
+#include "libmscore/page.h"
+#include "libmscore/pitchspelling.h"
+#include "libmscore/rest.h"
+#include "libmscore/score.h"
+#include "libmscore/segment.h"
+#include "libmscore/slur.h"
+#include "libmscore/sig.h"
+#include "libmscore/spacer.h"
+#include "libmscore/stem.h"
+#include "libmscore/stemslash.h"
+#include "libmscore/system.h"
+#include "libmscore/systemdivider.h"
+#include "libmscore/text.h"
+#include "libmscore/textline.h"
+#include "libmscore/tie.h"
+#include "libmscore/timesig.h"
+#include "libmscore/tremolo.h"
+#include "libmscore/trill.h"
+#include "libmscore/tuplet.h"
+#include "libmscore/volta.h"
 
 namespace Ms {
 
@@ -166,6 +163,10 @@ Debugger::Debugger(QWidget* parent)
       connect(selectButton, SIGNAL(clicked()), SLOT(selectElement()));
       connect(resetButton,  SIGNAL(clicked()), SLOT(resetElement()));
       connect(layoutButton, SIGNAL(clicked()), SLOT(layout()));
+
+      back->setIcon(*icons[int(Icons::goPrevious_ICON)]);
+      forward->setIcon(*icons[int(Icons::goNext_ICON)]);
+      reload->setIcon(*icons[int(Icons::viewRefresh_ICON)]);
       }
 
 //---------------------------------------------------------
@@ -199,7 +200,7 @@ void Debugger::layout()
       {
       if (!curElement)
             return;
-      curElement->score()->setLayoutAll();
+      curElement->triggerLayoutAll();
       curElement->score()->update();
       mscore->endCmd();
       }
@@ -529,13 +530,13 @@ bool Debugger::searchElement(QTreeWidgetItem* pi, Element* el)
             ElementItem* ei = (ElementItem*)item;
             if (ei->element() == el) {
                   QTreeWidget* tw = pi->treeWidget();
-                  tw->setItemExpanded(item, true);
+                  item->setExpanded(true);
                   tw->setCurrentItem(item);
                   tw->scrollToItem(item);
                   return true;
                   }
             if (searchElement(item, el)) {
-                  pi->treeWidget()->setItemExpanded(item, true);
+                  item->setExpanded(true);
                   return true;
                   }
             }
@@ -604,7 +605,7 @@ void Debugger::updateElement(Element* el)
                   continue;
             ElementItem* ei = static_cast<ElementItem*>(item);
             if (ei->element() == el) {
-                  list->setItemExpanded(item, true);
+                  item->setExpanded(true);
                   list->setCurrentItem(item);
                   list->scrollToItem(item);
                   found = true;
@@ -619,46 +620,46 @@ void Debugger::updateElement(Element* el)
       ShowElementBase* ew = elementViews[int(el->type())];
       if (ew == 0) {
             switch (el->type()) {
-                  case ElementType::PAGE:             ew = new ShowPageWidget;      break;
-                  case ElementType::SYSTEM:           ew = new SystemView;          break;
-                  case ElementType::MEASURE:          ew = new MeasureView;         break;
-                  case ElementType::CHORD:            ew = new ChordDebug;          break;
-                  case ElementType::NOTE:             ew = new ShowNoteWidget;      break;
-                  case ElementType::REST:             ew = new RestView;            break;
-                  case ElementType::CLEF:             ew = new ClefView;            break;
-                  case ElementType::TIMESIG:          ew = new TimeSigView;         break;
-                  case ElementType::KEYSIG:           ew = new KeySigView;          break;
-                  case ElementType::SEGMENT:          ew = new SegmentView;         break;
-                  case ElementType::HAIRPIN:          ew = new HairpinView;         break;
-                  case ElementType::BAR_LINE:         ew = new BarLineView;         break;
-                  case ElementType::DYNAMIC:          ew = new DynamicView;         break;
-                  case ElementType::TUPLET:           ew = new TupletView;          break;
-                  case ElementType::SLUR:             ew = new SlurTieView;         break;
-                  case ElementType::TIE:              ew = new TieView;             break;
-                  case ElementType::VOLTA:            ew = new VoltaView;           break;
-                  case ElementType::VOLTA_SEGMENT:    ew = new VoltaSegmentView;    break;
+                  case ElementType::PAGE:                    ew = new ShowPageWidget;      break;
+                  case ElementType::SYSTEM:                  ew = new SystemView;          break;
+                  case ElementType::MEASURE:                 ew = new MeasureView;         break;
+                  case ElementType::CHORD:                   ew = new ChordDebug;          break;
+                  case ElementType::NOTE:                    ew = new ShowNoteWidget;      break;
+                  case ElementType::REST:                    ew = new RestView;            break;
+                  case ElementType::CLEF:                    ew = new ClefView;            break;
+                  case ElementType::TIMESIG:                 ew = new TimeSigView;         break;
+                  case ElementType::KEYSIG:                  ew = new KeySigView;          break;
+                  case ElementType::SEGMENT:                 ew = new SegmentView;         break;
+                  case ElementType::HAIRPIN:                 ew = new HairpinView;         break;
+                  case ElementType::BAR_LINE:                ew = new BarLineView;         break;
+                  case ElementType::DYNAMIC:                 ew = new DynamicView;         break;
+                  case ElementType::TUPLET:                  ew = new TupletView;          break;
+                  case ElementType::SLUR:                    ew = new SlurTieView;         break;
+                  case ElementType::TIE:                     ew = new TieView;             break;
+                  case ElementType::VOLTA:                   ew = new VoltaView;           break;
+                  case ElementType::VOLTA_SEGMENT:           ew = new VoltaSegmentView;    break;
                   case ElementType::PEDAL:
                   case ElementType::LET_RING:
                   case ElementType::VIBRATO:
-                  case ElementType::TEXTLINE:         ew = new TextLineView;        break;
+                  case ElementType::TEXTLINE:           ew = new TextLineView;        break;
                   case ElementType::PEDAL_SEGMENT:
-                  case ElementType::TEXTLINE_SEGMENT: ew = new TextLineSegmentView; break;
-                  case ElementType::LYRICS:           ew = new LyricsView;          break;
-                  case ElementType::BEAM:             ew = new BeamView;            break;
-                  case ElementType::TREMOLO:          ew = new TremoloView;         break;
-                  case ElementType::OTTAVA:           ew = new OttavaView;          break;
+                  case ElementType::TEXTLINE_SEGMENT:    ew = new TextLineSegmentView; break;
+                  case ElementType::LYRICS:                  ew = new LyricsView;          break;
+                  case ElementType::BEAM:                    ew = new BeamView;            break;
+                  case ElementType::TREMOLO:                 ew = new TremoloView;         break;
+                  case ElementType::OTTAVA:                  ew = new OttavaView;          break;
                   case ElementType::LET_RING_SEGMENT:
-                  case ElementType::OTTAVA_SEGMENT:   ew = new TextLineSegmentView; break;
-                  case ElementType::SLUR_SEGMENT:     ew = new SlurSegmentView;     break;
-                  case ElementType::TIE_SEGMENT:      ew = new TieSegmentView;     break;
-                  case ElementType::ACCIDENTAL:       ew = new AccidentalView;      break;
-                  case ElementType::ARTICULATION:     ew = new ArticulationView;    break;
-                  case ElementType::STEM:             ew = new StemView;            break;
+                  case ElementType::OTTAVA_SEGMENT:          ew = new TextLineSegmentView; break;
+                  case ElementType::SLUR_SEGMENT:            ew = new SlurSegmentView;     break;
+                  case ElementType::TIE_SEGMENT:             ew = new TieSegmentView;      break;
+                  case ElementType::ACCIDENTAL:              ew = new AccidentalView;      break;
+                  case ElementType::ARTICULATION:            ew = new ArticulationView;    break;
+                  case ElementType::STEM:                    ew = new StemView;            break;
                   case ElementType::VBOX:
                   case ElementType::HBOX:
                   case ElementType::FBOX:
-                  case ElementType::TBOX:             ew = new BoxView;             break;
-                  case ElementType::TRILL:            ew = new SpannerView;         break;
+                  case ElementType::TBOX:                    ew = new BoxView;             break;
+                  case ElementType::TRILL:                   ew = new SpannerView;         break;
 
                   case ElementType::INSTRUMENT_NAME:
                   case ElementType::FINGERING:
@@ -666,6 +667,7 @@ void Debugger::updateElement(Element* el)
                   case ElementType::JUMP:
                   case ElementType::TEXT:
                   case ElementType::MEASURE_NUMBER:
+                  case ElementType::MMREST_RANGE:
                   case ElementType::STAFF_TEXT:
                   case ElementType::SYSTEM_TEXT:
                   case ElementType::REHEARSAL_MARK:
@@ -753,6 +755,9 @@ MeasureView::MeasureView()
       connect(mb.nextButton, SIGNAL(clicked()), SLOT(nextClicked()));
       connect(mb.prevButton, SIGNAL(clicked()), SLOT(prevClicked()));
       connect(mb.mmRest, SIGNAL(clicked()), SLOT(mmRestClicked()));
+
+      mb.prevButton->setIcon(*icons[int(Icons::goPrevious_ICON)]);
+      mb.nextButton->setIcon(*icons[int(Icons::goNext_ICON)]);
       }
 
 //---------------------------------------------------------
@@ -1101,7 +1106,7 @@ void ChordDebug::upChanged(bool val)
 void ChordDebug::beamModeChanged(int n)
       {
       ((Chord*)element())->setBeamMode(Beam::Mode(n));
-      element()->score()->setLayoutAll();
+      element()->triggerLayoutAll();
       }
 
 //---------------------------------------------------------
@@ -1781,7 +1786,11 @@ QSize DoubleLabel::sizeHint() const
       QFontMetrics fm = fontMetrics();
       int h           = fm.height() + 4;
       int n           = 3 + 3;
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
+      int w = fm.horizontalAdvance(QString("-0.")) + fm.horizontalAdvance('0') * n + 6;
+#else
       int w = fm.width(QString("-0.")) + fm.width('0') * n + 6;
+#endif
       return QSize(w, h);
       }
 
@@ -2523,7 +2532,7 @@ void AccidentalView::setElement(Element* e)
 //TODO      acc.hasBracket->setChecked(s->hasBracket());
       acc.accAuto->setChecked(s->role() == AccidentalRole::AUTO);
       acc.accUser->setChecked(s->role() == AccidentalRole::USER);
-      acc.small->setChecked(s->small());
+      acc.isSmallCheckbox->setChecked(s->isSmall());
       }
 
 //---------------------------------------------------------
@@ -2547,7 +2556,7 @@ void ClefView::setElement(Element* e)
 
       clef.clefType->setValue(int(c->clefType()));
       clef.showCourtesy->setChecked(c->showCourtesy());
-      clef.small->setChecked(c->small());
+      clef.isSmallCheckbox->setChecked(c->isSmall());
 
       clef.concertClef->setValue(int(c->concertClef()));
       clef.transposingClef->setValue(int(c->transposingClef()));
@@ -2839,4 +2848,3 @@ void BracketView::setElement(Element* e)
       }
 
 }
-

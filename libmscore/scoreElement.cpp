@@ -10,21 +10,21 @@
 //  the file LICENCE.GPL
 //=============================================================================
 
-#include "scoreElement.h"
+#include "bracketItem.h"
+#include "measure.h"
+#include "musescoreCore.h"
+#include "rest.h"
 #include "score.h"
+#include "scoreElement.h"
 #include "undo.h"
 #include "xml.h"
-#include "bracket.h"
-#include "bracketItem.h"
-#include "spanner.h"
-#include "musescoreCore.h"
 
 namespace Ms {
 
 ElementStyle const ScoreElement::emptyStyle;
 
 //
-// list has to be synchronized with ElementType enum
+// list has to be synchronized with ElementType enum in types.h
 //
 static const ElementName elementNames[] = {
       { ElementType::INVALID,              "invalid",              QT_TRANSLATE_NOOP("elementName", "Invalid") },
@@ -34,7 +34,9 @@ static const ElementName elementNames[] = {
       { ElementType::SCORE,                "Score",                QT_TRANSLATE_NOOP("elementName", "Score") },
       { ElementType::SYMBOL,               "Symbol",               QT_TRANSLATE_NOOP("elementName", "Symbol") },
       { ElementType::TEXT,                 "Text",                 QT_TRANSLATE_NOOP("elementName", "Text") },
+      { ElementType::LAYOUT_BREAK,         "LayoutBreak",          QT_TRANSLATE_NOOP("elementName", "Layout Break") },
       { ElementType::MEASURE_NUMBER,       "MeasureNumber",        QT_TRANSLATE_NOOP("elementName", "Measure Number") },
+      { ElementType::MMREST_RANGE,         "MMRestRange",          QT_TRANSLATE_NOOP("elementName", "Multimeasure Rest Range") },
       { ElementType::INSTRUMENT_NAME,      "InstrumentName",       QT_TRANSLATE_NOOP("elementName", "Instrument Name") },
       { ElementType::SLUR_SEGMENT,         "SlurSegment",          QT_TRANSLATE_NOOP("elementName", "Slur Segment") },
       { ElementType::TIE_SEGMENT,          "TieSegment",           QT_TRANSLATE_NOOP("elementName", "Tie Segment") },
@@ -46,6 +48,7 @@ static const ElementName elementNames[] = {
       { ElementType::ACCIDENTAL,           "Accidental",           QT_TRANSLATE_NOOP("elementName", "Accidental") },
       { ElementType::LEDGER_LINE,          "LedgerLine",           QT_TRANSLATE_NOOP("elementName", "Ledger Line") },
       { ElementType::STEM,                 "Stem",                 QT_TRANSLATE_NOOP("elementName", "Stem") },
+      { ElementType::HOOK,                 "Hook",                 QT_TRANSLATE_NOOP("elementName", "Flag") }, // internally called "Hook", but "Flag" in SMuFL, so here externally too
       { ElementType::NOTE,                 "Note",                 QT_TRANSLATE_NOOP("elementName", "Note") },
       { ElementType::CLEF,                 "Clef",                 QT_TRANSLATE_NOOP("elementName", "Clef") },
       { ElementType::KEYSIG,               "KeySig",               QT_TRANSLATE_NOOP("elementName", "Key Signature") },
@@ -60,7 +63,6 @@ static const ElementName elementNames[] = {
       { ElementType::CHORDLINE,            "ChordLine",            QT_TRANSLATE_NOOP("elementName", "Chord Line") },
       { ElementType::DYNAMIC,              "Dynamic",              QT_TRANSLATE_NOOP("elementName", "Dynamic") },
       { ElementType::BEAM,                 "Beam",                 QT_TRANSLATE_NOOP("elementName", "Beam") },
-      { ElementType::HOOK,                 "Hook",                 QT_TRANSLATE_NOOP("elementName", "Hook") },
       { ElementType::LYRICS,               "Lyrics",               QT_TRANSLATE_NOOP("elementName", "Lyrics") },
       { ElementType::FIGURED_BASS,         "FiguredBass",          QT_TRANSLATE_NOOP("elementName", "Figured Bass") },
       { ElementType::MARKER,               "Marker",               QT_TRANSLATE_NOOP("elementName", "Marker") },
@@ -89,7 +91,6 @@ static const ElementName elementNames[] = {
       { ElementType::PEDAL_SEGMENT,        "PedalSegment",         QT_TRANSLATE_NOOP("elementName", "Pedal Segment") },
       { ElementType::LYRICSLINE_SEGMENT,   "LyricsLineSegment",    QT_TRANSLATE_NOOP("elementName", "Melisma Line Segment") },
       { ElementType::GLISSANDO_SEGMENT,    "GlissandoSegment",     QT_TRANSLATE_NOOP("elementName", "Glissando Segment") },
-      { ElementType::LAYOUT_BREAK,         "LayoutBreak",          QT_TRANSLATE_NOOP("elementName", "Layout Break") },
       { ElementType::SPACER,               "Spacer",               QT_TRANSLATE_NOOP("elementName", "Spacer") },
       { ElementType::STAFF_STATE,          "StaffState",           QT_TRANSLATE_NOOP("elementName", "Staff State") },
       { ElementType::NOTEHEAD,             "NoteHead",             QT_TRANSLATE_NOOP("elementName", "Notehead") },
@@ -112,7 +113,6 @@ static const ElementName elementNames[] = {
       { ElementType::PALM_MUTE,            "PalmMute",             QT_TRANSLATE_NOOP("elementName", "Palm Mute") },
       { ElementType::TEXTLINE,             "TextLine",             QT_TRANSLATE_NOOP("elementName", "Text Line") },
       { ElementType::TEXTLINE_BASE,        "TextLineBase",         QT_TRANSLATE_NOOP("elementName", "Text Line Base") },  // remove
-      { ElementType::NOTELINE,             "NoteLine",             QT_TRANSLATE_NOOP("elementName", "Note Line") },
       { ElementType::LYRICSLINE,           "LyricsLine",           QT_TRANSLATE_NOOP("elementName", "Melisma Line") },
       { ElementType::GLISSANDO,            "Glissando",            QT_TRANSLATE_NOOP("elementName", "Glissando") },
       { ElementType::BRACKET,              "Bracket",              QT_TRANSLATE_NOOP("elementName", "Bracket") },
@@ -208,7 +208,7 @@ void ScoreElement::initElementStyle(const ElementStyle* ss)
             _propertyFlagsList[i] = PropertyFlags::STYLED;
       for (const StyledProperty& spp : *_elementStyle)
 //            setProperty(spp.pid, styleValue(spp.pid, spp.sid));
-            setProperty(spp.pid, styleValue(spp.pid, getPropertyStyle(spp.pid)));
+            setProperty(spp.pid, safePropertyStyleValue(spp.pid));
       }
 
 //---------------------------------------------------------
@@ -271,7 +271,7 @@ static void changeProperty(ScoreElement* e, Pid t, const QVariant& st, PropertyF
 static void changeProperties(ScoreElement* e, Pid t, const QVariant& st, PropertyFlags ps)
       {
       if (propertyLink(t)) {
-            for (ScoreElement* ee : e->linkList())
+            for (ScoreElement*& ee : e->linkList())
                   changeProperty(ee, t, st, ps);
             }
       else
@@ -368,7 +368,7 @@ void ScoreElement::readProperty(XmlReader& e, Pid id)
                   v = v.toPointF() * score()->spatium();
                   break;
             case P_TYPE::POINT_SP_MM:
-                  if (sizeIsSpatiumDependent())
+                  if (offsetIsSpatiumDependent())
                         v = v.toPointF() * score()->spatium();
                   else
                         v = v.toPointF() * DPMM;
@@ -419,6 +419,8 @@ void ScoreElement::writeProperty(XmlWriter& xml, Pid pid) const
                   xml.tag("italic", fs & FontStyle::Italic);
             if ((fs & FontStyle::Underline) != (ds & FontStyle::Underline))
                   xml.tag("underline", fs & FontStyle::Underline);
+            if ((fs & FontStyle::Strike) != (ds & FontStyle::Strike))
+                  xml.tag("strike", fs & FontStyle::Strike);
             return;
             }
 
@@ -446,7 +448,7 @@ void ScoreElement::writeProperty(XmlWriter& xml, Pid pid) const
                   if ((qAbs(p1.x() - p2.x()) < 0.0001) && (qAbs(p1.y() - p2.y()) < 0.0001))
                         return;
                   }
-            qreal q = sizeIsSpatiumDependent() ? score()->spatium() : DPMM;
+            qreal q = offsetIsSpatiumDependent() ? score()->spatium() : DPMM;
             p = QVariant(p1/q);
             d = QVariant();
             }
@@ -579,10 +581,17 @@ void ScoreElement::unlink()
 ///  linked to this element
 //---------------------------------------------------------
 
-bool ScoreElement::isLinked(ScoreElement* se)
+bool ScoreElement::isLinked(ScoreElement* se) const
       {
-      return se != this && _links && _links->contains(se);
+      if (se == this || !_links) {
+          return false;
       }
+
+      if (se == nullptr) {
+          return !_links->empty() && _links->mainElement() != this;
+      }
+
+      return _links->contains(se);      }
 
 //---------------------------------------------------------
 //   undoUnlink
@@ -646,20 +655,61 @@ ScoreElement* LinkedElements::mainElement()
             return nullptr;
       MasterScore* ms = at(0)->masterScore();
       const bool elements = at(0)->isElement();
-      return *std::min_element(begin(), end(), [ms, elements](ScoreElement* s1, ScoreElement* s2) {
+      const bool staves = at(0)->isStaff();
+      return *std::min_element(begin(), end(), [ms, elements, staves](ScoreElement* s1, ScoreElement* s2) {
             if (s1->score() == ms && s2->score() != ms)
                   return true;
+            if (s1->score() != s2->score())
+                  return false;
+            if (staves)
+                  return toStaff(s1)->idx() < toStaff(s2)->idx();
             if (elements) {
-                  if (s1->score() != s2->score())
-                        return false;
                   // Now we compare either two elements from master score
                   // or two elements from excerpt.
                   Element* e1 = toElement(s1);
                   Element* e2 = toElement(s2);
-                  if (e1->track() < e2->track())
-                        return true;
-                  if (e1->track() == e2->track() && e1->tick() < e2->tick())
-                        return true;
+                  const int tr1 = e1->track();
+                  const int tr2 = e2->track();
+                  if (tr1 == tr2) {
+                        const Fraction tick1 = e1->tick();
+                        const Fraction tick2 = e2->tick();
+                        if (tick1 == tick2) {
+                              Measure* m1 = e1->findMeasure();
+                              Measure* m2 = e2->findMeasure();
+                              if (!m1 || !m2)
+                                    return false;
+
+                              // MM rests are written to MSCX in the following order:
+                              // 1) first measure of MM rest (m->hasMMRest() == true);
+                              // 2) MM rest itself (m->isMMRest() == true);
+                              // 3) other measures of MM rest (m->hasMMRest() == false).
+                              //
+                              // As mainElement() must find the first element that
+                              // is going to be written to a file, MM rest writing
+                              // order should also be considered.
+
+                              if (m1->isMMRest() == m2->isMMRest()) {
+                                    // no difference if both are MM rests or both are usual measures
+                                    return false;
+                                    }
+
+                              // MM rests may be generated but not written (e.g. if
+                              // saving a file right after disabling MM rests)
+                              const bool mmRestsWritten = e1->score()->styleB(Sid::createMultiMeasureRests);
+
+                              if (m1->isMMRest()) {
+                                    // m1 is earlier if m2 is *not* the first MM rest measure
+                                    return mmRestsWritten && !m2->hasMMRest();
+                                    }
+                              if (m2->isMMRest()) {
+                                    // m1 is earlier if it *is* the first MM rest measure
+                                    return !mmRestsWritten || m1->hasMMRest();
+                                    }
+                              return false;
+                              }
+                        return tick1 < tick2;
+                        }
+                  return tr1 < tr2;
                   }
             return false;
             });
@@ -737,7 +787,7 @@ void ScoreElement::styleChanged()
       for (const StyledProperty& spp : *_elementStyle) {
             PropertyFlags f = propertyFlags(spp.pid);
             if (f == PropertyFlags::STYLED)
-                  setProperty(spp.pid, styleValue(spp.pid, getPropertyStyle(spp.pid)));
+                  setProperty(spp.pid, safePropertyStyleValue(spp.pid));
             }
       }
 
@@ -815,6 +865,7 @@ bool ScoreElement::isTextBase() const
          || type() == ElementType::TEMPO_TEXT
          || type() == ElementType::INSTRUMENT_NAME
          || type() == ElementType::MEASURE_NUMBER
+         || type() == ElementType::MMREST_RANGE
          || type() == ElementType::STICKING
          ;
       }
@@ -839,7 +890,7 @@ QVariant ScoreElement::styleValue(Pid pid, Sid sid) const
                   }
             case P_TYPE::POINT_SP_MM: {
                   QPointF val = score()->styleV(sid).toPointF();
-                  if (sizeIsSpatiumDependent()) {
+                  if (offsetIsSpatiumDependent()) {
                         val *= score()->spatium();
                         if (isElement()) {
                               const Element* e = toElement(this);
@@ -856,5 +907,17 @@ QVariant ScoreElement::styleValue(Pid pid, Sid sid) const
                   return score()->styleV(sid);
             }
       }
-}
 
+//---------------------------------------------------------
+//   styleValueSafe
+//---------------------------------------------------------
+
+QVariant ScoreElement::safePropertyStyleValue(Pid pid) const
+      {
+      Sid sid = getPropertyStyle(pid);
+      if (sid != Sid::NOSTYLE)
+            return styleValue(pid, sid);
+      return propertyDefault(pid);
+      }
+
+}

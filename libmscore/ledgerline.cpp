@@ -10,12 +10,12 @@
 //  the file LICENCE.GPL
 //=============================================================================
 
-#include "ledgerline.h"
 #include "chord.h"
+#include "ledgerline.h"
 #include "measure.h"
+#include "score.h"
 #include "staff.h"
 #include "system.h"
-#include "score.h"
 #include "xml.h"
 
 namespace Ms {
@@ -28,7 +28,9 @@ LedgerLine::LedgerLine(Score* s)
    : Element(s)
       {
       setSelectable(false);
-      _next = 0;
+      _width      = 0.;
+      _len        = 0.;
+      _next       = 0;
       }
 
 //---------------------------------------------------------
@@ -60,14 +62,21 @@ qreal LedgerLine::measureXPos() const
 
 void LedgerLine::layout()
       {
-      setLineWidth(score()->styleP(Sid::ledgerLineWidth) * chord()->mag());
+      qreal chordMag = chord()->mag();
+      setMag(chordMag);
+      setLineWidth(score()->styleP(Sid::ledgerLineWidth) * chordMag);
       if (staff())
-            setColor(staff()->color());
+            setColor(staff()->staffType(tick())->color());
       qreal w2 = _width * .5;
+
+      //Adjust Y position to staffType offset
+      if (staffType())
+            rypos() += staffType()->yoffset().val() * spatium();
+
       if (vertical)
-            bbox().setRect(-w2, -w2, _width, _len + _width);
+            bbox().setRect(-w2, 0, w2, _len);
       else
-            bbox().setRect(-w2, -w2, _len + _width, _width);
+            bbox().setRect(0, -w2, _len, w2);
       }
 
 //---------------------------------------------------------
@@ -78,7 +87,7 @@ void LedgerLine::draw(QPainter* painter) const
       {
       if (chord()->crossMeasure() == CrossMeasure::SECOND)
             return;
-      painter->setPen(QPen(curColor(), _width));
+      painter->setPen(QPen(curColor(), _width, Qt::SolidLine, Qt::FlatCap));
       if (vertical)
             painter->drawLine(QLineF(0.0, 0.0, 0.0, _len));
       else

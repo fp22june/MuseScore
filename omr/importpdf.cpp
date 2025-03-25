@@ -243,7 +243,7 @@ Score::FileError importPdf(MasterScore* score, const QString& path)
 
       score->setOmr(omr);
       qreal sp = omr->spatiumMM();
-      if (sp == 0.0)
+      if (qFuzzyIsNull(sp))
             sp = 1.5;
       score->setSpatium(sp * DPMM);
       score->style().set(Sid::lastSystemFillLimit,  0.0);
@@ -277,7 +277,12 @@ Score::FileError importPdf(MasterScore* score, const QString& path)
       OmrState state;
       state.score = score;
       for (OmrPage* omrPage1 : omr->pages()) {
-            OmrStaff staff = omrPage1->systems().last().staves().first();
+            if (omrPage1->systems().count() == 0)
+                  continue;
+            OmrSystem system = omrPage1->systems().last();
+            if (system.staves().count() == 0)
+                  continue;
+            OmrStaff staff = system.staves().first();
             qreal top = staff.top()/omr->spatium();
             state.importPdfPage(omrPage1, top);
             }

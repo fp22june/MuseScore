@@ -23,7 +23,7 @@
 
 
 #include "libmscore/score.h"
-#include "mixertrackitem.h"
+#include "mixer/mixertrackitem.h"
 
 namespace Ms {
 

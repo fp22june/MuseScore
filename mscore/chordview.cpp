@@ -11,13 +11,13 @@
 //=============================================================================
 
 #include "chordview.h"
+#include "musescore.h"
 #include "piano.h"
+
 #include "libmscore/chord.h"
+#include "libmscore/mscore.h"
 #include "libmscore/note.h"
 #include "libmscore/noteevent.h"
-#include "preferences.h"
-#include "musescore.h"
-#include "libmscore/mscore.h"
 #include "libmscore/score.h"
 
 namespace Ms {
@@ -155,7 +155,10 @@ ChordView::ChordView()
       setDragMode(QGraphicsView::RubberBandDrag);
       magStep   = 2;
       chord     = 0;
-      _curNote   = 0;
+      _curNote  = 0;
+      _locator  = 0;
+      _pos      = 0;
+      locatorLine = nullptr;
       _evenGrid = true;
       lg        = 0;
       rg        = 0;
@@ -178,10 +181,10 @@ void ChordView::drawBackground(QPainter* p, const QRectF& r)
       {
       if (chord == 0)
             return;
-      QRectF r1(-1000000.0,               0.0, 1000000.0+CHORD_MAP_OFFSET, 1000000.0);
-      QRectF r2(ticks + CHORD_MAP_OFFSET, 0.0, 1000000.0, 1000000.0);
-      QRectF r3(-1000000.0,     127*keyHeight, 1000000.0+CHORD_MAP_OFFSET, keyHeight);
-      QRectF r4(ticks + CHORD_MAP_OFFSET,  127*keyHeight, 1000000.0,        keyHeight);
+      QRectF r1(-DBL_MAX,                 0.0,           DBL_MAX, DBL_MAX);
+      QRectF r2(ticks + CHORD_MAP_OFFSET, 0.0,           DBL_MAX, DBL_MAX);
+      QRectF r3(-DBL_MAX,                 127*keyHeight, DBL_MAX, keyHeight);
+      QRectF r4(ticks + CHORD_MAP_OFFSET, 127*keyHeight, DBL_MAX, keyHeight);
 
       QColor bg(0x71, 0x8d, 0xbe);
       QColor bg1 = bg.darker(150);
@@ -240,11 +243,11 @@ void ChordView::drawBackground(QPainter* p, const QRectF& r)
             for (int i = 0; i < 3; ++i) {
                   p->setPen(Qt::lightGray);
                   for (int k = 1; k < 4; ++k) {
-                        int x = lrint(i * step1 + k * step2);
+                        int x = (int)lrint(i * step1 + k * step2);
                         p->drawLine(pos2pix(x), y1, pos2pix(x), y2);
                         }
                   p->setPen(Qt::black);
-                  int x = lrint(i * step1);
+                  int x = (int)lrint(i * step1);
                   p->drawLine(pos2pix(x), y1, pos2pix(x), y2);
                   }
             }
@@ -337,7 +340,7 @@ void ChordView::moveLocator()
 
 void ChordView::wheelEvent(QWheelEvent* event)
       {
-      int step    = event->delta() / 120;
+      int step    = event->angleDelta().y() / 120;
       double xmag = transform().m11();
       double ymag = transform().m22();
 
@@ -395,7 +398,12 @@ void ChordView::wheelEvent(QWheelEvent* event)
                   emit xposChanged(xpos);
             }
       else if (event->modifiers() == Qt::ShiftModifier) {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+            QWheelEvent we(event->position(), event->globalPosition(), event->pixelDelta().transposed(), event->angleDelta().transposed(),
+                           event->buttons(), Qt::NoModifier, Qt::ScrollPhase::NoScrollPhase, false);
+#else
             QWheelEvent we(event->pos(), event->delta(), event->buttons(), 0, Qt::Horizontal);
+#endif
             QGraphicsView::wheelEvent(&we);
             }
       else if (event->modifiers() == 0) {
@@ -486,10 +494,8 @@ void ChordView::mouseMoveEvent(QMouseEvent* event)
       int pitch = y2pitch(int(p.y()));
       emit pitchChanged(pitch);
       int tick = int(p.x()) - CHORD_MAP_OFFSET;
-      if (tick < 0) {
-            tick = 0;
+      if (tick < 0)
             _pos = -1;
-            }
       else
             _pos = tick;
       emit posChanged(_pos);

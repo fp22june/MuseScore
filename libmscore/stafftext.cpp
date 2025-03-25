@@ -10,12 +10,10 @@
 //  the file LICENCE.GPL
 //=============================================================================
 
+#include "measure.h"
 #include "score.h"
 #include "stafftext.h"
-#include "system.h"
 #include "staff.h"
-#include "xml.h"
-#include "measure.h"
 
 namespace Ms {
 
@@ -60,17 +58,6 @@ QVariant StaffText::propertyDefault(Pid id) const
             default:
                   return StaffTextBase::propertyDefault(id);
             }
-      }
-
-//---------------------------------------------------------
-//   getPropertyStyle
-//---------------------------------------------------------
-
-Sid StaffText::getPropertyStyle(Pid pid) const
-      {
-      if (pid == Pid::OFFSET)
-            return placeAbove() ? Sid::staffTextPosAbove : Sid::staffTextPosBelow;
-      return TextBase::getPropertyStyle(pid);
       }
 
 }

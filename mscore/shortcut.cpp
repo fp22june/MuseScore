@@ -11,10 +11,10 @@
 //=============================================================================
 
 #include "globals.h"
-#include "shortcut.h"
 #include "icons.h"
-#include "libmscore/xml.h"
+#include "shortcut.h"
 
+#include "libmscore/xml.h"
 
 namespace Ms {
 
@@ -32,8 +32,8 @@ Shortcut Shortcut::_sc[] = {
          MsWidget::MAIN_WINDOW,
          STATE_ALL,
          "help",
-         QT_TRANSLATE_NOOP("action","Online Handbook…"),   // Appears in menu
-         QT_TRANSLATE_NOOP("action","Online handbook"),      // Appears in Edit > Preferences > Shortcuts
+         QT_TRANSLATE_NOOP("action","Online Handbook…"),     // Appears in menu, so Title Case
+         QT_TRANSLATE_NOOP("action","Online handbook"),      // Appears in Edit > Preferences > Shortcuts, so Sentence case
          QT_TRANSLATE_NOOP("action","Show online handbook"), // Appears if you use Help > What's This?
          Icons::Invalid_ICON,
          Qt::ApplicationShortcut,
@@ -53,7 +53,7 @@ Shortcut Shortcut::_sc[] = {
          STATE_NORMAL | STATE_NOTE_ENTRY | STATE_EDIT | STATE_TEXT_EDIT| STATE_LYRICS_EDIT
             | STATE_HARMONY_FIGBASS_EDIT | STATE_PLAY,
          "file-save",
-         QT_TRANSLATE_NOOP("action","Save"),
+         QT_TRANSLATE_NOOP("action","&Save"),
          QT_TRANSLATE_NOOP("action","File > Save"),
          QT_TRANSLATE_NOOP("action","Save score to file"),
          Icons::fileSave_ICON
@@ -74,7 +74,7 @@ Shortcut Shortcut::_sc[] = {
          STATE_NORMAL | STATE_NOTE_ENTRY | STATE_EDIT | STATE_TEXT_EDIT | STATE_LYRICS_EDIT
             | STATE_HARMONY_FIGBASS_EDIT | STATE_PLAY,
          "file-save-as",
-         QT_TRANSLATE_NOOP("action","Save As…"),
+         QT_TRANSLATE_NOOP("action","Save &As…"),
          QT_TRANSLATE_NOOP("action","File > Save as"),
          QT_TRANSLATE_NOOP("action","Save score under a new file name"),
          Icons::fileSaveAs_ICON,
@@ -107,20 +107,9 @@ Shortcut Shortcut::_sc[] = {
          MsWidget::MAIN_WINDOW,
          STATE_NORMAL | STATE_NOTE_ENTRY | STATE_EDIT,
          "file-export",
-         QT_TRANSLATE_NOOP("action","Export…"),
+         QT_TRANSLATE_NOOP("action","&Export…"),
          QT_TRANSLATE_NOOP("action","Export score"),
          QT_TRANSLATE_NOOP("action","Save a copy of the score in various formats"),
-         Icons::fileSave_ICON,
-         Qt::WindowShortcut,
-         ShortcutFlags::A_SCORE
-         },
-      {
-         MsWidget::MAIN_WINDOW,
-         STATE_NORMAL | STATE_NOTE_ENTRY | STATE_EDIT | STATE_PLAY,
-         "file-part-export",
-         QT_TRANSLATE_NOOP("action","Export Parts…"),
-         QT_TRANSLATE_NOOP("action","Export parts"),
-         QT_TRANSLATE_NOOP("action","Save a copy of the score's parts in various formats"),
          Icons::fileSave_ICON,
          Qt::WindowShortcut,
          ShortcutFlags::A_SCORE
@@ -155,9 +144,9 @@ Shortcut Shortcut::_sc[] = {
          Ms::MAIN_WINDOW,
          STATE_NORMAL | STATE_NOTE_ENTRY | STATE_PLAY,
          "print",
-         QT_TRANSLATE_NOOP("action","Print…"),
+         QT_TRANSLATE_NOOP("action","&Print…"),
          QT_TRANSLATE_NOOP("action","Print"),
-         QT_TRANSLATE_NOOP("action","Print score"),
+         QT_TRANSLATE_NOOP("action","Print score/part"),
          Icons::print_ICON,
          Qt::WindowShortcut,
          ShortcutFlags::A_SCORE
@@ -170,7 +159,8 @@ Shortcut Shortcut::_sc[] = {
          QT_TRANSLATE_NOOP("action","Undo"),
          QT_TRANSLATE_NOOP("action","Undo last change"),
          Icons::undo_ICON,
-         Qt::ApplicationShortcut
+         Qt::ApplicationShortcut,
+         ShortcutFlags::A_UNDO_REDO
          },
       {
          MsWidget::MAIN_WINDOW,
@@ -180,7 +170,8 @@ Shortcut Shortcut::_sc[] = {
          QT_TRANSLATE_NOOP("action","Redo"),
          QT_TRANSLATE_NOOP("action","Redo last undo"),
          Icons::redo_ICON,
-         Qt::ApplicationShortcut
+         Qt::ApplicationShortcut,
+         ShortcutFlags::A_UNDO_REDO
          },
       {
          MsWidget::SCORE_TAB,
@@ -208,6 +199,16 @@ Shortcut Shortcut::_sc[] = {
             | STATE_HARMONY_FIGBASS_EDIT,
          "paste",
          QT_TRANSLATE_NOOP("action","Paste"),
+         0,
+         0,
+         Icons::paste_ICON,
+         Qt::ApplicationShortcut
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL,
+         "paste-clone",
+         QT_TRANSLATE_NOOP("action","Paste (Clone)"),
          0,
          0,
          Icons::paste_ICON,
@@ -266,7 +267,7 @@ Shortcut Shortcut::_sc[] = {
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "note-input",
          QT_TRANSLATE_NOOP("action","Note Input"),
-         QT_TRANSLATE_NOOP("action","Note input"),
+         QT_TRANSLATE_NOOP("action","Note input: Toggle Entry/Normal mode"),
          QT_TRANSLATE_NOOP("action","Enter notes with a mouse or keyboard"),
          Icons::noteEntry_ICON,
          Qt::WindowShortcut,
@@ -277,8 +278,8 @@ Shortcut Shortcut::_sc[] = {
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "note-input-steptime",
          QT_TRANSLATE_NOOP("action","Step-Time (Default)"),
-         QT_TRANSLATE_NOOP("action","Enter notes in step-time"),
-         0,
+         QT_TRANSLATE_NOOP("action","Note input: Enter Step-Time mode"),
+         QT_TRANSLATE_NOOP("action","Enter notes in Step-time"),
          Icons::noteEntry_ICON, // Icons::noteEntrySteptime_ICON (using normal icon for the time being.)
          Qt::WindowShortcut,
          ShortcutFlags::A_CHECKABLE
@@ -288,8 +289,8 @@ Shortcut Shortcut::_sc[] = {
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "note-input-repitch",
          QT_TRANSLATE_NOOP("action","Re-Pitch"),
+         QT_TRANSLATE_NOOP("action","Note input: Enter Re-Pitch mode"),
          QT_TRANSLATE_NOOP("action","Replace pitches without changing rhythms"),
-         0,
          Icons::noteEntryRepitch_ICON,
          Qt::ApplicationShortcut,
          ShortcutFlags::A_CMD | ShortcutFlags::A_CHECKABLE
@@ -299,8 +300,8 @@ Shortcut Shortcut::_sc[] = {
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "note-input-rhythm",
          QT_TRANSLATE_NOOP("action","Rhythm"),
+         QT_TRANSLATE_NOOP("action","Note input: Enter Rhythm mode"),
          QT_TRANSLATE_NOOP("action","Enter durations with a single click or keypress"),
-         0,
          Icons::noteEntryRhythm_ICON,
          Qt::WindowShortcut,
          ShortcutFlags::A_CHECKABLE
@@ -310,8 +311,8 @@ Shortcut Shortcut::_sc[] = {
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "note-input-realtime-auto",
          QT_TRANSLATE_NOOP("action","Real-Time (Automatic)"),
-         QT_TRANSLATE_NOOP("action","Perform the piece at a fixed tempo indicated by a metronome beat"),
-         0,
+         QT_TRANSLATE_NOOP("action","Note input: Enter Real-Time (Automatic) mode"),
+         QT_TRANSLATE_NOOP("action","Enter notes at a fixed tempo indicated by a metronome beat"),
          Icons::noteEntryRealtimeAuto_ICON,
          Qt::WindowShortcut,
          ShortcutFlags::A_CHECKABLE
@@ -321,8 +322,8 @@ Shortcut Shortcut::_sc[] = {
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "note-input-realtime-manual",
          QT_TRANSLATE_NOOP("action","Real-Time (Manual)"),
-         QT_TRANSLATE_NOOP("action","Perform the piece while tapping a key or pedal to set the tempo"),
-         0,
+         QT_TRANSLATE_NOOP("action","Note input: Enter Real-Time (Manual) mode"),
+         QT_TRANSLATE_NOOP("action","Enter notes while tapping a key or pedal to set the tempo"),
          Icons::noteEntryRealtimeManual_ICON,
          Qt::WindowShortcut,
          ShortcutFlags::A_CHECKABLE
@@ -332,8 +333,8 @@ Shortcut Shortcut::_sc[] = {
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "note-input-timewise",
          QT_TRANSLATE_NOOP("action","Insert"),
-         QT_TRANSLATE_NOOP("action","Insert notes increasing measure duration"),
-         0,
+         QT_TRANSLATE_NOOP("action","Note input: Enter Insert mode"),
+         QT_TRANSLATE_NOOP("action","Insert notes by increasing measure duration"),
          Icons::noteTimewise_ICON,
          Qt::WindowShortcut,
          ShortcutFlags::A_CHECKABLE
@@ -702,8 +703,8 @@ Shortcut Shortcut::_sc[] = {
          MsWidget::SCORE_TAB,
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "add-sforzato",
-         QT_TRANSLATE_NOOP("action","Sforzato"),
-         QT_TRANSLATE_NOOP("action","Toggle sforzato"),
+         QT_TRANSLATE_NOOP("action","Accent"),
+         QT_TRANSLATE_NOOP("action","Toggle accent"),
          0,
          Icons::Invalid_ICON,
          Qt::WindowShortcut
@@ -751,6 +752,16 @@ Shortcut Shortcut::_sc[] = {
       {
          MsWidget::SCORE_TAB,
          STATE_NORMAL | STATE_NOTE_ENTRY,
+         "reset-text-style-overrides",
+         QT_TRANSLATE_NOOP("action","Reset Text Style Overrides"),
+         QT_TRANSLATE_NOOP("action","Reset text style overrides"),
+         QT_TRANSLATE_NOOP("action","Reset all text style overrides to default"),
+         Icons::Invalid_ICON,
+         Qt::WindowShortcut
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
          "reset-groupings",
          QT_TRANSLATE_NOOP("action","Regroup Rhythms"),
          QT_TRANSLATE_NOOP("action","Regroup rhythms"),
@@ -792,6 +803,17 @@ Shortcut Shortcut::_sc[] = {
       {
          MsWidget::SCORE_TAB,
          STATE_NORMAL | STATE_NOTE_ENTRY,
+         "pitch-up-diatonic-alterations",
+         QT_TRANSLATE_NOOP("action","Diatonic Up (Keep Degree Alterations)"),
+         QT_TRANSLATE_NOOP("action","Diatonic pitch up (Keep degree alterations)"),
+         0,
+         Icons::Invalid_ICON,
+         Qt::WindowShortcut,
+         ShortcutFlags::A_CMD
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
          "pitch-up-octave",
          QT_TRANSLATE_NOOP("action","Up Octave"),
          QT_TRANSLATE_NOOP("action","Pitch up octave"),
@@ -824,7 +846,7 @@ Shortcut Shortcut::_sc[] = {
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "move-up",
          QT_TRANSLATE_NOOP("action","Move Up"),
-         QT_TRANSLATE_NOOP("action","Move up"),
+         QT_TRANSLATE_NOOP("action","Move chord/rest to staff above"),
          0,
          Icons::Invalid_ICON,
          Qt::WindowShortcut,
@@ -846,6 +868,17 @@ Shortcut Shortcut::_sc[] = {
          "pitch-down-diatonic",
          QT_TRANSLATE_NOOP("action","Diatonic Down"),
          QT_TRANSLATE_NOOP("action","Diatonic pitch down"),
+         0,
+         Icons::Invalid_ICON,
+         Qt::WindowShortcut,
+         ShortcutFlags::A_CMD
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "pitch-down-diatonic-alterations",
+         QT_TRANSLATE_NOOP("action","Diatonic Down (Keep Degree Alterations)"),
+         QT_TRANSLATE_NOOP("action","Diatonic pitch down (Keep degree alterations)"),
          0,
          Icons::Invalid_ICON,
          Qt::WindowShortcut,
@@ -918,6 +951,17 @@ Shortcut Shortcut::_sc[] = {
          ShortcutFlags::A_CMD
          },
       {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL,
+         "get-location",
+         QT_TRANSLATE_NOOP("action","Get Location"),
+         QT_TRANSLATE_NOOP("action","Accessibility: Get location"),
+         0,
+         Icons::Invalid_ICON,
+         Qt::WindowShortcut,
+         ShortcutFlags::A_CMD
+         },
+      {
          MsWidget::MAIN_WINDOW,
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "palette-search",
@@ -977,7 +1021,7 @@ Shortcut Shortcut::_sc[] = {
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "move-down",
          QT_TRANSLATE_NOOP("action","Move Down"),
-         QT_TRANSLATE_NOOP("action","Move down"),
+         QT_TRANSLATE_NOOP("action","Move chord/rest to staff below"),
          0,
          Icons::Invalid_ICON,
          Qt::WindowShortcut,
@@ -1000,6 +1044,27 @@ Shortcut Shortcut::_sc[] = {
       {
          MsWidget::SCORE_TAB,
          STATE_NORMAL | STATE_NOTE_ENTRY,
+         "prev-system",
+         QT_TRANSLATE_NOOP("action","Previous System"),
+         QT_TRANSLATE_NOOP("action","Go to previous system")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "prev-frame",
+         QT_TRANSLATE_NOOP("action","Previous Frame"),
+         QT_TRANSLATE_NOOP("action","Go to previous frame")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "prev-section",
+         QT_TRANSLATE_NOOP("action","Previous Section"),
+         QT_TRANSLATE_NOOP("action","Go to previous section")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
          "prev-track",
          QT_TRANSLATE_NOOP("action","Previous Staff or Voice"),
          QT_TRANSLATE_NOOP("action","Previous staff or voice")
@@ -1017,6 +1082,48 @@ Shortcut Shortcut::_sc[] = {
          "next-measure",
          QT_TRANSLATE_NOOP("action","Next Measure"),
          QT_TRANSLATE_NOOP("action","Go to next measure or move text right")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "next-system",
+         QT_TRANSLATE_NOOP("action","Next System"),
+         QT_TRANSLATE_NOOP("action","Go to next system")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "next-frame",
+         QT_TRANSLATE_NOOP("action","Next Frame"),
+         QT_TRANSLATE_NOOP("action","Go to next frame")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "next-section",
+         QT_TRANSLATE_NOOP("action","Next Section"),
+         QT_TRANSLATE_NOOP("action","Go to next section")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "top-staff",
+         QT_TRANSLATE_NOOP("action","Top Staff"),
+         QT_TRANSLATE_NOOP("action","Go to top staff")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "playback-position",
+         QT_TRANSLATE_NOOP("action","Playback Cursor Position"),
+         QT_TRANSLATE_NOOP("action","Go to recent playback cursor position")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "empty-trailing-measure",
+         QT_TRANSLATE_NOOP("action","First Empty Trailing Measure"),
+         QT_TRANSLATE_NOOP("action","Go to first empty trailing measure")
          },
       {
          MsWidget::SCORE_TAB,
@@ -1119,6 +1226,18 @@ Shortcut Shortcut::_sc[] = {
       {
          MsWidget::SCORE_TAB,
          STATE_NORMAL | STATE_NOTE_ENTRY,
+         "scr-prev",
+         QT_TRANSLATE_NOOP("action","Screen: Previous")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "scr-next",
+         QT_TRANSLATE_NOOP("action","Screen: Next")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
          "page-prev",
          QT_TRANSLATE_NOOP("action","Page: Previous")
          },
@@ -1216,7 +1335,7 @@ Shortcut Shortcut::_sc[] = {
          },
       {
          MsWidget::SCORE_TAB,
-         STATE_NORMAL,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
          "time-delete",
          QT_TRANSLATE_NOOP("action","Remove Selected Range"),
          QT_TRANSLATE_NOOP("action","Remove selected range"),
@@ -1478,6 +1597,39 @@ Shortcut Shortcut::_sc[] = {
          },
       {
          MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "pad-note-256",
+         QT_TRANSLATE_NOOP("action","256th Note"),
+         QT_TRANSLATE_NOOP("action","Note duration: 256th"),
+         QT_TRANSLATE_NOOP("action","256th note"),
+         Icons::note256_ICON,
+         Qt::WindowShortcut,
+         ShortcutFlags::A_CHECKABLE
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "pad-note-512",
+         QT_TRANSLATE_NOOP("action","512th Note"),
+         QT_TRANSLATE_NOOP("action","Note duration: 512th"),
+         QT_TRANSLATE_NOOP("action","512th note"),
+         Icons::note512_ICON,
+         Qt::WindowShortcut,
+         ShortcutFlags::A_CHECKABLE
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "pad-note-1024",
+         QT_TRANSLATE_NOOP("action","1024th Note"),
+         QT_TRANSLATE_NOOP("action","Note duration: 1024th"),
+         QT_TRANSLATE_NOOP("action","1024th note"),
+         Icons::note1024_ICON,
+         Qt::WindowShortcut,
+         ShortcutFlags::A_CHECKABLE
+         },
+      {
+         MsWidget::SCORE_TAB,
          STATE_NOTE_ENTRY,
          "pad-note-increase",
          QT_TRANSLATE_NOOP("action","Increase Active Duration"),
@@ -1541,7 +1693,9 @@ Shortcut Shortcut::_sc[] = {
          QT_TRANSLATE_NOOP("action","Tie"),
          QT_TRANSLATE_NOOP("action","Note duration: Tie"),
          QT_TRANSLATE_NOOP("action","Tie"),
-         Icons::tie_ICON
+         Icons::tie_ICON,
+         Qt::WindowShortcut,
+         ShortcutFlags::A_CHECKABLE
          },
       {
          MsWidget::SCORE_TAB,
@@ -1562,7 +1716,8 @@ Shortcut Shortcut::_sc[] = {
          QT_TRANSLATE_NOOP("action","Note input: Double ♯"),
          QT_TRANSLATE_NOOP("action","Double ♯"),
          Icons::sharpsharp_ICON,
-         Qt::WindowShortcut
+         Qt::WindowShortcut,
+         ShortcutFlags::A_CHECKABLE
          },
       {
          MsWidget::SCORE_TAB,
@@ -1572,7 +1727,8 @@ Shortcut Shortcut::_sc[] = {
          QT_TRANSLATE_NOOP("action","Note input: ♯"),
          QT_TRANSLATE_NOOP("action","♯"),
          Icons::sharp_ICON,
-         Qt::WindowShortcut
+         Qt::WindowShortcut,
+         ShortcutFlags::A_CHECKABLE
          },
       {
          MsWidget::SCORE_TAB,
@@ -1582,7 +1738,8 @@ Shortcut Shortcut::_sc[] = {
          QT_TRANSLATE_NOOP("action","Note input: ♮"),
          QT_TRANSLATE_NOOP("action","♮"),
          Icons::natural_ICON,
-         Qt::WindowShortcut
+         Qt::WindowShortcut,
+         ShortcutFlags::A_CHECKABLE
          },
       {
          MsWidget::SCORE_TAB,
@@ -1592,7 +1749,8 @@ Shortcut Shortcut::_sc[] = {
          QT_TRANSLATE_NOOP("action","Note input: ♭"),
          QT_TRANSLATE_NOOP("action","♭"),
          Icons::flat_ICON,
-         Qt::WindowShortcut
+         Qt::WindowShortcut,
+         ShortcutFlags::A_CHECKABLE
          },
       {
          MsWidget::SCORE_TAB,
@@ -1602,7 +1760,63 @@ Shortcut Shortcut::_sc[] = {
          QT_TRANSLATE_NOOP("action","Note input: Double ♭"),
          QT_TRANSLATE_NOOP("action","Double ♭"),
          Icons::flatflat_ICON,
-         Qt::WindowShortcut
+         Qt::WindowShortcut,
+         ShortcutFlags::A_CHECKABLE
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY_STAFF_PITCHED | STATE_NOTE_ENTRY_STAFF_DRUM,
+         "sharp2-post",
+         QT_TRANSLATE_NOOP("action","Double ♯ (non-toggle)"),
+         QT_TRANSLATE_NOOP("action","Note input (non-toggle): Double ♯"),
+         QT_TRANSLATE_NOOP("action","Double ♯ (non-toggle)"),
+         Icons::sharpsharp_ICON,
+         Qt::WindowShortcut,
+         ShortcutFlags::A_CHECKABLE
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY_STAFF_PITCHED | STATE_NOTE_ENTRY_STAFF_DRUM,
+         "sharp-post",
+         QT_TRANSLATE_NOOP("action","♯ (non-toggle)"),
+         QT_TRANSLATE_NOOP("action","Note input (non-toggle): ♯"),
+         QT_TRANSLATE_NOOP("action","♯ (non-toggle)"),
+         Icons::sharp_ICON,
+         Qt::WindowShortcut,
+         ShortcutFlags::A_CHECKABLE
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY_STAFF_PITCHED | STATE_NOTE_ENTRY_STAFF_DRUM,
+         "nat-post",
+         QT_TRANSLATE_NOOP("action","♮ (non-toggle)"),
+         QT_TRANSLATE_NOOP("action","Note input (non-toggle): ♮"),
+         QT_TRANSLATE_NOOP("action","♮ (non-toggle)"),
+         Icons::natural_ICON,
+         Qt::WindowShortcut,
+         ShortcutFlags::A_CHECKABLE
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY_STAFF_PITCHED | STATE_NOTE_ENTRY_STAFF_DRUM,
+         "flat-post",
+         QT_TRANSLATE_NOOP("action","♭ (non-toggle)"),
+         QT_TRANSLATE_NOOP("action","Note input (non-toggle): ♭"),
+         QT_TRANSLATE_NOOP("action","♭ (non-toggle)"),
+         Icons::flat_ICON,
+         Qt::WindowShortcut,
+         ShortcutFlags::A_CHECKABLE
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY_STAFF_PITCHED | STATE_NOTE_ENTRY_STAFF_DRUM,
+         "flat2-post",
+         QT_TRANSLATE_NOOP("action","Double ♭ (non-toggle)"),
+         QT_TRANSLATE_NOOP("action","Note input (non-toggle): Double ♭"),
+         QT_TRANSLATE_NOOP("action","Double ♭ (non-toggle)"),
+         Icons::flatflat_ICON,
+         Qt::WindowShortcut,
+         ShortcutFlags::A_CHECKABLE
          },
       {
          MsWidget::SCORE_TAB,
@@ -1729,6 +1943,35 @@ Shortcut Shortcut::_sc[] = {
          QT_TRANSLATE_NOOP("action","4"),
          QT_TRANSLATE_NOOP("action","Voice 4"),
          0,
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "voice-selection-cycle",
+         QT_TRANSLATE_NOOP("action","Cycle through voices in range-selection"),
+         QT_TRANSLATE_NOOP("action","Cycle through voices in range-selection")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "toggle-mouse-entry",
+         QT_TRANSLATE_NOOP("action","Toggle mouse for note entry"),
+         QT_TRANSLATE_NOOP("action","Toggle mouse for note entry"),
+         0,
+         Icons::mouseEntry_ICON,
+         Qt::WindowShortcut,
+         ShortcutFlags::A_CHECKABLE
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "toggle-edit-playback",
+         QT_TRANSLATE_NOOP("action","Toggle editing sound playback"),
+         QT_TRANSLATE_NOOP("action","Toggle editing sound playback"),
+         0,
+         Icons::editPlayback_ICON,
+         Qt::WindowShortcut,
+         ShortcutFlags::A_CHECKABLE
          },
       {
          MsWidget::MAIN_WINDOW,
@@ -1935,6 +2178,7 @@ Shortcut Shortcut::_sc[] = {
          QT_TRANSLATE_NOOP("action","Note Input"),
          QT_TRANSLATE_NOOP("action","Toggle 'Note Input' toolbar")
          },
+#if 0
       {
          MsWidget::MAIN_WINDOW,
          STATE_NORMAL | STATE_NOTE_ENTRY | STATE_EDIT ,
@@ -1942,12 +2186,27 @@ Shortcut Shortcut::_sc[] = {
          QT_TRANSLATE_NOOP("action","Feedback"),
          QT_TRANSLATE_NOOP("action","Toggle 'Feedback' toolbar"),
          },
+#endif
+      {
+         MsWidget::MAIN_WINDOW,
+         STATE_NORMAL | STATE_NOTE_ENTRY | STATE_EDIT ,
+         "toggle-workspaces-toolbar",
+         QT_TRANSLATE_NOOP("action","Workspaces"),
+         QT_TRANSLATE_NOOP("action","Toggle 'Workspaces' toolbar"),
+         },
       {
          MsWidget::MAIN_WINDOW,
          STATE_NORMAL | STATE_NOTE_ENTRY | STATE_EDIT ,
          "toggle-statusbar",
          QT_TRANSLATE_NOOP("action","Status Bar"),
          QT_TRANSLATE_NOOP("action","Toggle 'Status Bar'")
+         },
+      {
+         MsWidget::MAIN_WINDOW,
+         STATE_NORMAL | STATE_NOTE_ENTRY | STATE_EDIT ,
+         "create-new-workspace",
+         "+",
+         QT_TRANSLATE_NOOP("action","Add new workspace"),
          },
       {
          MsWidget::MAIN_WINDOW,
@@ -2057,6 +2316,20 @@ Shortcut Shortcut::_sc[] = {
       {
          MsWidget::SCORE_TAB,
          STATE_NORMAL | STATE_NOTE_ENTRY,
+         "roman-numeral-text",
+         QT_TRANSLATE_NOOP("action","Roman Numeral Analysis"),
+         QT_TRANSLATE_NOOP("action","Add Roman numeral analysis")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "nashville-number-text",
+         QT_TRANSLATE_NOOP("action","Nashville Number"),
+         QT_TRANSLATE_NOOP("action","Add Nashville number")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
          "rehearsalmark-text",
          QT_TRANSLATE_NOOP("action","Rehearsal Mark"),
          QT_TRANSLATE_NOOP("action","Add rehearsal mark")
@@ -2086,8 +2359,8 @@ Shortcut Shortcut::_sc[] = {
          MsWidget::SCORE_TAB,
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "picture",
-         QT_TRANSLATE_NOOP("action","Picture"),
-         QT_TRANSLATE_NOOP("action","Add picture")
+         QT_TRANSLATE_NOOP("action","Image"),
+         QT_TRANSLATE_NOOP("action","Add image")
          },
       {
          MsWidget::SCORE_TAB,
@@ -2509,7 +2782,8 @@ Shortcut Shortcut::_sc[] = {
          MsWidget::MAIN_WINDOW,
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "find",
-         QT_TRANSLATE_NOOP("action","Find")
+         QT_TRANSLATE_NOOP("action","Find / Go To"),
+         QT_TRANSLATE_NOOP("action","Find / Go to")
          },
       {
          MsWidget::MAIN_WINDOW,
@@ -2532,6 +2806,13 @@ Shortcut Shortcut::_sc[] = {
          "zoom100",
          QT_TRANSLATE_NOOP("action","Zoom to 100%"),
          QT_TRANSLATE_NOOP("action","Zoom to 100%")
+         },
+      {
+         MsWidget::MAIN_WINDOW,
+         STATE_NORMAL | STATE_NOTE_ENTRY | STATE_EDIT | STATE_PLAY,
+         "zoom-page-width",
+         QT_TRANSLATE_NOOP("action","Zoom to Page Width or Previous Magnification Level"),
+         QT_TRANSLATE_NOOP("action","Zoom to page-width / previous magnification level")
          },
       {
          MsWidget::SCORE_TAB,
@@ -2676,7 +2957,7 @@ Shortcut Shortcut::_sc[] = {
          MsWidget::MAIN_WINDOW,
          STATE_NORMAL | STATE_NOTE_ENTRY | STATE_PLAY,
          "parts",
-         QT_TRANSLATE_NOOP("action","Parts…"),
+         QT_TRANSLATE_NOOP("action","Par&ts…"),
          QT_TRANSLATE_NOOP("action","Manage parts")
          },
       {
@@ -2872,7 +3153,7 @@ Shortcut Shortcut::_sc[] = {
          MsWidget::MAIN_WINDOW,
          STATE_ALL,
          "resource-manager",
-         QT_TRANSLATE_NOOP("action", "Resource Manager…"),
+         QT_TRANSLATE_NOOP("action", "&Resource Manager…"),
          QT_TRANSLATE_NOOP("action", "Resource manager"),
          0,
          Icons::Invalid_ICON,
@@ -2906,8 +3187,7 @@ Shortcut Shortcut::_sc[] = {
          QT_TRANSLATE_NOOP("action","Set loop in position"),
          0,
          Icons::loopIn_ICON,
-         Qt::WindowShortcut,
-         ShortcutFlags::A_CHECKABLE
+         Qt::WindowShortcut
          },
       {
          MsWidget::MAIN_WINDOW,
@@ -2917,8 +3197,7 @@ Shortcut Shortcut::_sc[] = {
          QT_TRANSLATE_NOOP("action","Set loop out position"),
          0,
          Icons::loopOut_ICON,
-         Qt::WindowShortcut,
-         ShortcutFlags::A_CHECKABLE
+         Qt::WindowShortcut
          },
       {
          MsWidget::MAIN_WINDOW,
@@ -2941,6 +3220,30 @@ Shortcut Shortcut::_sc[] = {
          Icons::countin_ICON,
          Qt::WindowShortcut,
          ShortcutFlags::A_CHECKABLE
+         },
+      {
+         MsWidget::MAIN_WINDOW,
+         STATE_NORMAL | STATE_NOTE_ENTRY | STATE_PLAY | STATE_EDIT,
+         "playback-speed-increase",
+         QT_TRANSLATE_NOOP("action","Increase Playback Speed"),
+         QT_TRANSLATE_NOOP("action","Increase playback speed"),
+         QT_TRANSLATE_NOOP("action","Increase the playback speed")
+         },
+      {
+         MsWidget::MAIN_WINDOW,
+         STATE_NORMAL | STATE_NOTE_ENTRY | STATE_PLAY | STATE_EDIT,
+         "playback-speed-decrease",
+         QT_TRANSLATE_NOOP("action","Decrease Playback Speed"),
+         QT_TRANSLATE_NOOP("action","Decrease playback speed"),
+         QT_TRANSLATE_NOOP("action","Decrease the playback speed")
+         },
+      {
+         MsWidget::MAIN_WINDOW,
+         STATE_NORMAL | STATE_NOTE_ENTRY | STATE_PLAY | STATE_EDIT,
+         "playback-speed-reset",
+         QT_TRANSLATE_NOOP("action","Reset Playback Speed"),
+         QT_TRANSLATE_NOOP("action","Reset playback speed"),
+         QT_TRANSLATE_NOOP("action","Reset the playback speed to 100%")
          },
       {
          MsWidget::SCORE_TAB,
@@ -3167,6 +3470,36 @@ Shortcut Shortcut::_sc[] = {
          QT_TRANSLATE_NOOP("action","Note duration: 128th (TAB)"),
          QT_TRANSLATE_NOOP("action","128th note"),
          Icons::note128_ICON,
+         Qt::WindowShortcut
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NEVER,
+         "pad-note-256-TAB",
+         QT_TRANSLATE_NOOP("action","256th Note (TAB)"),
+         QT_TRANSLATE_NOOP("action","Note duration: 256th (TAB)"),
+         QT_TRANSLATE_NOOP("action","256th note"),
+         Icons::note256_ICON,
+         Qt::WindowShortcut
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NEVER,
+         "pad-note-512-TAB",
+         QT_TRANSLATE_NOOP("action","512th Note (TAB)"),
+         QT_TRANSLATE_NOOP("action","Note duration: 512th (TAB)"),
+         QT_TRANSLATE_NOOP("action","512th note"),
+         Icons::note512_ICON,
+         Qt::WindowShortcut
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NEVER,
+         "pad-note-1024-TAB",
+         QT_TRANSLATE_NOOP("action","1024th Note (TAB)"),
+         QT_TRANSLATE_NOOP("action","Note duration: 1024th (TAB)"),
+         QT_TRANSLATE_NOOP("action","1024th note"),
+         Icons::note1024_ICON,
          Qt::WindowShortcut
          },
       {
@@ -3434,6 +3767,16 @@ Shortcut Shortcut::_sc[] = {
          },
       {
          MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "add-braces",
+         QT_TRANSLATE_NOOP("action","Add Braces to Element"),
+         QT_TRANSLATE_NOOP("action","Add Braces to element"),
+         0,
+         Icons::braces_ICON,
+         Qt::WindowShortcut
+         },
+      {
+         MsWidget::SCORE_TAB,
          STATE_NORMAL,
          "toggle-mmrest",
          QT_TRANSLATE_NOOP("action","Toggle 'Create Multimeasure Rest'"),
@@ -3474,6 +3817,12 @@ Shortcut Shortcut::_sc[] = {
       {
          MsWidget::SCORE_TAB,
          STATE_TEXT_EDIT,
+         "text-s",
+         QT_TRANSLATE_NOOP("action","Strike-through")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_TEXT_EDIT,
          "text-word-left",
          QT_TRANSLATE_NOOP("action","Move Word Left"),
          QT_TRANSLATE_NOOP("action","Move word left"),
@@ -3500,6 +3849,16 @@ Shortcut Shortcut::_sc[] = {
          QT_TRANSLATE_NOOP("action","Explode"),
          QT_TRANSLATE_NOOP("action","Explode"),
          QT_TRANSLATE_NOOP("action","Explode contents of top selected staff into staves below"),
+         Icons::Invalid_ICON,
+         Qt::WindowShortcut
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL,
+         "realize-chord-symbols",
+         QT_TRANSLATE_NOOP("action","Realize Chord Symbols"),
+         QT_TRANSLATE_NOOP("action","Realize chord symbols"),
+         QT_TRANSLATE_NOOP("action","Convert chord symbols into notes"),
          Icons::Invalid_ICON,
          Qt::WindowShortcut
          },
@@ -3607,16 +3966,6 @@ Shortcut Shortcut::_sc[] = {
          },
       {
          MsWidget::MAIN_WINDOW,
-         STATE_DISABLED | STATE_NORMAL | STATE_NOTE_ENTRY | STATE_EDIT | STATE_PLAY,
-         "toggle-insert-mode",
-         QT_TRANSLATE_NOOP("action","Toggle Insert Mode"),
-         QT_TRANSLATE_NOOP("action","Toggle 'Insert Mode'"),
-         0,
-         Icons::Invalid_ICON,
-         Qt::ApplicationShortcut
-         },
-      {
-         MsWidget::MAIN_WINDOW,
          STATE_ALL,
          "show-tours",
          QT_TRANSLATE_NOOP("action", "Show Tours"),
@@ -3664,6 +4013,13 @@ Shortcut Shortcut::_sc[] = {
          Qt::ApplicationShortcut
          },
       {
+         MsWidget::SCORE_TAB,
+         STATE_NOTE_ENTRY,
+         "apply-input-state",
+         QT_TRANSLATE_NOOP("action","Apply Input State"),
+         QT_TRANSLATE_NOOP("action","Apply input state")
+         },
+      {
          MsWidget::MAIN_WINDOW,
          STATE_ALL,
          "leave-feedback",
@@ -3673,6 +4029,43 @@ Shortcut Shortcut::_sc[] = {
          Icons::mail_ICON,
          Qt::ApplicationShortcut
          },
+      {
+         MsWidget::PIANO_ROLL_EDITOR,
+         STATE_ALL,
+         "zoom-in-horiz-pre",
+         QT_TRANSLATE_NOOP("action", "Zoom In Horizontally"),
+         QT_TRANSLATE_NOOP("action", "Zoom in horizontally - piano roll editor"),
+         0,
+         Icons::Invalid_ICON
+         },
+      {
+         MsWidget::PIANO_ROLL_EDITOR,
+         STATE_ALL,
+         "zoom-out-horiz-pre",
+         QT_TRANSLATE_NOOP("action", "Zoom Out Horizontally"),
+         QT_TRANSLATE_NOOP("action", "Zoom out horizontally - piano roll editor"),
+         0,
+         Icons::Invalid_ICON
+         },
+      {
+         MsWidget::PIANO_ROLL_EDITOR,
+         STATE_ALL,
+         "zoom-in-vert-pre",
+         QT_TRANSLATE_NOOP("action", "Zoom In Vertically"),
+         QT_TRANSLATE_NOOP("action", "Zoom in vertically - piano roll editor"),
+         0,
+         Icons::Invalid_ICON
+         },
+      {
+         MsWidget::PIANO_ROLL_EDITOR,
+         STATE_ALL,
+         "zoom-out-vert-pre",
+         QT_TRANSLATE_NOOP("action", "Zoom Out Vertically"),
+         QT_TRANSLATE_NOOP("action", "Zoom out vertically - piano roll editor"),
+         0,
+         Icons::Invalid_ICON
+         },
+
 #ifdef MSCORE_UNSTABLE
       {
          MsWidget::MAIN_WINDOW,
@@ -3766,6 +4159,16 @@ Shortcut Shortcut::_sc[] = {
          Icons::Invalid_ICON,
          Qt::ApplicationShortcut
          },
+      {
+         MsWidget::MAIN_WINDOW,
+         STATE_ALL,
+         "qml-reload-source",
+         "Reload QML code",
+         "Reload QML code",
+         0,
+         Icons::Invalid_ICON,
+         Qt::ApplicationShortcut
+         },
 #endif
       };
 
@@ -3819,6 +4222,9 @@ void Shortcut::setKeys(const QList<QKeySequence>& ks)
 
 void Shortcut::setStandardKey(QKeySequence::StandardKey k)
       {
+      if (QKeySequence::keyBindings(k).empty()) // make sure key binding is set for OS
+            return;
+
       _standardKey = k;
       if (_action && k != QKeySequence::UnknownKey)
             _action->setShortcuts(_standardKey);
@@ -4047,7 +4453,7 @@ void Shortcut::retranslate()
 
 void Shortcut::refreshIcons()
       {
-      for (Shortcut* s : _shortcuts) {
+      for (Shortcut* s : qAsConst(_shortcuts)) {
             QAction* a = s->action();
             if (a && s->icon() != Icons::Invalid_ICON) {
                   a->setIcon(*icons[int(s->icon())]);
@@ -4116,13 +4522,16 @@ void Shortcut::read(XmlReader& e)
             const QStringRef& tag(e.name());
             if (tag == "key")
                   _key = e.readElementText().toLocal8Bit();
-            else if (tag == "std")
-                  _standardKey = QKeySequence::StandardKey(e.readInt());
+            else if (tag == "std") {
+                  int i = e.readInt();
+                  if (!QKeySequence::keyBindings((QKeySequence::StandardKey(i))).empty()) // make sure key binding is set for OS
+                        _standardKey = QKeySequence::StandardKey(i);
+                  }
             else if (tag == "seq") {
                   QKeySequence seq  = Shortcut::keySeqFromString(e.readElementText(), QKeySequence::PortableText);
 #ifndef NDEBUG
                   for (const Shortcut& sc : _sc) {
-                        for (const QKeySequence s : sc._keys) {
+                        for (const QKeySequence& s : sc._keys) {
                               if (s == seq)
                                     qDebug("Ambiguous shortcut for action <%s>", _key.data());
                               }
@@ -4170,7 +4579,7 @@ void Shortcut::load()
                                           }
                                     else if (tag == "std") {
                                           int i = e.readInt();
-                                          if(sc)
+                                          if(sc && !QKeySequence::keyBindings((QKeySequence::StandardKey(i))).empty()) // make sure key binding is set for OS
                                                 sc->_standardKey = QKeySequence::StandardKey(i);
                                           }
                                     else if (tag == "seq") {
@@ -4227,8 +4636,11 @@ static QList<Shortcut1> loadShortcuts(QString fileLocation)
                                     const QStringRef& tag(e.name());
                                     if (tag == "key")
                                           sc.key = e.readElementText().toLocal8Bit();
-                                    else if (tag == "std")
-                                          sc.standardKey = QKeySequence::StandardKey(e.readInt());
+                                    else if (tag == "std") {
+                                          int i = e.readInt();
+                                          if (!QKeySequence::keyBindings(QKeySequence::StandardKey(i)).empty()) // make sure key binding is set for OS
+                                                sc.standardKey = QKeySequence::StandardKey(i);
+                                          }
                                     else if (tag == "seq")
                                           sc.keys.append(Shortcut::keySeqFromString(e.readElementText(), QKeySequence::PortableText));
                                     else
@@ -4249,7 +4661,7 @@ static QList<Shortcut1> loadShortcuts(QString fileLocation)
 void Shortcut::loadFromNewFile(QString fileLocation)
       {
       QList<Shortcut1> list = loadShortcuts(fileLocation);
-      for (const Shortcut1& sc : list) {
+      for (const Shortcut1& sc : qAsConst(list)) {
             Shortcut* s = getShortcut(sc.key);
             if (s) {
                   s->setKeys(sc.keys);
@@ -4295,7 +4707,7 @@ QActionGroup* Shortcut::getActionGroupForWidget(MsWidget w, Qt::ShortcutContext 
 void Shortcut::resetToDefault()
       {
       QList<Shortcut1> sl = loadShortcuts(defaultFileName);
-      for (const Shortcut1& sc : sl) {
+      for (const Shortcut1& sc : qAsConst(sl)) {
             Shortcut* s = getShortcut(sc.key);
             if (s) {
                   s->setKeys(sc.keys);
@@ -4307,6 +4719,30 @@ void Shortcut::resetToDefault()
       }
 
 //---------------------------------------------------------
+//   getShortcutByKeySequence
+//---------------------------------------------------------
+
+Shortcut* Shortcut::getShortcutByKeySequence(const QKeySequence& keySequence, const ScoreState state)
+      {
+      for (Shortcut* shortcut : _shortcuts.values()) {
+            if (!(shortcut->state() & state))
+                  continue;
+
+            QAction* action = shortcut->action();
+
+            if (!action)
+                  continue;
+
+            for (const QKeySequence& _keySequence : action->shortcuts()) {
+                  if (_keySequence == keySequence)
+                        return shortcut;
+                  }
+            }
+
+      return nullptr;
+      }
+
+//---------------------------------------------------------
 //   reset
 //---------------------------------------------------------
 
@@ -4315,7 +4751,7 @@ void Shortcut::reset()
       _standardKey = QKeySequence::UnknownKey;
       _keys.clear();
       QList<Shortcut1> sl = loadShortcuts(defaultFileName);
-      for (const Shortcut1& sc : sl) {
+      for (const Shortcut1& sc : qAsConst(sl)) {
             if (sc.key == _key) {
                   setKeys(sc.keys);
                   setStandardKey(sc.standardKey);
@@ -4330,7 +4766,7 @@ void Shortcut::reset()
 //---------------------------------------------------------
 
 static const QString numPadPrefix("NumPad+");
-static const int NUMPADPREFIX_SIZE = 7;         // the length in chars of the above string
+static const int NUMPADPREFIX_SIZE = numPadPrefix.size();
 
 QString Shortcut::keySeqToString(const QKeySequence& keySeq, QKeySequence::SequenceFormat fmt, bool escapeKeyStr /* = false */)
       {
@@ -4355,18 +4791,27 @@ QString Shortcut::keySeqToString(const QKeySequence& keySeq, QKeySequence::Seque
       return s;
       }
 
+//---------------------------------------------------------
+//   keySeqFromString
+//---------------------------------------------------------
+
 QKeySequence Shortcut::keySeqFromString(const QString& str, QKeySequence::SequenceFormat fmt)
       {
       int code[KEYSEQ_SIZE], i;
       for (i = 0; i < KEYSEQ_SIZE; ++i)
             code[i] = 0;
 
-      QStringList strList = str.split(QRegularExpression("(?<!\\\\),|(?<=\\\\\\\\),"), QString::SkipEmptyParts);
+      static QRegularExpression re("(?<!\\\\),|(?<=\\\\\\\\),");
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
+      QStringList strList = str.split(re, Qt::SkipEmptyParts);
+#else
+      QStringList strList = str.split(re, QString::SkipEmptyParts);
+#endif
       //split based on commas that are not preceded by a single slash; two is okay
       //original regex: (?<!\\),|(?<=\\\\),
 
       i = 0;
-      for (const QString& s : strList) {
+      for (const QString& s : qAsConst(strList)) {
             QString keyStr = s.trimmed();
             if (keyStr.contains("\\"))
                   keyStr.remove(keyStr.length() - 2, 1); //remove escaped characters which will always be second to last

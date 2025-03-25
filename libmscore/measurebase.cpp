@@ -10,19 +10,18 @@
 //  the file LICENCE.GPL
 //=============================================================================
 
-#include "measurebase.h"
+#include "layoutbreak.h"
 #include "measure.h"
+#include "measurebase.h"
+#include "note.h"
 #include "staff.h"
 #include "score.h"
-#include "chord.h"
-#include "note.h"
-#include "layoutbreak.h"
-#include "image.h"
 #include "segment.h"
+#include "staff.h"
+#include "stafftypechange.h"
+#include "system.h"
 #include "tempo.h"
 #include "xml.h"
-#include "system.h"
-#include "stafftypechange.h"
 
 namespace Ms {
 
@@ -137,13 +136,13 @@ void MeasureBase::add(Element* e)
                         setLineBreak(true);
                         setSectionBreak(false);
                         setNoBreak(false);
+                        if (b->startWithMeasureOne())
+                              triggerLayoutToEnd();
                         break;
                   case LayoutBreak::SECTION:
                         setLineBreak(false);
                         setSectionBreak(true);
                         setNoBreak(false);
-      //does not work with repeats: score()->tempomap()->setPause(endTick(), b->pause());
-                        score()->setLayoutAll();
                         break;
                   case LayoutBreak::NOBREAK:
                         setPageBreak(false);
@@ -153,10 +152,11 @@ void MeasureBase::add(Element* e)
                         break;
                   }
             if (next())
-                  score()->setLayout(next()->endTick());
-//            score()->setLayoutAll();     // TODO
+                  next()->triggerLayout();
             }
-      triggerLayout();
+      // Observation: Cloning a MeasureBase has an issue with triggerlayout here,
+      // Will keep comment in case there's a problem later to refer back here
+      // triggerLayout()
       _el.push_back(e);
       }
 
@@ -179,16 +179,22 @@ void MeasureBase::remove(Element* el)
                   case LayoutBreak::SECTION:
                         setSectionBreak(false);
                         score()->setPause(endTick(), 0);
-                        score()->setLayoutAll();
+                        if (lb->startWithMeasureOne())
+                              triggerLayoutToEnd();
                         break;
                   case LayoutBreak::NOBREAK:
                         setNoBreak(false);
                         break;
                   }
             }
+
       if (!_el.remove(el)) {
             qDebug("MeasureBase(%p)::remove(%s,%p) not found", this, el->name(), el);
             }
+
+      triggerLayout();
+      if (next())
+            next()->triggerLayout();
       }
 
 //---------------------------------------------------------
@@ -197,13 +203,13 @@ void MeasureBase::remove(Element* el)
 
 Measure* MeasureBase::nextMeasure() const
       {
-      MeasureBase* m = _next;
-      for (;;) {
-            if (m == 0 || m->isMeasure())
-                  break;
-            m = m->_next;
+      MeasureBase* m = next();
+      while (m) {
+            if (m->isMeasure())
+                  return toMeasure(m);
+            m = m->next();
             }
-      return toMeasure(m);
+      return nullptr;
       }
 
 //---------------------------------------------------------
@@ -230,7 +236,7 @@ Measure* MeasureBase::prevMeasure() const
                   return toMeasure(m);
             m = m->prev();
             }
-      return 0;
+      return nullptr;
       }
 
 //---------------------------------------------------------
@@ -256,6 +262,22 @@ Measure* MeasureBase::prevMeasureMM() const
             m = m->prev();
             }
       return 0;
+      }
+
+//---------------------------------------------------------
+//   findPotentialSectionBreak
+//---------------------------------------------------------
+
+const MeasureBase *MeasureBase::findPotentialSectionBreak() const
+      {
+      // we're trying to find the MeasureBase that determines
+      // if the next one after this starts a new section
+      // if this is a measure, it's the one that determines this
+      // but if it is a frame, we may need to look backwards
+      const MeasureBase* mb = this;
+      while (mb && !mb->isMeasure() && !mb->sectionBreak())
+            mb = mb->prev();
+      return mb;
       }
 
 //---------------------------------------------------------
@@ -299,6 +321,45 @@ void MeasureBase::layout()
             else
                   element->layout();
             }
+      }
+
+//---------------------------------------------------------
+//   top
+//---------------------------------------------------------
+
+MeasureBase* MeasureBase::top() const
+      {
+      const MeasureBase* mb = this;
+      while (mb && mb->parent()) {
+            if (mb->parent()->isMeasureBase())
+                  mb = toMeasureBase(mb->parent());
+            else
+                  break;
+            }
+      return const_cast<MeasureBase*>(mb);
+      }
+
+//---------------------------------------------------------
+//   tick
+//---------------------------------------------------------
+
+Fraction MeasureBase::tick() const
+      {
+      const MeasureBase* mb = top();
+      return mb ? mb->_tick : Fraction(-1, 1);
+      }
+
+//---------------------------------------------------------
+//   triggerLayout
+//---------------------------------------------------------
+
+void MeasureBase::triggerLayout() const
+      {
+      // for measurebases within other measurebases (e.g., hbox within vbox), use top level
+      const MeasureBase* mb = top();
+      // avoid triggering layout before getting added to a score
+      if (mb->prev() || mb->next())
+            score()->setLayout(mb->tick(), -1, mb);
       }
 
 //---------------------------------------------------------
@@ -368,7 +429,7 @@ bool MeasureBase::setProperty(Pid id, const QVariant& value)
                         return false;
                   break;
             }
-      score()->setLayoutAll();
+      triggerLayout();
       score()->setPlaylistDirty();
       return true;
       }
@@ -431,7 +492,7 @@ void MeasureBase::undoSetBreak(bool v, LayoutBreak::Type type)
       if (v) {
             LayoutBreak* lb = new LayoutBreak(score());
             lb->setLayoutBreakType(type);
-            lb->setTrack(-1);       // this are system elements
+            lb->setTrack(0);       // these are system elements
             MeasureBase* mb = (isMeasure() && toMeasure(this)->isMMRest()) ? toMeasure(this)->mmRestLast() : this;
             lb->setParent(mb);
             score()->undoAddElement(lb);
@@ -490,6 +551,20 @@ MeasureBase* MeasureBase::nextMM() const
             return toMeasure(_next)->mmRest();
             }
       return _next;
+      }
+
+//---------------------------------------------------------
+//   prevMM
+//---------------------------------------------------------
+
+MeasureBase* MeasureBase::prevMM() const
+      {
+      if (_prev
+         && _prev->isMeasure()
+         && score()->styleB(Sid::createMultiMeasureRests)) {
+            return const_cast<Measure*>(toMeasure(_prev)->coveringMMRestOrThis());
+            }
+      return _prev;
       }
 
 //---------------------------------------------------------
@@ -579,7 +654,7 @@ int MeasureBase::index() const
 int MeasureBase::measureIndex() const
       {
       int idx = 0;
-      MeasureBase* m = score()->first();
+      MeasureBase* m = score()->firstMeasure();
       while (m) {
             if (m == this)
                   return idx;

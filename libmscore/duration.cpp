@@ -84,9 +84,15 @@ Fraction DurationElement::globalTicks() const
 //   actualTicks
 //---------------------------------------------------------
 
+Fraction DurationElement::actualTicksAt(const Fraction& tick) const
+      {
+      // Use when tick() is unreliable, for example when pasting
+      return globalTicks() / staff()->timeStretch(tick);
+      }
+
 Fraction DurationElement::actualTicks() const
       {
-      return globalTicks() / staff()->timeStretch(tick());
+      return actualTicksAt(tick());
       }
 
 //---------------------------------------------------------
@@ -148,8 +154,7 @@ bool DurationElement::setProperty(Pid propertyId, const QVariant& v)
             case Pid::DURATION: {
                   Fraction f(v.value<Fraction>());
                   setTicks(f);
-                  // TODO: do we really need to re-layout all here?
-                  score()->setLayoutAll();
+                  triggerLayout();
                   }
                   break;
             default:

@@ -11,7 +11,6 @@
 //=============================================================================
 
 #include <stdio.h>
-#include "all.h"
 
 static QFile logFile;
 static int processed = 0;
@@ -36,6 +35,7 @@ const char* tests[] = {
       "libmscore/hairpin/tst_hairpin",
       "libmscore/chordsymbol/tst_chordsymbol",
       "libmscore/text/tst_text",
+      "libmscore/tempotext/tst_tempotext",
       "libmscore/measure/tst_measure",
       "libmscore/beam/tst_beam",
       "libmscore/layout/tst_benchmark",
@@ -49,7 +49,7 @@ const char* tests[] = {
       "libmscore/tools/tst_tools",                    // some tests disabled
       "libmscore/plugins/tst_plugins",
       "libmscore/album/tst_album",
-      "scripting/tst_scripting"
+      "scripting/tst_scripting",
       "guitarpro/tst_guitarpro",
       "biab/tst_biab",
       "capella/io/tst_capella_io",
@@ -57,6 +57,7 @@ const char* tests[] = {
       "libmscore/selectionrangedelete/tst_selectionrangedelete",
       "libmscore/parts/tst_parts",
       "testscript/tst_runscripts",
+      "mscore/palette/tst_palette"
 #endif
 #if 0
       "libmscore/spanners/tst_spanners",              // FAIL
@@ -150,4 +151,3 @@ int main(int argc, char* argv[])
       printf("================\n");
       return 0;
       }
-

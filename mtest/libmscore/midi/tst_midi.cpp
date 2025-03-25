@@ -10,25 +10,31 @@
 //  the file LICENCE.GPL
 //=============================================================================
 
-#include <QtTest/QtTest>
-#include <QFile>
 #include <QCoreApplication>
-#include <QTextStream>
-#include "libmscore/mscore.h"
-#include "libmscore/score.h"
-#include "libmscore/durationtype.h"
-#include "libmscore/measure.h"
-#include "libmscore/segment.h"
-#include "libmscore/tempotext.h"
-#include "libmscore/chord.h"
-#include "libmscore/note.h"
-#include "libmscore/keysig.h"
-#include "mscore/exportmidi.h"
+#include <QFile>
 #include <QIODevice>
+#include <QTextStream>
+#include <QtTest/QtTest>
 
+#include "audio/exports/exportmidi.h"
+
+#include "libmscore/chord.h"
+#include "libmscore/durationtype.h"
+#include "libmscore/keysig.h"
 #include "libmscore/mcursor.h"
+#include "libmscore/measure.h"
+#include "libmscore/mscore.h"
+#include "libmscore/note.h"
+#include "libmscore/score.h"
+#include "libmscore/segment.h"
+
 #include "mtest/testutils.h"
 #define DIR QString("libmscore/midi/")
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+#define endl Qt::endl
+#define dec Qt::dec
+#endif
 
 namespace Ms {
       extern Score::FileError importMidi(MasterScore*, const QString&);
@@ -60,6 +66,7 @@ class TestMidi : public QObject, public MTest
       void midiBendsExport2() { midiExportTestRef("testBends2"); }      // Play property test
       void midiPortExport()   { midiExportTestRef("testMidiPort"); }
       void midiArpeggio()     { midiExportTestRef("testArpeggio"); }
+      void midiMutedUnison()  { midiExportTestRef("testMutedUnison"); }
       void midi184376ExportMidiInitialKeySig()
             {
             midiExportTestRef("testInitialKeySigThenRepeatToMeas2");    // tick 0 has Bb keysig.  Meas 2 has no key sig. Meas 2 repeats back to start of Meas 2.  Result should have initial Bb keysig
@@ -135,11 +142,17 @@ void TestMidi::events_data()
 //      QTest::newRow("testPedal") <<  "testPedal";
       // multi note tremolo
       QTest::newRow("testMultiNoteTremolo") << "testMultiNoteTremolo";
+      QTest::newRow("testMultiNoteTremoloTuplet") << "testMultiNoteTremoloTuplet";
       // Test Pauses
       QTest::newRow("testPauses") <<  "testPauses";
       QTest::newRow("testPausesRepeats") <<  "testPausesRepeats";
       QTest::newRow("testPausesTempoTimesigChange") <<  "testPausesTempoTimesigChange";
       QTest::newRow("testGuitarTrem") <<  "testGuitarTrem";
+      QTest::newRow("testPlayArticulation") << "testPlayArticulation";
+      QTest::newRow("testTremoloDynamics") << "testTremoloDynamics";
+      QTest::newRow("testRepeatsDynamics") << "testRepeatsDynamics";
+      QTest::newRow("testArticulationDynamics") << "testArticulationDynamics";
+      QTest::newRow("testChannelsDynamics") << "testChannelsDynamics";
       }
 
 //---------------------------------------------------------
@@ -242,7 +255,7 @@ bool compareScores(Score* score1, Score* score2)
                   }
             s1 = s1->next1();
             s2 = s2->next1();
-            if ((s1 && !s2) || (s2 && !s2)) {
+            if ((s1 && !s2) || (s2 && !s1)) {
                   printf("   segment count different\n");
                   return false;
                   }
@@ -508,7 +521,7 @@ void TestMidi::midiTimeStretchFermataTempoEditContinuousView()
       }
 
 //---------------------------------------------------------
-//   midiTimeStretchFermata
+//   midiSingleNoteDynamics
 //---------------------------------------------------------
 
 void TestMidi::midiSingleNoteDynamics()
@@ -539,7 +552,7 @@ void TestMidi::events()
 
       MasterScore* score = readScore(readFile);
       EventMap events;
-      // a temporary, unitialized synth state so we can render the midi - should fall back correctly
+      // a temporary, uninitialized synth state so we can render the midi - should fall back correctly
       SynthesizerState ss;
       score->renderMidi(&events, ss);
       qDebug() << "Opened score " << readFile;

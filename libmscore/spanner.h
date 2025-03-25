@@ -28,21 +28,6 @@ enum class SpannerSegmentType {
       };
 
 //---------------------------------------------------------
-//   SpannerEditData
-//---------------------------------------------------------
-
-class SpannerEditData : public ElementEditData {
-   public:
-      Element* editStartElement;
-      Element* editEndElement;
-      int editTick;
-      int editTick2;
-      int editTrack2;
-      QList<QPointF> userOffsets;
-      QList<QPointF> userOffsets2;
-      };
-
-//---------------------------------------------------------
 //   @@ SpannerSegment
 //!    parent: System
 //---------------------------------------------------------
@@ -59,9 +44,10 @@ class SpannerSegment : public Element {
       SpannerSegment(Spanner*, Score*, ElementFlags f = ElementFlag::ON_STAFF | ElementFlag::MOVABLE);
       SpannerSegment(Score* s, ElementFlags f = ElementFlag::ON_STAFF | ElementFlag::MOVABLE);
       SpannerSegment(const SpannerSegment&);
-      virtual SpannerSegment* clone() const = 0;
+      virtual SpannerSegment* clone() const override = 0;
 
       virtual qreal mag() const override;
+      virtual Fraction tick() const override;
 
       Spanner* spanner() const              { return _spanner;            }
       Spanner* setSpanner(Spanner* val)     { return _spanner = val;      }
@@ -96,6 +82,8 @@ class SpannerSegment : public Element {
       virtual bool isEditable() const override { return true; }
 
       QByteArray mimeData(const QPointF& dragOffset) const override;
+
+      virtual void spatiumChanged(qreal ov, qreal nv) override;
 
       virtual QVariant getProperty(Pid id) const override;
       virtual bool setProperty(Pid id, const QVariant& v) override;
@@ -138,7 +126,7 @@ class Spanner : public Element {
       enum class Anchor {
             SEGMENT, MEASURE, CHORD, NOTE
             };
-      Q_ENUM(Anchor)
+      Q_ENUM(Anchor);
    private:
 
       Element* _startElement { 0  };
@@ -173,7 +161,7 @@ class Spanner : public Element {
 
       virtual qreal mag() const override;
 
-      virtual ElementType type() const = 0;
+      virtual ElementType type() const override = 0;
       virtual void setScore(Score* s) override;
 
       bool readProperties(XmlReader&) override;
@@ -192,8 +180,10 @@ class Spanner : public Element {
       void setTick2(const Fraction&);
       void setTicks(const Fraction&);
 
+      bool isVoiceSpecific() const;
       int track2() const       { return _track2;   }
       void setTrack2(int v)    { _track2 = v;      }
+      int effectiveTrack2() const { return _track2 == -1 ? track() : _track2; }
 
       bool broken() const      { return _broken;   }
       void setBroken(bool v)   { _broken = v;      }
@@ -223,9 +213,9 @@ class Spanner : public Element {
       virtual void removeUnmanaged();
       virtual void insertTimeUnmanaged(const Fraction& tick, const Fraction& len);
 
-      QVariant getProperty(Pid propertyId) const;
-      bool setProperty(Pid propertyId, const QVariant& v);
-      QVariant propertyDefault(Pid propertyId) const;
+      QVariant getProperty(Pid propertyId) const override;
+      bool setProperty(Pid propertyId, const QVariant& v) override;
+      QVariant propertyDefault(Pid propertyId) const override;
       virtual void undoChangeProperty(Pid id, const QVariant&, PropertyFlags ps) override;
 
       void computeStartElement();
@@ -239,6 +229,9 @@ class Spanner : public Element {
 
       Measure* startMeasure() const;
       Measure* endMeasure() const;
+
+      Measure* findStartMeasure() const;
+      Measure* findEndMeasure() const;
 
       void setStartElement(Element* e);
       void setEndElement(Element* e);

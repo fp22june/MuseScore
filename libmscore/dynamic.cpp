@@ -10,72 +10,23 @@
 //  the file LICENCE.GPL
 //=============================================================================
 
-#include "dynamic.h"
-#include "xml.h"
-#include "score.h"
-#include "measure.h"
-#include "system.h"
-#include "segment.h"
-#include "utils.h"
-#include "style.h"
-#include "mscore.h"
 #include "chord.h"
-#include "undo.h"
-#include "sym.h"
+#include "dynamic.h"
+#include "dynamichairpingroup.h"
+#include "measure.h"
+#include "mscore.h"
 #include "musescoreCore.h"
+#include "score.h"
+#include "segment.h"
+#include "style.h"
+#include "system.h"
+#include "tempo.h"
+#include "utils.h"
+#include "undo.h"
+#include "xml.h"
 
 namespace Ms {
 
-//-----------------------------------------------------------------------------
-//   Dyn
-//    see: http://en.wikipedia.org/wiki/File:Dynamic's_Note_Velocity.svg
-//-----------------------------------------------------------------------------
-
-struct Dyn {
-      int velocity;      ///< associated midi velocity (0-127, -1 = none)
-      bool accent;       ///< if true add velocity to current chord velocity
-      const char* tag;   // name of dynamics, eg. "fff"
-      const char* text;  // utf8 text of dynamic
-      int changeInVelocity;
-      };
-
-// variant with ligatures, works for both emmentaler and bravura:
-
-static Dyn dynList[] = {
-      // dynamic:
-      {  -1,  true,  "other-dynamics", "", 0 },
-      {   1,  false, "pppppp", "<sym>dynamicPiano</sym><sym>dynamicPiano</sym><sym>dynamicPiano</sym><sym>dynamicPiano</sym><sym>dynamicPiano</sym><sym>dynamicPiano</sym>", 0 },
-      {   5,  false, "ppppp",  "<sym>dynamicPiano</sym><sym>dynamicPiano</sym><sym>dynamicPiano</sym><sym>dynamicPiano</sym><sym>dynamicPiano</sym>", 0 },
-      {  10,  false, "pppp",   "<sym>dynamicPiano</sym><sym>dynamicPiano</sym><sym>dynamicPiano</sym><sym>dynamicPiano</sym>", 0 },
-      {  16,  false, "ppp",    "<sym>dynamicPiano</sym><sym>dynamicPiano</sym><sym>dynamicPiano</sym>", 0 },
-      {  33,  false, "pp",     "<sym>dynamicPiano</sym><sym>dynamicPiano</sym>", 0 },
-      {  49,  false, "p",      "<sym>dynamicPiano</sym>", 0 },
-      {  64,  false, "mp",     "<sym>dynamicMezzo</sym><sym>dynamicPiano</sym>", 0 },
-      {  80,  false, "mf",     "<sym>dynamicMezzo</sym><sym>dynamicForte</sym>", 0 },
-      {  96,  false, "f",      "<sym>dynamicForte</sym>", 0 },
-      { 112,  false, "ff",     "<sym>dynamicForte</sym><sym>dynamicForte</sym>", 0 },
-      { 126,  false, "fff",    "<sym>dynamicForte</sym><sym>dynamicForte</sym><sym>dynamicForte</sym>", 0 },
-      { 127,  false, "ffff",   "<sym>dynamicForte</sym><sym>dynamicForte</sym><sym>dynamicForte</sym><sym>dynamicForte</sym>", 0 },
-      { 127,  false, "fffff",  "<sym>dynamicForte</sym><sym>dynamicForte</sym><sym>dynamicForte</sym><sym>dynamicForte</sym><sym>dynamicForte</sym>", 0 },
-      { 127,  false, "ffffff", "<sym>dynamicForte</sym><sym>dynamicForte</sym><sym>dynamicForte</sym><sym>dynamicForte</sym><sym>dynamicForte</sym><sym>dynamicForte</sym>", 0 },
-
-      // accents:
-      {  96,  true,  "fp",     "<sym>dynamicForte</sym><sym>dynamicPiano</sym>", -47 },
-      {  112, true,  "sf",     "<sym>dynamicSforzando</sym><sym>dynamicForte</sym>", -18 },
-      {  112, true,  "sfz",    "<sym>dynamicSforzando</sym><sym>dynamicForte</sym><sym>dynamicZ</sym>", -18 },
-      {  126, true,  "sff",    "<sym>dynamicSforzando</sym><sym>dynamicForte</sym><sym>dynamicForte</sym>", -18 },
-      {  126, true,  "sffz",   "<sym>dynamicSforzando</sym><sym>dynamicForte</sym><sym>dynamicForte</sym><sym>dynamicZ</sym>", -18 },
-      {  112, true,  "sfp",    "<sym>dynamicSforzando</sym><sym>dynamicForte</sym><sym>dynamicPiano</sym>", -47 },
-      {  112, true,  "sfpp",   "<sym>dynamicSforzando</sym><sym>dynamicForte</sym><sym>dynamicPiano</sym><sym>dynamicPiano</sym>", -79 },
-      {  112, true,  "rfz",    "<sym>dynamicRinforzando</sym><sym>dynamicForte</sym><sym>dynamicZ</sym>", -18 },
-      {  112, true,  "rf",     "<sym>dynamicRinforzando</sym><sym>dynamicForte</sym>", -18 },
-      {  112, true,  "fz",     "<sym>dynamicForte</sym><sym>dynamicZ</sym>", -18 },
-      {  96,  true,  "m",      "<sym>dynamicMezzo</sym>", -16 },
-      {  112, true,  "r",      "<sym>dynamicRinforzando</sym>", -18 },
-      {  112, true,  "s",      "<sym>dynamicSforzando</sym>", -18 },
-      {  80,  true,  "z",      "<sym>dynamicZ</sym>", 0 },
-      {  49,  true,  "n",      "<sym>dynamicNiente</sym>", -48 }
-      };
 
 //---------------------------------------------------------
 //   dynamicsStyle
@@ -97,18 +48,57 @@ const std::vector<Dynamic::ChangeSpeedItem> Dynamic::changeSpeedTable {
       };
 
 //---------------------------------------------------------
+//   findInString
+//---------------------------------------------------------
+
+// find the longest first match of dynList's dynamic text in s
+// used by the MusicXML export to correctly export dynamics embedded
+// in spanner begin- or endtexts
+// return match's position and length and the dynamic type
+
+int Dynamic::findInString(const QString& s, int& length, QString& type)
+      {
+      length = 0;
+      type = "";
+      int matchIndex { -1 };
+      const int n = sizeof(dynList)/sizeof(*dynList);
+
+      // for all dynamics, find their text in s
+      for (int i = 0; i < n; ++i) {
+            const QString dynamicText = dynList[i].text;
+            const int dynamicLength = dynamicText.length();
+            // note: skip entries with empty text
+            if (dynamicLength > 0) {
+                  const auto index = s.indexOf(dynamicText);
+                  if (index >= 0) {
+                        // found a match, accept it if
+                        // - it is the first one
+                        // - or it starts a the same index but is longer ("pp" versus "p")
+                        if (matchIndex == -1 || (index == matchIndex && dynamicLength > length)) {
+                              matchIndex = index;
+                              length = dynamicLength;
+                              type = dynList[i].tag;
+                              }
+                        }
+                  }
+            }
+
+            return matchIndex;
+      }
+
+//---------------------------------------------------------
 //   Dynamic
 //---------------------------------------------------------
 
 Dynamic::Dynamic(Score* s)
    : TextBase(s, Tid::DYNAMICS, ElementFlag::MOVABLE | ElementFlag::ON_STAFF)
       {
-      initElementStyle(&dynamicsStyle);
       _velocity    = -1;
       _dynRange    = Range::PART;
       _dynamicType = Type::OTHER;
       _changeInVelocity = 128;
       _velChangeSpeed = Speed::NORMAL;
+      initElementStyle(&dynamicsStyle);
       }
 
 Dynamic::Dynamic(const Dynamic& d)
@@ -314,6 +304,11 @@ QString Dynamic::dynamicTypeName(Dynamic::Type type)
       return dynList[int(type)].tag;
       }
 
+int Dynamic::dynamicVelocity(Dynamic::Type t)
+      {
+      return dynList[int(t)].velocity;
+      }
+
 //---------------------------------------------------------
 //   startEdit
 //---------------------------------------------------------
@@ -330,8 +325,11 @@ void Dynamic::startEdit(EditData& ed)
 void Dynamic::endEdit(EditData& ed)
       {
       TextBase::endEdit(ed);
-      if (xmlText() != QString::fromUtf8(dynList[int(_dynamicType)].text))
-            _dynamicType = Type::OTHER;
+      auto text = xmlText();
+      auto it = std::find_if(std::begin(dynList), std::end(dynList), [text](const Ms::Dyn& d) { return text == QString::fromUtf8(d.text); });
+      _dynamicType = it == std::end(dynList) ? Type::OTHER : static_cast<Type>(it - std::begin(dynList));
+      for (auto* e : this->linkList())
+            toDynamic(e)->_dynamicType = _dynamicType;
       }
 
 //---------------------------------------------------------
@@ -341,6 +339,19 @@ void Dynamic::endEdit(EditData& ed)
 void Dynamic::reset()
       {
       TextBase::reset();
+      }
+
+//---------------------------------------------------------
+//   getDragGroup
+//---------------------------------------------------------
+
+std::unique_ptr<ElementGroup> Dynamic::getDragGroup(std::function<bool(const Element*)> isDragged)
+      {
+      if (auto g = HairpinWithDynamicsDragGroup::detectFor(this, isDragged))
+            return g;
+      if (auto g = DynamicNearHairpinsDragGroup::detectFor(this, isDragged))
+            return g;
+      return TextBase::getDragGroup(isDragged);
       }
 
 //---------------------------------------------------------
@@ -358,15 +369,18 @@ QRectF Dynamic::drag(EditData& ed)
       if (km != (Qt::ShiftModifier | Qt::ControlModifier)) {
             int si       = staffIdx();
             Segment* seg = segment();
-            score()->dragPosition(ed.pos, &si, &seg);
+            score()->dragPosition(canvasPos(), &si, &seg);
             if (seg != segment() || staffIdx() != si) {
+                  const QPointF oldOffset = offset();
                   QPointF pos1(canvasPos());
                   score()->undo(new ChangeParent(this, seg, si));
                   setOffset(QPointF());
                   layout();
                   QPointF pos2(canvasPos());
-                  setOffset(pos1 - pos2);
-                  ed.startMove = pos2;
+                  const QPointF newOffset = pos1 - pos2;
+                  setOffset(newOffset);
+                  ElementEditData* eed = ed.getData(this);
+                  eed->initOffset += newOffset - oldOffset;
                   }
             }
       return f;
@@ -516,17 +530,6 @@ QString Dynamic::propertyUserValue(Pid pid) const
       }
 
 //---------------------------------------------------------
-//   getPropertyStyle
-//---------------------------------------------------------
-
-Sid Dynamic::getPropertyStyle(Pid pid) const
-      {
-      if (pid == Pid::OFFSET)
-            return placeAbove() ? Sid::dynamicsPosAbove : Sid::dynamicsPosBelow;
-      return TextBase::getPropertyStyle(pid);
-      }
-
-//---------------------------------------------------------
 //   accessibleInfo
 //---------------------------------------------------------
 
@@ -544,7 +547,7 @@ QString Dynamic::accessibleInfo() const
       else {
             s = dynamicTypeName();
             }
-      return QString("%1: %2").arg(Element::accessibleInfo()).arg(s);
+      return QString("%1: %2").arg(Element::accessibleInfo(), s);
       }
 
 //---------------------------------------------------------
@@ -560,7 +563,7 @@ QString Dynamic::screenReaderInfo() const
       else {
             s = dynamicTypeName();
             }
-      return QString("%1: %2").arg(Element::accessibleInfo()).arg(s);
+      return QString("%1: %2").arg(Element::accessibleInfo(), s);
       }
 }
 

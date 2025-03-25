@@ -11,9 +11,9 @@
 //=============================================================================
 
 #include "jump.h"
+#include "measure.h"
 #include "score.h"
 #include "xml.h"
-#include "measure.h"
 
 namespace Ms {
 
@@ -246,7 +246,7 @@ QVariant Jump::propertyDefault(Pid propertyId) const
 Element* Jump::nextSegmentElement()
       {
       Segment* seg = measure()->last();
-      return seg->firstElement(staffIdx());
+      return seg->firstElementForNavigation(staffIdx());
       }
 
 //---------------------------------------------------------
@@ -264,7 +264,7 @@ Element* Jump::prevSegmentElement()
 
 QString Jump::accessibleInfo() const
       {
-      return QString("%1: %2").arg(Element::accessibleInfo()).arg(this->jumpTypeUserName());
+      return QString("%1: %2").arg(Element::accessibleInfo(), this->jumpTypeUserName());
       }
 
 }

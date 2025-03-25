@@ -10,18 +10,18 @@
 //  the file LICENCE.GPL
 //=============================================================================
 
-#include "scoreview.h"
-#include "musescore.h"
-#include "libmscore/score.h"
-#include "libmscore/lasso.h"
-#include "icons.h"
-#include "libmscore/page.h"
-#include "preferences.h"
-#include "libmscore/image.h"
-#include "libmscore/mscore.h"
-#include "svggenerator.h"
-#include "inspector/inspector.h"
 #include "fotomode.h"
+#include "musescore.h"
+#include "preferences.h"
+#include "scoreview.h"
+#include "svggenerator.h"
+
+#include "inspector/inspector.h"
+
+#include "libmscore/lasso.h"
+#include "libmscore/mscore.h"
+#include "libmscore/page.h"
+#include "libmscore/score.h"
 
 namespace Ms {
 
@@ -31,9 +31,7 @@ namespace Ms {
 
 void FotoLasso::startEdit(EditData& ed)
       {
-      Element::startEdit(ed);
-      ed.grips   = 8;
-      ed.curGrip = Grip(0);
+      Lasso::startEdit(ed);
       QRectF view = ((ScoreView*)ed.view)->toLogical(QRect(0.0, 0.0, ed.view->geometry().width(), ed.view->geometry().height()));
       if (bbox().isEmpty() || !view.intersects(bbox())) {
             // rect not found - construct new rect with default size & relative position
@@ -53,15 +51,6 @@ void FotoLasso::startEdit(EditData& ed)
 void FotoLasso::endEdit(EditData&)
       {
       setVisible(false);
-      }
-
-//---------------------------------------------------------
-//   updateGrips
-//---------------------------------------------------------
-
-void FotoLasso::updateGrips(EditData& ed) const
-      {
-      Lasso::updateGrips(ed);
       }
 
 //---------------------------------------------------------
@@ -99,7 +88,7 @@ void ScoreView::startFotomode()
       _foto->setFlag(ElementFlag::MOVABLE, true);
       _foto->setVisible(true);
       _score->select(_foto);
-      editData.element = _foto;
+      setEditElement(_foto);
       QAction* a = getAction("fotomode");
       a->setChecked(true);
       startEdit();
@@ -166,7 +155,7 @@ void ScoreView::endFotoDrag()
       editData.grip.resize(8);
       for (int i = 0; i < 8; ++i)
             editData.grip[i] = r;
-      editData.element = _foto;
+      setEditElement(_foto);
       updateGrips();
       _score->setUpdateAll();
       _score->update();
@@ -380,7 +369,7 @@ void ScoreView::fotoContextPopup(QContextMenuEvent* ev)
                tr("Set Output Resolution"),
                tr("Set output resolution for PNG"),
                preferences.getDouble(PREF_EXPORT_PNG_RESOLUTION),
-               16.0, 2400.0, 1,
+               0.0, 5000.0, 0,
                &ok
                );
             if (ok) {
@@ -388,6 +377,7 @@ void ScoreView::fotoContextPopup(QContextMenuEvent* ev)
                   }
             }
       else if (cmd == "resizePage") {
+            _foto->setOffset(0, 0);
             QRectF r = _foto->bbox();
             Page* page = point2page(r.center());
             if (page) {
@@ -421,13 +411,13 @@ void ScoreView::fotoContextPopup(QContextMenuEvent* ev)
 QImage ScoreView::getRectImage(const QRectF& rect, double dpi, bool transparent, bool printMode)
       {
       const double mag = dpi / DPI;
-      const int w = lrint(rect.width()  * mag);
-      const int h = lrint(rect.height() * mag);
+      const int w = (int)lrint(rect.width()  * mag);
+      const int h = (int)lrint(rect.height() * mag);
 
       QImage::Format f = QImage::Format_ARGB32_Premultiplied;
       QImage img(w, h, f);
-      img.setDotsPerMeterX(lrint((dpi * 1000) / INCH));
-      img.setDotsPerMeterY(lrint((dpi * 1000) / INCH));
+      img.setDotsPerMeterX((int)lrint((dpi * 1000) / INCH));
+      img.setDotsPerMeterY((int)lrint((dpi * 1000) / INCH));
       img.fill(transparent ? 0 : 0xffffffff);
 
       const auto pr = MScore::pixelRatio;
@@ -467,9 +457,9 @@ void ScoreView::fotoModeCopy(bool includeLink)
             printer.save(&buffer, "PNG");
             buffer.close();
             QString html = "<a href=\"" + url.toString() + "\"><img src=\"data:image/png," + imageData.toPercentEncoding() + "\" /></a>";
-            QMimeData *data = new QMimeData;
-            data->setHtml(html);
-            QApplication::clipboard()->setMimeData(data);
+            QMimeData *mdata = new QMimeData;
+            mdata->setHtml(html);
+            QApplication::clipboard()->setMimeData(mdata);
             // TODO: add both, with priority to html
             //QApplication::clipboard()->setImage(printer);
             }
@@ -547,8 +537,8 @@ bool ScoreView::saveFotoAs(bool printMode, const QRectF& r)
       if (ext == "svg")
             mag = 1; // SVG is not scaled, it's scalable.
 
-      int w = lrint(r.width()  * mag);
-      int h = lrint(r.height() * mag);
+      int w = (int)lrint(r.width()  * mag);
+      int h = (int)lrint(r.height() * mag);
 
       double pr = MScore::pixelRatio;
       if (ext == "pdf") {
@@ -631,7 +621,7 @@ void ScoreView::fotoDragDrop(QMouseEvent*)
       QRectF r(_foto->bbox());
 
       QTemporaryFile tf(QDir::tempPath() + QString("/imgXXXXXX.svg"));
-      tf.setAutoRemove(false);
+      tf.setAutoRemove(false);  // TODO: find out whether, where, when and how to delete it
       tf.open();
       tf.close();
       qDebug("Temp File <%s>", qPrintable(tf.fileName()));
@@ -639,8 +629,8 @@ void ScoreView::fotoDragDrop(QMouseEvent*)
 //      QString fn = "/home/ws/mops.eps";
       QString fn = tf.fileName();
 
-      int w = lrint(r.width());
-      int h = lrint(r.height());
+      int w = (int)lrint(r.width());
+      int h = (int)lrint(r.height());
       SvgGenerator printer;
       printer.setFileName(fn);
       printer.setTitle(_score->title());
@@ -660,7 +650,7 @@ void ScoreView::fotoDragDrop(QMouseEvent*)
       mimeData->setUrls(ul);
 
       drag->setMimeData(mimeData);
-      drag->start(Qt::CopyAction);
+      drag->exec(Qt::CopyAction);
       }
 }
 

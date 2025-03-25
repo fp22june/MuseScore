@@ -20,9 +20,9 @@
 #include "mixermasterchannel.h"
 
 #include "musescore.h"                    // required for getAction()
-#include "synthesizer/msynthesizer.h"     // required for synti->gain() / setGain()
+#include "audio/midi/msynthesizer.h"     // required for synti->gain() / setGain()
 
-#include "mixer.h"
+#include "mixer/mixer.h"
 #include "mixeroptions.h"
 
 namespace Ms {

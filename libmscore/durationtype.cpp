@@ -11,10 +11,9 @@
 //=============================================================================
 
 #include "durationtype.h"
-#include "mscore.h"
+#include "measure.h"
 #include "note.h"
 #include "sig.h"
-#include "measure.h"
 
 namespace Ms {
 
@@ -56,6 +55,8 @@ void TDuration::setDots(int v)
       {
       if (v > MAX_DOTS)
             v = MAX_DOTS;
+      if (v < 0)
+            v = 0;
       _dots = v;
       }
 
@@ -74,7 +75,8 @@ void TDuration::setVal(int ticks)
                   int t = dt.ticks().ticks();
                   if (ticks / t) {
                         int remain = ticks % t;
-                        if ((t - remain) < (t/4)) {
+                        const int SMALLEST_DOT_DIVISOR = 1 << MAX_DOTS;
+                        if ((t - remain) < (t/SMALLEST_DOT_DIVISOR)) {
                               _val = DurationType(i - 1);
                               return;
                               }
@@ -415,14 +417,12 @@ Fraction TDuration::fraction() const
             case DurationType::V_ZERO:      z = 0; n = 1; break;
             default:          z = 0; n = 0; break;    // zero+invalid fraction
             }
-      Fraction a(z, n);
-      if (a.isValid()) {
-            for (int i = 0; i < _dots; ++i) {
-                  n *= 2;
-                  a += Fraction(z, n);
-                  }
-            }
-      return a;
+
+      //dots multiplier is (2^(n + 1) - 1)/(2^n) where n is the number of dots
+      int dotN = (1 << (_dots + 1)) - 1;
+      int dotD = 1 << _dots;
+
+      return Fraction(z * dotN, n * dotD);
       }
 
 // Longest TDuration that fits into Fraction. Must fit exactly if truncate = false.
@@ -537,9 +537,9 @@ std::vector<TDuration> toRhythmicDurationList(const Fraction& l, bool isRest, Fr
             }
 
       if (nominal.isCompound())
-            splitCompoundBeatsForList(&dList, l, isRest, rtickStart, nominal, maxDots);
+            splitCompoundBeatsForList(&dList, l, isRest, rtickStart + msr->anacrusisOffset(), nominal, maxDots);
       else
-            populateRhythmicList(&dList, l, isRest, rtickStart, nominal, maxDots);
+            populateRhythmicList(&dList, l, isRest, rtickStart + msr->anacrusisOffset(), nominal, maxDots);
 
       return dList;
       }
@@ -564,6 +564,7 @@ void populateRhythmicList(std::vector<TDuration>* dList, const Fraction& l, bool
       if ((startLevel < 0) || (endLevel < 0) || (strongestLevelCrossed < 0)) {
             // Beyond maximum subbeat level so just split into largest possible durations.
             std::vector<TDuration> dList2 = toDurationList(l, maxDots > 0, maxDots, false);
+            std::reverse(dList2.begin(), dList2.end());
             dList->insert(dList->end(), dList2.begin(), dList2.end());
             return;
             }

@@ -37,14 +37,16 @@ Score* NoteGroups::createScore(int n, TDuration::DurationType t, std::vector<Cho
       c.move(0, Fraction(0,1));
       c.addKeySig(Key::C);
       TimeSig* nts = c.addTimeSig(_sig);
-      if (!_z.isEmpty())
-            nts->setNumeratorString(_z);
-      if (!_n.isEmpty())
-            nts->setDenominatorString(_n);
-      GroupNode node {0, 0};
-      Groups ng;
-      ng.push_back(node);
-      nts->setGroups(ng);
+      if (nts) {
+            if (!_z.isEmpty())
+                  nts->setNumeratorString(_z);
+            if (!_n.isEmpty())
+                  nts->setDenominatorString(_n);
+            GroupNode node {0, 0};
+            Groups ng;
+            ng.push_back(node);
+            nts->setGroups(ng);
+            }
 
       for (int i = 0; i < n; ++i) {
             Chord* chord = c.addChord(77, t);
@@ -53,13 +55,9 @@ Score* NoteGroups::createScore(int n, TDuration::DurationType t, std::vector<Cho
             chord->setStemDirection(Direction::UP);
             chords->push_back(chord);
             }
-      c.score()->style().set(Sid::pageOddTopMargin, 16.0/INCH);
-      c.score()->style().set(Sid::pageOddLeftMargin, 0.0);
 
-      c.score()->parts().front()->setLongName("");
-      c.score()->style().set(Sid::linearStretch, 1.3);
-      c.score()->style().set(Sid::MusicalSymbolFont, QString("Bravura"));
-      c.score()->style().set(Sid::MusicalTextFont, QString("Bravura Text"));
+      c.score()->style().set(Sid::pageOddLeftMargin, 0.0);
+      c.score()->style().set(Sid::pageOddTopMargin, 10.0/INCH);
       c.score()->style().set(Sid::startBarlineSingle, true);
 
       StaffType* st = c.score()->staff(0)->staffType(Fraction(0,1));
@@ -87,11 +85,15 @@ NoteGroups::NoteGroups(QWidget* parent)
             };
 
       iconPalette->setName(QT_TRANSLATE_NOOP("Palette", "Beam Properties"));
+      iconPalette->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Fixed);
+      //iconPalette->setMag(.5);
       iconPalette->setGrid(27, 40);
-      iconPalette->setMag(.5);
+      iconPalette->setMinimumWidth(27 * 4 * Palette::guiMag() + 1);     // enough room for all icons, with roundoff
       iconPalette->setDrawGrid(true);
       populateIconPalette(iconPalette, bpa);
       iconPalette->setReadOnly(true);
+      iconPalette->setFixedHeight(iconPalette->heightForWidth(iconPalette->width()));
+      iconPalette->updateGeometry();
 
       connect(resetGroups, SIGNAL(clicked()), SLOT(resetClicked()));
       connect(view8,  SIGNAL(noteClicked(Note*)), SLOT(noteClicked(Note*)));

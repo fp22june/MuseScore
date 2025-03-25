@@ -10,8 +10,9 @@
 //  the file LICENCE.GPL
 //=============================================================================
 
-#include "waveview.h"
 #include "piano.h"
+#include "waveview.h"
+
 #include "libmscore/audio.h"
 #include "libmscore/score.h"
 
@@ -67,13 +68,13 @@ static int ovSeek(void* datasource, ogg_int64_t offset, int whence)
       VorbisData* vd = (VorbisData*)datasource;
       switch(whence) {
             case SEEK_SET:
-                  vd->pos = offset;
+                  vd->pos = (int)offset;
                   break;
             case SEEK_CUR:
-                  vd->pos += offset;
+                  vd->pos += (int)offset;
                   break;
             case SEEK_END:
-                  vd->pos = vd->data.size() - offset;
+                  vd->pos = vd->data.size() - (int)offset;
                   break;
             }
       return 0;
@@ -97,9 +98,12 @@ static long ovTell(void* datasource)
 WaveView::WaveView(QWidget* parent)
    : QWidget(parent)
       {
-      _xpos   = 0;
-      _xmag   = 0.1;
+      _locator = nullptr;
+      _score   = nullptr;
+      _xpos    = 0;
+      _xmag    = 0.1;
       _timeType = TType::TICKS;      // TType::FRAMES
+      _magStep = 0;
       setMinimumHeight(50);
       }
 
@@ -120,7 +124,7 @@ void WaveView::setAudio(Audio* audio)
             qDebug("ogg open failed: %d", rv);
             return;
             }
-      int rn = 0;
+      long rn = 0;
       const int n = 10000 / WSCALE;
       uchar dst[n];
       float* r = 0;
@@ -146,7 +150,7 @@ void WaveView::setAudio(Audio* audio)
                         val += fabsf(*r++) + fabsf(*l++);
                         --rn;
                         }
-                  unsigned int v = lrint(val * 128);
+                  unsigned int v = (unsigned int)lrint(val * 128);
                   if (v > 255)
                         v = 255;
                   dst[i] = v;
@@ -230,7 +234,7 @@ static const int MAP_OFFSET = 5;
 
 int WaveView::pos2pix(const Pos& p) const
       {
-      return lrint((p.time(_timeType) + 480) * _xmag)
+      return (int)lrint((p.time(_timeType) + 480) * _xmag)
          + MAP_OFFSET - _xpos + pianoWidth;
       }
 

@@ -20,13 +20,13 @@
 #include "mixertreewidgetitem.h"
 
 #include "musescore.h"                    // required for access to synti
-#include "synthesizer/msynthesizer.h"     // required for MidiPatch
+#include "audio/midi/msynthesizer.h"     // required for MidiPatch
 #include "seq.h"
 
 #include "libmscore/score.h"
 #include "libmscore/part.h"
 
-#include "mixertrackchannel.h"
+#include "mixer/mixertrackchannel.h"
 
 
 namespace Ms {

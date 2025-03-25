@@ -97,7 +97,6 @@ class PedalSegment;
 class LedgerLine;
 class Icon;
 class VoltaSegment;
-class NoteLine;
 class Trill;
 class TrillSegment;
 class Symbol;
@@ -118,6 +117,7 @@ class SystemText;
 class BracketItem;
 class Spanner;
 class SpannerSegment;
+class Lasso;
 class BagpipeEmbellishment;
 class LineSegment;
 class BSymbol;
@@ -131,12 +131,12 @@ class VibratoSegment;
 class PalmMute;
 class PalmMuteSegment;
 class MeasureNumber;
+class MMRestRange;
 
 class StaffTextBase;
 
 enum class Pid : int;
 enum class PropertyFlags : char;
-enum class Sid : int;
 
 //---------------------------------------------------------
 //   LinkedElements
@@ -202,6 +202,7 @@ class ScoreElement {
       virtual void resetProperty(Pid id);
       QVariant propertyDefault(Pid pid, Tid tid) const;
       virtual bool sizeIsSpatiumDependent() const { return true; }
+      virtual bool offsetIsSpatiumDependent() const { return true; }
 
       virtual void reset();                     // reset all properties & position to default
 
@@ -215,8 +216,9 @@ class ScoreElement {
       virtual PropertyFlags propertyFlags(Pid) const;
       bool isStyled(Pid pid) const;
       QVariant styleValue(Pid, Sid) const;
+      QVariant safePropertyStyleValue(Pid) const;
 
-      virtual void setPropertyFlags(Pid, PropertyFlags);
+      void setPropertyFlags(Pid, PropertyFlags);
 
       virtual Sid getPropertyStyle(Pid) const;
       bool readProperty(const QStringRef&, XmlReader&, Pid);
@@ -239,7 +241,7 @@ class ScoreElement {
 
       void linkTo(ScoreElement*);
       void unlink();
-      bool isLinked(ScoreElement*);
+      bool isLinked(ScoreElement* se = nullptr) const;
 
       virtual void undoUnlink();
       int lid() const                         { return _links ? _links->lid() : 0; }
@@ -320,7 +322,6 @@ class ScoreElement {
       CONVERT(LedgerLine,    LEDGER_LINE)
       CONVERT(Icon,          ICON)
       CONVERT(VoltaSegment,  VOLTA_SEGMENT)
-      CONVERT(NoteLine,      NOTELINE)
       CONVERT(Trill,         TRILL)
       CONVERT(TrillSegment,  TRILL_SEGMENT)
       CONVERT(LetRing,       LET_RING)
@@ -344,6 +345,7 @@ class ScoreElement {
       CONVERT(Page,          PAGE)
       CONVERT(Text,          TEXT)
       CONVERT(MeasureNumber, MEASURE_NUMBER)
+      CONVERT(MMRestRange,   MMREST_RANGE)
       CONVERT(StaffText,     STAFF_TEXT)
       CONVERT(SystemText,    SYSTEM_TEXT)
       CONVERT(BracketItem,   BRACKET_ITEM)
@@ -351,10 +353,11 @@ class ScoreElement {
       CONVERT(Staff,         STAFF)
       CONVERT(Part,          PART)
       CONVERT(BagpipeEmbellishment, BAGPIPE_EMBELLISHMENT)
+      CONVERT(Lasso,         LASSO)
       CONVERT(Sticking,      STICKING)
 #undef CONVERT
 
-      virtual bool isElement() const { return false; } // overriden in element.h
+      virtual bool isElement() const { return false; } // overridden in element.h
       bool isChordRest() const       { return isRest() || isChord() || isRepeatMeasure(); }
       bool isDurationElement() const { return isChordRest() || isTuplet(); }
       bool isSlurTieSegment() const  { return isSlurSegment() || isTieSegment(); }
@@ -386,7 +389,6 @@ class ScoreElement {
       bool isTextLineBase() const {
             return isHairpin()
             || isLetRing()
-            || isNoteLine()
             || isOttava()
             || isPalmMute()
             || isPedal()
@@ -472,6 +474,10 @@ static inline SpannerSegment* toSpannerSegment(ScoreElement* e) {
       Q_ASSERT(e == 0 || e->isSpannerSegment());
       return (SpannerSegment*)e;
       }
+static inline const SpannerSegment* toSpannerSegment(const ScoreElement* e) {
+      Q_ASSERT(e == 0 || e->isSpannerSegment());
+      return (const SpannerSegment*)e;
+      }
 static inline BSymbol* toBSymbol(ScoreElement* e) {
       Q_ASSERT(e == 0 || e->isBSymbol());
       return (BSymbol*)e;
@@ -550,6 +556,7 @@ static inline const a* to##a(const ScoreElement* e) { Q_ASSERT(e == 0 || e->is##
       CONVERT(StaffTypeChange)
       CONVERT(Text)
       CONVERT(MeasureNumber)
+      CONVERT(MMRestRange)
       CONVERT(Hairpin)
       CONVERT(HairpinSegment)
       CONVERT(Bend)
@@ -568,7 +575,6 @@ static inline const a* to##a(const ScoreElement* e) { Q_ASSERT(e == 0 || e->is##
       CONVERT(LedgerLine)
       CONVERT(Icon)
       CONVERT(VoltaSegment)
-      CONVERT(NoteLine)
       CONVERT(Trill)
       CONVERT(TrillSegment)
       CONVERT(LetRing)
@@ -594,6 +600,7 @@ static inline const a* to##a(const ScoreElement* e) { Q_ASSERT(e == 0 || e->is##
       CONVERT(BracketItem)
       CONVERT(Staff)
       CONVERT(Part)
+      CONVERT(Lasso)
       CONVERT(BagpipeEmbellishment)
       CONVERT(Sticking)
 #undef CONVERT
@@ -601,4 +608,3 @@ static inline const a* to##a(const ScoreElement* e) { Q_ASSERT(e == 0 || e->is##
 }
 
 #endif
-

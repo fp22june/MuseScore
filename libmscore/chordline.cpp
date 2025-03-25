@@ -264,6 +264,18 @@ void ChordLine::draw(QPainter* painter) const
       }
 
 //---------------------------------------------------------
+//   startEditDrag
+//---------------------------------------------------------
+
+void ChordLine::startEditDrag(EditData& ed)
+      {
+      Element::startEditDrag(ed);
+      ElementEditData* eed = ed.getData(this);
+
+      eed->pushProperty(Pid::PATH);
+      }
+
+//---------------------------------------------------------
 //   editDrag
 //---------------------------------------------------------
 
@@ -342,10 +354,10 @@ void ChordLine::editDrag(EditData& ed)
       }
 
 //---------------------------------------------------------
-//   updateGrips
+//   gripsPositions
 //---------------------------------------------------------
 
-void ChordLine::updateGrips(EditData& ed) const
+std::vector<QPointF> ChordLine::gripsPositions(const EditData&) const
       {
       qreal sp = spatium();
       int n    = path.elementCount();
@@ -353,39 +365,26 @@ void ChordLine::updateGrips(EditData& ed) const
       if (_straight) {
             // limit the number of grips to one
             qreal offset = 0.5 * sp;
+            QPointF p;
 
             if (_chordLineType == ChordLineType::FALL)
-                  ed.grip[0].translate(QPointF(offset, -offset));
+                  p = QPointF(offset, -offset);
             else if (_chordLineType == ChordLineType::DOIT)
-                   ed.grip[0].translate(QPointF(offset, offset));
+                  p = QPointF(offset, offset);
             else if (_chordLineType == ChordLineType::SCOOP)
-                   ed.grip[0].translate(QPointF(-offset, offset));
+                  p = QPointF(-offset, offset);
             else if (_chordLineType == ChordLineType::PLOP)
-                   ed.grip[0].translate(QPointF(-offset, -offset));
+                  p = QPointF(-offset, -offset);
 
             // translate on the length and height - stops the grips from going past boundaries of slide
-            ed.grip[0].translate(cp + QPointF(path.elementAt(1).x * sp, path.elementAt(1).y * sp));
+            p += (cp + QPointF(path.elementAt(1).x * sp, path.elementAt(1).y * sp));
+            return { p };
             }
       else  {
+            std::vector<QPointF> grips(n);
             for (int i = 0; i < n; ++i)
-                  ed.grip[i].translate(cp + QPointF(path.elementAt(i).x * sp, path.elementAt(i).y * sp));
-            }
-      }
-
-//---------------------------------------------------------
-//   grips
-//---------------------------------------------------------
-
-void ChordLine::startEdit(EditData& ed)
-      {
-      Element::startEdit(ed);
-      if (_straight) {
-            ed.curGrip = Grip(0);
-            ed.grips   = 1;
-            }
-      else {
-            ed.grips   = path.elementCount();
-            ed.curGrip = Grip(ed.grips-1);
+                  grips[i] = cp + QPointF(path.elementAt(i).x * sp, path.elementAt(i).y * sp);
+            return grips;
             }
       }
 
@@ -397,7 +396,7 @@ QString ChordLine::accessibleInfo() const
       {
       QString rez = Element::accessibleInfo();
       if(chordLineType() != ChordLineType::NOTYPE)
-            rez = QString("%1: %2").arg(rez).arg(scorelineNames[static_cast<int>(chordLineType()) - 1]);
+            rez = QString("%1: %2").arg(rez, scorelineNames[static_cast<int>(chordLineType()) - 1]);
       return rez;
       }
 
@@ -408,6 +407,8 @@ QString ChordLine::accessibleInfo() const
 QVariant ChordLine::getProperty(Pid propertyId) const
       {
       switch(propertyId) {
+            case Pid::PATH:
+                  return QVariant::fromValue(path);
             case Pid::CHORD_LINE_TYPE:
                   return int(_chordLineType);
             case Pid::CHORD_LINE_STRAIGHT:
@@ -425,6 +426,9 @@ QVariant ChordLine::getProperty(Pid propertyId) const
 bool ChordLine::setProperty(Pid propertyId, const QVariant& val)
       {
       switch(propertyId) {
+            case Pid::PATH:
+                  path = val.value<QPainterPath>();
+                  break;
             case Pid::CHORD_LINE_TYPE:
                   setChordLineType(ChordLineType(val.toInt()));
                   break;
@@ -432,9 +436,10 @@ bool ChordLine::setProperty(Pid propertyId, const QVariant& val)
                   setStraight(val.toBool());
                   break;
             default:
-                  break;
+                  return Element::setProperty(propertyId, val);
             }
-      return Element::setProperty(propertyId, val);
+      triggerLayout();
+      return true;
       }
 
 //---------------------------------------------------------

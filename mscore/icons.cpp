@@ -34,6 +34,7 @@ QIcon* icons[int(Icons::ICONS)];
 //---------------------------------------------------------
 //   genIcons
 //    create some icons
+//    keep in syn with enum class Icons in icons.h
 //---------------------------------------------------------
 
 static const char* iconNames[] = {
@@ -47,6 +48,9 @@ static const char* iconNames[] = {
       "note-32.svg",
       "note-64.svg",
       "note-128.svg",
+      "note-256.svg",
+      "note-512.svg",
+      "note-1024.svg",
       "note-natural.svg",
       "note-sharp.svg",
       "note-double-sharp.svg",
@@ -58,6 +62,8 @@ static const char* iconNames[] = {
       "note-dot3.svg",
       "note-dot4.svg",
       "stem-flip.svg",
+      "mouse-entry.svg",
+      "edit-playback.svg",
       "edit-undo.svg",
       "edit-redo.svg",
       "edit-cut.svg",
@@ -106,6 +112,7 @@ static const char* iconNames[] = {
       "format-text-bold.svg",
       "format-text-italic.svg",
       "format-text-underline.svg",
+      "format-text-strike.svg",
       "format-justify-left.svg",
       "format-justify-center.svg",
       "format-justify-right.svg",
@@ -133,6 +140,7 @@ static const char* iconNames[] = {
       "frame-fretboard.svg",
       "measure.svg",
       "object-select.svg",
+      "mscz-icon.svg",
       "help-contents.svg",
       "go-home.svg",
       "go-previous.svg",
@@ -140,6 +148,7 @@ static const char* iconNames[] = {
       "view-refresh.svg",
       "parentheses.svg",
       "brackets.svg",
+      "braces.svg",
       "timesig_allabreve.svg",
       "timesig_common.svg",
       "timesig_prolatio01.svg",
@@ -158,7 +167,10 @@ static const char* iconNames[] = {
       "arrow_down.svg",
       "mail.svg",
       "bug.svg",
-      "note_timewise.svg"
+      "bin.svg",
+      "note_timewise.svg",
+      "arrowsMoveToTop.svg",
+      "arrowsMoveToBottom.svg",
       };
 
 //---------------------------------------------------------

@@ -10,8 +10,8 @@
 //  the file LICENCE.GPL
 //=============================================================================
 
+#include "mscore.h"
 #include "tempo.h"
-#include "xml.h"
 
 namespace Ms {
 
@@ -24,6 +24,7 @@ TEvent::TEvent()
       type     = TempoType::INVALID;
       tempo    = 0.0;
       pause    = 0.0;
+      time     = 0.0;
       }
 
 TEvent::TEvent(const TEvent& e)
@@ -301,7 +302,7 @@ int TempoMap::time2tick(qreal time, int* sn) const
             tempo = e->second.tempo;
             }
       delta = time - delta;
-      tick += lrint(delta * _relTempo * MScore::division * tempo);
+      tick += (int)lrint(delta * _relTempo * MScore::division * tempo);
       if (sn)
             *sn = _tempoSN;
       return tick;

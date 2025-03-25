@@ -17,17 +17,16 @@
 //  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //=============================================================================
 
-#include "musescore.h"
 #include "harmonyedit.h"
 #include "harmonycanvas.h"
+#include "musescore.h"
 #include "palette.h"
-#include "libmscore/accidental.h"
-#include "libmscore/score.h"
-#include "icons.h"
-#include "libmscore/pitchspelling.h"
-#include "libmscore/symbol.h"
+
 #include "libmscore/chordlist.h"
 #include "libmscore/mscore.h"
+#include "libmscore/pitchspelling.h"
+#include "libmscore/score.h"
+#include "libmscore/symbol.h"
 #include "libmscore/xml.h"
 
 namespace Ms {
@@ -117,10 +116,12 @@ void ChordStyleEditor::loadChordDescriptionFile(const QString& s)
       ChordList* cl = new ChordList;
       if (!cl->read("chords.xml")) {
             qDebug("cannot read <chords.xml>");
+            delete cl;
             return;
             }
       if (!cl->read(s)) {
             qDebug("cannot read <%s>", qPrintable(s));
+            delete cl;
             return;
             }
       setChordList(cl);
@@ -157,7 +158,7 @@ void ChordStyleEditor::setChordList(ChordList* cl)
             paletteTab->addTab(accPalette, f.family);
             QFont qf(f.family);
             qf.setStyleStrategy(QFont::NoFontMerging);
-            int size = lrint(20.0 * DPI / PPI);
+            int size = (int)lrint(20.0 * DPI / PPI);
             qf.setPixelSize(size);
 
             QFontMetricsF fi(qf);
@@ -231,9 +232,10 @@ HarmonyCanvas::HarmonyCanvas(QWidget* parent)
       setAcceptDrops(true);
       setFocusPolicy(Qt::StrongFocus);
       extraMag = 3.0;
-      chordDescription = 0;
-      chordList = 0;
-      moveElement = 0;
+      chordDescription = nullptr;
+      chordList   = nullptr;
+      moveElement = nullptr;
+      dragElement = nullptr;
       QAction* a = getAction("delete");
       addAction(a);
       connect(a, SIGNAL(triggered()), SLOT(deleteAction()));
@@ -356,7 +358,7 @@ void HarmonyCanvas::render(const QList<RenderAction>& /*renderList*/, double& /*
                   }
             else if (a.type == RenderAction::RenderActionType::NOTE) {
                   QString c;
-                  int acc;
+                  AccidentalVal acc;
                   tpc2name(tpc, noteSpelling, noteCase, c, acc);
                   TextSegment* ts = new TextSegment(fontList[fontIdx], x, y);
                   QString lookup = "note" + c;

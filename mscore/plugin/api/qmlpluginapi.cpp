@@ -10,71 +10,49 @@
 //  the file LICENCE.GPL
 //=============================================================================
 
-#include "qmlpluginapi.h"
+#include <QQmlEngine>
+
 #include "cursor.h"
 #include "elements.h"
 #include "fraction.h"
-#include "score.h"
+#include "instrument.h"
+#include "musescore.h"
 #include "part.h"
-#include "util.h"
-#ifndef TESTROOT
+#include "qmlpluginapi.h"
+#include "score.h"
+#include "selection.h"
 #include "shortcut.h"
-#endif
-#include "libmscore/musescoreCore.h"
-#include "libmscore/score.h"
+#include "tie.h"
+#include "util.h"
 
-#include <QQmlEngine>
+#include "libmscore/musescoreCore.h"
 
 namespace Ms {
 namespace PluginAPI {
 
-Enum* PluginAPI::elementTypeEnum;
-Enum* PluginAPI::accidentalTypeEnum;
-Enum* PluginAPI::beamModeEnum;
-Enum* PluginAPI::placementEnum;
-Enum* PluginAPI::glissandoTypeEnum;
-Enum* PluginAPI::layoutBreakTypeEnum;
-Enum* PluginAPI::lyricsSyllabicEnum;
-Enum* PluginAPI::directionEnum;
-Enum* PluginAPI::directionHEnum;
-Enum* PluginAPI::ornamentStyleEnum;
-Enum* PluginAPI::glissandoStyleEnum;
-Enum* PluginAPI::tidEnum;
-Enum* PluginAPI::noteHeadTypeEnum;
-Enum* PluginAPI::noteHeadGroupEnum;
-Enum* PluginAPI::noteValueTypeEnum;
-Enum* PluginAPI::segmentTypeEnum;
-Enum* PluginAPI::spannerAnchorEnum;
-
-//---------------------------------------------------------
-//   PluginAPI::initEnums
-//---------------------------------------------------------
-
-void PluginAPI::initEnums() {
-      static bool initialized = false;
-      if (initialized)
-            return;
-
-      PluginAPI::elementTypeEnum = wrapEnum<Ms::ElementType>();
-      PluginAPI::accidentalTypeEnum = wrapEnum<Ms::AccidentalType>();
-      PluginAPI::beamModeEnum = wrapEnum<Ms::Beam::Mode>();
-      PluginAPI::placementEnum = wrapEnum<Ms::Placement>();
-      PluginAPI::glissandoTypeEnum = wrapEnum<Ms::GlissandoType>();
-      PluginAPI::layoutBreakTypeEnum = wrapEnum<Ms::LayoutBreak::Type>();
-      PluginAPI::lyricsSyllabicEnum = wrapEnum<Ms::Lyrics::Syllabic>();
-      PluginAPI::directionEnum = wrapEnum<Ms::Direction>();
-      PluginAPI::directionHEnum = wrapEnum<Ms::MScore::DirectionH>();
-      PluginAPI::ornamentStyleEnum = wrapEnum<Ms::MScore::OrnamentStyle>();
-      PluginAPI::glissandoStyleEnum = wrapEnum<Ms::GlissandoStyle>();
-      PluginAPI::tidEnum = wrapEnum<Ms::Tid>();
-      PluginAPI::noteHeadTypeEnum = wrapEnum<Ms::NoteHead::Type>();
-      PluginAPI::noteHeadGroupEnum = wrapEnum<Ms::NoteHead::Group>();
-      PluginAPI::noteValueTypeEnum = wrapEnum<Ms::Note::ValueType>();
-      PluginAPI::segmentTypeEnum = wrapEnum<Ms::SegmentType>();
-      PluginAPI::spannerAnchorEnum = wrapEnum<Ms::Spanner::Anchor>();
-
-      initialized = true;
-      }
+Enum* PluginAPI::elementTypeEnum = nullptr;
+Enum* PluginAPI::accidentalTypeEnum = nullptr;
+Enum* PluginAPI::beamModeEnum = nullptr;
+Enum* PluginAPI::placementEnum = nullptr;
+Enum* PluginAPI::glissandoTypeEnum = nullptr;
+Enum* PluginAPI::layoutBreakTypeEnum = nullptr;
+Enum* PluginAPI::lyricsSyllabicEnum = nullptr;
+Enum* PluginAPI::directionEnum = nullptr;
+Enum* PluginAPI::directionHEnum = nullptr;
+Enum* PluginAPI::ornamentStyleEnum = nullptr;
+Enum* PluginAPI::glissandoStyleEnum = nullptr;
+Enum* PluginAPI::tidEnum = nullptr;
+Enum* PluginAPI::alignEnum = nullptr;
+Enum* PluginAPI::noteTypeEnum = nullptr;
+Enum* PluginAPI::playEventTypeEnum = nullptr;
+Enum* PluginAPI::noteHeadTypeEnum = nullptr;
+Enum* PluginAPI::noteHeadSchemeEnum = nullptr;
+Enum* PluginAPI::noteHeadGroupEnum = nullptr;
+Enum* PluginAPI::noteValueTypeEnum = nullptr;
+Enum* PluginAPI::segmentTypeEnum = nullptr;
+Enum* PluginAPI::spannerAnchorEnum = nullptr;
+Enum* PluginAPI::symIdEnum = nullptr;
+Enum* PluginAPI::harmonyTypeEnum = nullptr;
 
 //---------------------------------------------------------
 //   PluginAPI
@@ -83,7 +61,6 @@ void PluginAPI::initEnums() {
 PluginAPI::PluginAPI(QQuickItem* parent)
    : Ms::QmlPlugin(parent)
       {
-      initEnums();
       setRequiresScore(true);              // by default plugins require a score to work
       }
 
@@ -136,10 +113,14 @@ bool PluginAPI::writeScore(Score* s, const QString& name, const QString& ext)
 
 Score* PluginAPI::readScore(const QString& name, bool noninteractive)
       {
+      bool oldIgnoreWarnings = ignoreWarnings;
+      ignoreWarnings = noninteractive;
       Ms::Score* score = msc()->openScore(name, !noninteractive);
-      if (score) {
-            if (noninteractive)
-                  score->setCreated(false);
+      ignoreWarnings = oldIgnoreWarnings;
+      if (score && noninteractive) {
+            score->setCreated(false);
+            if (score->dirty()) // seems to happen when 'importing' Mu4 scores
+                  score->undoStack()->setClean();
             }
       return wrap<Score>(score, Ownership::SCORE);
       }
@@ -176,6 +157,19 @@ Element* PluginAPI::newElement(int elementType)
       }
 
 //---------------------------------------------------------
+//   removeElement
+///   Disposes of an Element and its children.
+///   \param Element type.
+///   \since MuseScore 3.3
+//---------------------------------------------------------
+
+void PluginAPI::removeElement(Ms::PluginAPI::Element* wrapped)
+      {
+      Ms::Score* score = wrapped->element()->score();
+      score->deleteItem(wrapped->element());
+      }
+
+//---------------------------------------------------------
 //   newScore
 //---------------------------------------------------------
 
@@ -185,7 +179,7 @@ Score* PluginAPI::newScore(const QString& name, const QString& part, int measure
             msc()->currentScore()->endCmd();
       MasterScore* score = new MasterScore(MScore::defaultStyle());
       score->setName(name);
-      score->appendPart(part);
+      score->appendPart(Score::instrTemplateFromName(part));
       score->appendMeasures(measures);
       score->doLayout();
       const int view = msc()->appendScore(score);
@@ -199,22 +193,14 @@ Score* PluginAPI::newScore(const QString& name, const QString& part, int measure
 //---------------------------------------------------------
 //   cmd
 //---------------------------------------------------------
+
 void PluginAPI::cmd(const QString& s)
       {
-#ifdef TESTROOT
-      // TODO: testing this function requires including
-      // shortcuts system to mtest testutils library
-      // as well as some way to execute these commands
-      // without MuseScore instance.
-      Q_UNUSED(s);
-      qFatal("PluginAPI::cmd is not testable currently");
-#else
       Shortcut* sc = Shortcut::getShortcut(qPrintable(s));
       if (sc)
             msc()->cmd(sc->action());
       else
             qDebug("PluginAPI:cmd: not found <%s>", qPrintable(s));
-#endif
       }
 
 //---------------------------------------------------------
@@ -313,10 +299,13 @@ void PluginAPI::registerQmlTypes()
       if (-1 == qmlRegisterType<PluginAPI>  ("MuseScore", 3, 0, "MuseScore"))
             qWarning("qmlRegisterType failed: MuseScore");
 
+      qmlRegisterUncreatableType<Enum>("MuseScore", 3, 0, "MuseScoreEnum", "Cannot create an enumeration");
+
 //             qmlRegisterType<MScore>     ("MuseScore", 3, 0, "MScore");
-      qmlRegisterType<MsScoreView>("MuseScore", 3, 0, "ScoreView");
+      qmlRegisterType<ScoreView>("MuseScore", 3, 0, "ScoreView");
 
       qmlRegisterType<Cursor>("MuseScore", 3, 0, "Cursor");
+#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
       qmlRegisterType<ScoreElement>();
       qmlRegisterType<Score>();
       qmlRegisterType<Element>();
@@ -325,7 +314,31 @@ void PluginAPI::registerQmlTypes()
       qmlRegisterType<Segment>();
       qmlRegisterType<Measure>();
       qmlRegisterType<Part>();
+      qmlRegisterType<Staff>();
+      qmlRegisterType<Instrument>();
+      qmlRegisterType<Channel>();
+      qmlRegisterType<StringData>();
       qmlRegisterType<Excerpt>();
+      qmlRegisterType<Selection>();
+      qmlRegisterType<Tie>();
+#else
+      qmlRegisterAnonymousType<ScoreElement>("MuseScore", 3);
+      qmlRegisterAnonymousType<Score>("MuseScore", 3);
+      qmlRegisterAnonymousType<Element>("MuseScore", 3);
+      qmlRegisterAnonymousType<Chord>("MuseScore", 3);
+      qmlRegisterAnonymousType<Note>("MuseScore", 3);
+      qmlRegisterAnonymousType<Segment>("MuseScore", 3);
+      qmlRegisterAnonymousType<Measure>("MuseScore", 3);
+      qmlRegisterAnonymousType<Part>("MuseScore", 3);
+      qmlRegisterAnonymousType<Staff>("MuseScore", 3);
+      qmlRegisterAnonymousType<Instrument>("MuseScore", 3);
+      qmlRegisterAnonymousType<Channel>("MuseScore", 3);
+      qmlRegisterAnonymousType<StringData>("MuseScore", 3);
+      qmlRegisterAnonymousType<Excerpt>("MuseScore", 3);
+      qmlRegisterAnonymousType<Selection>("MuseScore", 3);
+      qmlRegisterAnonymousType<Tie>("MuseScore", 3);
+#endif
+      qmlRegisterType<PlayEvent>("MuseScore", 3, 0, "PlayEvent");
       //qmlRegisterType<Hook>();
       //qmlRegisterType<Stem>();
       //qmlRegisterType<StemSlash>();
@@ -360,7 +373,11 @@ void PluginAPI::registerQmlTypes()
       qmlRegisterType<SlurTie>();
       qmlRegisterType<Spanner>();
 #endif
+#if QT_VERSION < QT_VERSION_CHECK(5, 14, 0)
       qmlRegisterType<FractionWrapper>();
+#else
+      qmlRegisterAnonymousType<FractionWrapper>("MuseScore", 3);
+#endif
       qRegisterMetaType<FractionWrapper*>("FractionWrapper*");
 
       qmlTypesRegistered = true;

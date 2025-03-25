@@ -27,7 +27,7 @@ namespace Awl {
 //---------------------------------------------------------
 
 AbstractSlider::AbstractSlider(QWidget* parent)
-   : QWidget(parent), _scaleColor(Qt::darkGray), _scaleValueColor(QColor("#2456aa"))
+   : QWidget(parent), _scaleColor(Qt::darkGray), _scaleValueColor(QColor(0x2456aa))
       {
       __id         = 0;
       _value      = 0.5;
@@ -127,7 +127,7 @@ void AbstractSlider::wheelEvent(QWheelEvent* ev)
       int div = 50;
       if (ev->modifiers() & Qt::ShiftModifier)
             div = 15;
-      _value += (ev->delta() * lineStep()) / div;
+      _value += (ev->angleDelta().y() * lineStep()) / div;
       if (_value < _minValue)
             _value = _minValue;
       else if (_value > _maxValue)
@@ -187,7 +187,7 @@ void AbstractSlider::setValue(double val)
       double oldValue = _value;
 
       if (_log) {
-            if (val == 0.0f)
+            if (qFuzzyIsNull(val))
                   _value = _minValue;
             else {
                   _value = fast_log10(val) * 20.0f;
@@ -253,7 +253,7 @@ QString AbstractSlider::userValue() const
 void AbstractSlider::setMinLogValue(double val)
       {
       if (_log) {
-            if (val == 0.0f)
+            if (qFuzzyIsNull(val))
                   _minValue = -100;
             else
                   _minValue = fast_log10(val) * 20.0f;

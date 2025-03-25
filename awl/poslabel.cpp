@@ -69,10 +69,17 @@ QSize PosLabel::sizeHint() const
       int fw = style()->pixelMetric(QStyle::PM_DefaultFrameWidth);
       int h  = fm.height() + fw * 2;
       int w;
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
+      if (_smpte)
+            w  = 2 + fm.horizontalAdvance('9') * 9 + fm.horizontalAdvance(':') * 3 + fw * 4;
+      else
+            w  = 2 + fm.horizontalAdvance('9') * 9 + fm.horizontalAdvance('.') * 2 + fw * 4;
+#else
       if (_smpte)
             w  = 2 + fm.width('9') * 9 + fm.width(':') * 3 + fw * 4;
       else
             w  = 2 + fm.width('9') * 9 + fm.width('.') * 2 + fw * 4;
+#endif
       return QSize(w, h).expandedTo(QApplication::globalStrut());
       }
 
@@ -88,12 +95,12 @@ void PosLabel::updateValue()
       if (_smpte) {
             int min, sec, frame, subframe;
             pos.msf(&min, &sec, &frame, &subframe);
-            s.sprintf("%03d:%02d:%02d:%02d", min, sec, frame, subframe);
+            s = QString::asprintf("%03d:%02d:%02d:%02d", min, sec, frame, subframe);
             }
       else {
             int measure, beat, tick;
             pos.mbt(&measure, &beat, &tick);
-            s.sprintf("%04d.%02d.%03u", measure+1, beat+1, tick);
+            s = QString::asprintf("%04d.%02d.%03u", measure+1, beat+1, tick);
             }
       setText(s);
       }

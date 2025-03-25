@@ -10,21 +10,19 @@
 //  the file LICENCE.GPL
 //=============================================================================
 
-#include "text.h"
-#include "textedit.h"
-#include "jump.h"
-#include "marker.h"
-#include "score.h"
-#include "segment.h"
-#include "measure.h"
-#include "system.h"
+#include "barline.h"
 #include "box.h"
 #include "page.h"
-#include "textframe.h"
-#include "sym.h"
-#include "xml.h"
-#include "undo.h"
+#include "measure.h"
 #include "mscore.h"
+#include "score.h"
+#include "segment.h"
+#include "sym.h"
+#include "system.h"
+#include "textedit.h"
+#include "textframe.h"
+#include "undo.h"
+#include "xml.h"
 
 namespace Ms {
 
@@ -41,6 +39,78 @@ static const qreal superScriptOffset = -.9;      // of x-height
 //static const qreal tempotextOffset = 0.4; // of x-height // 80% of 50% = 2 spatiums
 
 //---------------------------------------------------------
+//   accessibleChar
+/// Return the name of common symbols and punctuation, or return the
+/// character itself if the name is unknown. For screen readers.
+//---------------------------------------------------------
+
+static QString accessibleChar(QChar chr)
+      {
+      if (chr == " ") return QObject::tr("space");
+      if (chr == "-") return QObject::tr("dash");
+      if (chr == "=") return QObject::tr("equals");
+      if (chr == ",") return QObject::tr("comma");
+      if (chr == ".") return QObject::tr("period");
+      if (chr == ":") return QObject::tr("colon");
+      if (chr == ";") return QObject::tr("semicolon");
+      if (chr == "(") return QObject::tr("left parenthesis");
+      if (chr == ")") return QObject::tr("right parenthesis");
+      if (chr == "[") return QObject::tr("left bracket");
+      if (chr == "]") return QObject::tr("right bracket");
+      return chr;
+      }
+
+//---------------------------------------------------------
+//   accessibleCharacter
+/// Given a string, if it has one character return its name, otherwise return
+/// the string. Useful to force screen readers to speak punctuation when it
+/// is alone but not when it forms part of a sentence.
+//---------------------------------------------------------
+
+static QString accessibleCharacter(QString str)
+      {
+      if (str.length() == 1)
+            return accessibleChar(str.at(0));
+      return str;
+      }
+
+//---------------------------------------------------------
+//   isSorted
+/// return true if (r1,c1) is at or before (r2,c2)
+//---------------------------------------------------------
+
+static bool isSorted(int r1, int c1, int r2, int c2)
+      {
+      if (r1 < r2)
+            return true;
+      if ((r1 == r2) && (c1 <= c2))
+            return true;
+      return false;
+      }
+
+//---------------------------------------------------------
+//   swap
+/// swap (r1,c1) with (r2,c2)
+//---------------------------------------------------------
+
+static void swap(int& r1, int& c1, int& r2, int& c2)
+      {
+      qSwap(r1, r2);
+      qSwap(c1, c2);
+      }
+
+//---------------------------------------------------------
+//   sort
+/// swap (r1,c1) with (r2,c2) if they are not sorted
+//---------------------------------------------------------
+
+static void sort(int& r1, int& c1, int& r2, int& c2)
+      {
+      if (!isSorted(r1, c1, r2, c2))
+            swap(r1, c1, r2, c2);
+      }
+
+//---------------------------------------------------------
 //   operator==
 //---------------------------------------------------------
 
@@ -51,6 +121,20 @@ bool CharFormat::operator==(const CharFormat& cf) const
          && cf.valign()     == valign()
          && cf.fontSize()   == fontSize()
          && cf.fontFamily() == fontFamily();
+      }
+
+//---------------------------------------------------------
+//   operator=
+//---------------------------------------------------------
+
+CharFormat& CharFormat::operator=(const CharFormat& cf)
+      {
+      setStyle(cf.style());
+      setValign(cf.valign());
+      setFontSize(cf.fontSize());
+      setFontFamily(cf.fontFamily());
+
+      return *this;
       }
 
 //---------------------------------------------------------
@@ -99,6 +183,27 @@ QChar TextCursor::currentCharacter() const
       }
 
 //---------------------------------------------------------
+//   currentWord
+//---------------------------------------------------------
+
+QString TextCursor::currentWord() const
+      {
+      const TextBlock& t = _text->_layout[row()];
+      QString s = t.text(column(), -1);
+      return s.remove(QRegularExpression(" .*"));
+      }
+
+//---------------------------------------------------------
+//   currentLine
+//---------------------------------------------------------
+
+QString TextCursor::currentLine() const
+      {
+      const TextBlock& t = _text->_layout[row()];
+      return t.text(0, -1);
+      }
+
+//---------------------------------------------------------
 //   updateCursorFormat
 //---------------------------------------------------------
 
@@ -106,7 +211,8 @@ void TextCursor::updateCursorFormat()
       {
       TextBlock* block = &_text->_layout[_row];
       int col = hasSelection() ? selectColumn() : column();
-      const CharFormat* format = block->formatAt(col);
+      // Get format at the LEFT of the cursor position
+      const CharFormat* format = block->formatAt(std::max((col) -1, 0));
       if (!format || format->fontFamily() == "ScoreText")
             init();
       else
@@ -153,15 +259,7 @@ void TextCursor::changeSelectionFormat(FormatId id, QVariant val)
       int r2 = row();
       int c1 = selectColumn();
       int c2 = column();
-
-      if (r1 > r2) {
-            qSwap(r1, r2);
-            qSwap(c1, c2);
-            }
-      else if (r1 == r2) {
-            if (c1 > c2)
-                  qSwap(c1, c2);
-            }
+      sort(r1, c1, r2, c2);
       int rows = _text->rows();
       for (int row = 0; row < rows; ++row) {
             TextBlock& t = _text->_layout[row];
@@ -198,6 +296,14 @@ void TextCursor::setFormat(FormatId id, QVariant val)
 
 bool TextCursor::movePosition(QTextCursor::MoveOperation op, QTextCursor::MoveMode mode, int count)
       {
+      QString accMsg;
+      int oldRow = _row;
+      int oldCol = _column;
+
+      QString oldSelection;
+      if (hasSelection())
+            oldSelection = selectedText();
+
       for (int i = 0; i < count; i++) {
             switch (op) {
                   case QTextCursor::Left:
@@ -206,15 +312,7 @@ bool TextCursor::movePosition(QTextCursor::MoveOperation op, QTextCursor::MoveMo
                               int r2 = _row;
                               int c1 = _selectColumn;
                               int c2 = _column;
-
-                              if (r1 > r2) {
-                                    qSwap(r1, r2);
-                                    qSwap(c1, c2);
-                                    }
-                              else if (r1 == r2) {
-                                    if (c1 > c2)
-                                           qSwap(c1, c2);
-                                    }
+                              sort(r1, c1, r2, c2);
                               clearSelection();
                               _row    = r1;
                               _column = c1;
@@ -227,6 +325,10 @@ bool TextCursor::movePosition(QTextCursor::MoveOperation op, QTextCursor::MoveMo
                               }
                         else
                               --_column;
+#if !defined(Q_OS_MAC)
+                        if (mode == QTextCursor::MoveAnchor)
+                              accMsg += accessibleCurrentCharacter();
+#endif
                         break;
 
                   case QTextCursor::Right:
@@ -235,15 +337,7 @@ bool TextCursor::movePosition(QTextCursor::MoveOperation op, QTextCursor::MoveMo
                               int r2 = _row;
                               int c1 = _selectColumn;
                               int c2 = _column;
-
-                              if (r1 > r2) {
-                                    qSwap(r1, r2);
-                                    qSwap(c1, c2);
-                                    }
-                              else if (r1 == r2) {
-                                    if (c1 > c2)
-                                           qSwap(c1, c2);
-                                    }
+                              sort(r1, c1, r2, c2);
                               clearSelection();
                               _row    = r2;
                               _column = c2;
@@ -256,6 +350,10 @@ bool TextCursor::movePosition(QTextCursor::MoveOperation op, QTextCursor::MoveMo
                               }
                         else
                               ++_column;
+#if !defined(Q_OS_MAC)
+                        if (mode == QTextCursor::MoveAnchor)
+                              accMsg += accessibleCurrentCharacter();
+#endif
                         break;
 
                   case QTextCursor::Up:
@@ -264,6 +362,10 @@ bool TextCursor::movePosition(QTextCursor::MoveOperation op, QTextCursor::MoveMo
                         --_row;
                         if (_column > curLine().columns())
                               _column = curLine().columns();
+#if !defined(Q_OS_MAC)
+                        if (mode == QTextCursor::MoveAnchor)
+                              accMsg += accessibleCharacter(currentLine()) + "\n";
+#endif
                         break;
 
                   case QTextCursor::Down:
@@ -272,24 +374,44 @@ bool TextCursor::movePosition(QTextCursor::MoveOperation op, QTextCursor::MoveMo
                         ++_row;
                         if (_column > curLine().columns())
                               _column = curLine().columns();
+#if !defined(Q_OS_MAC)
+                        if (mode == QTextCursor::MoveAnchor)
+                              accMsg += accessibleCharacter(currentLine()) + "\n";
+#endif
                         break;
 
                   case QTextCursor::Start:
                         _row    = 0;
                         _column = 0;
+#if !defined(Q_OS_MAC)
+                        if (mode == QTextCursor::MoveAnchor)
+                              accMsg = accessibleCharacter(currentLine());
+#endif
                         break;
 
                   case QTextCursor::End:
                         _row    = _text->rows() - 1;
                         _column = curLine().columns();
+#if !defined(Q_OS_MAC)
+                        if (mode == QTextCursor::MoveAnchor)
+                              accMsg = accessibleCharacter(currentLine());
+#endif
                         break;
 
                   case QTextCursor::StartOfLine:
                         _column = 0;
+#if !defined(Q_OS_MAC)
+                        if (mode == QTextCursor::MoveAnchor)
+                              accMsg = accessibleCurrentCharacter();
+#endif
                         break;
 
                   case QTextCursor::EndOfLine:
                         _column = curLine().columns();
+#if !defined(Q_OS_MAC)
+                        if (mode == QTextCursor::MoveAnchor)
+                              accMsg = accessibleCurrentCharacter();
+#endif
                         break;
 
                   case QTextCursor::WordLeft:
@@ -302,6 +424,10 @@ bool TextCursor::movePosition(QTextCursor::MoveOperation op, QTextCursor::MoveMo
                               if (currentCharacter().isSpace())
                                     ++_column;
                               }
+#if !defined(Q_OS_MAC)
+                        if (mode == QTextCursor::MoveAnchor)
+                              accMsg += accessibleCharacter(currentWord()) + " ";
+#endif
                         break;
 
                   case QTextCursor::NextWord: {
@@ -314,6 +440,10 @@ bool TextCursor::movePosition(QTextCursor::MoveOperation op, QTextCursor::MoveMo
                                     ++_column;
                               }
                         }
+#if !defined(Q_OS_MAC)
+                        if (mode == QTextCursor::MoveAnchor)
+                              accMsg += accessibleCharacter(currentWord()) + " ";
+#endif
                         break;
 
                   default:
@@ -323,6 +453,8 @@ bool TextCursor::movePosition(QTextCursor::MoveOperation op, QTextCursor::MoveMo
             if (mode == QTextCursor::MoveAnchor)
                   clearSelection();
             }
+      accessibileMessage(accMsg, oldRow, oldCol, oldSelection, mode);
+      _text->score()->setAccessibleMessage(accMsg);
       updateCursorFormat();
       _text->score()->addRefresh(_text->canvasBoundingRect());
       return true;
@@ -370,8 +502,6 @@ bool TextCursor::set(const QPointF& p, QTextCursor::MoveMode mode)
       QPointF pt  = p - _text->canvasPos();
       if (!_text->bbox().contains(pt))
             return false;
-      int oldRow    = _row;
-      int oldColumn = _column;
 
 //      if (_text->_layout.empty())
 //            _text->_layout.append(TextBlock());
@@ -385,13 +515,11 @@ bool TextCursor::set(const QPointF& p, QTextCursor::MoveMode mode)
             }
       _column = curLine().column(pt.x(), _text);
 
-      if (oldRow != _row || oldColumn != _column) {
-            _text->score()->setUpdateAll();
-            if (mode == QTextCursor::MoveAnchor)
-                  clearSelection();
-            if (hasSelection())
-                  QApplication::clipboard()->setText(selectedText(), QClipboard::Selection);
-            }
+      _text->score()->setUpdateAll();
+      if (mode == QTextCursor::MoveAnchor)
+            clearSelection();
+      if (hasSelection())
+            QApplication::clipboard()->setText(selectedText(), QClipboard::Selection);
       updateCursorFormat();
       return true;
       }
@@ -403,39 +531,151 @@ bool TextCursor::set(const QPointF& p, QTextCursor::MoveMode mode)
 
 QString TextCursor::selectedText() const
       {
-      QString s;
       int r1 = selectLine();
       int r2 = _row;
       int c1 = selectColumn();
       int c2 = column();
+      sort(r1, c1, r2, c2);
+      return extractText(r1, c1, r2, c2);
+      }
 
-      if (r1 > r2) {
-            qSwap(r1, r2);
-            qSwap(c1, c2);
-            }
-      else if (r1 == r2) {
-            if (c1 > c2)
-                  qSwap(c1, c2);
-            }
-      int rows = _text->rows();
-      for (int row = 0; row < rows; ++row) {
-            const TextBlock& t = _text->_layout.at(row);
-            if (row >= r1 && row <= r2) {
-                  if (row == r1 && r1 == r2)
-                        s += t.text(c1, c2 - c1);
-                  else if (row == r1) {
-                        s += t.text(c1, -1);
-                        s += "\n";
-                        }
-                  else if (row == r2)
-                        s += t.text(0, c2);
-                  else {
-                        s += t.text(0, -1);
-                        s += "\n";
-                        }
+//---------------------------------------------------------
+//   extractText
+//    return text between (r1,c1) and (r2,c2).
+//---------------------------------------------------------
+
+QString TextCursor::extractText(int r1, int c1, int r2, int c2) const
+      {
+      Q_ASSERT(isSorted(r1, c1, r2, c2));
+      const QList<TextBlock>& tb = _text->_layout;
+
+      if (r1 == r2)
+            return tb.at(r1).text(c1, c2 - c1);
+
+      QString str = tb.at(r1).text(c1, -1) + "\n";
+
+      for (int r = r1 + 1; r < r2; ++r)
+            str += tb.at(r).text(0, -1) + "\n";
+
+      str += tb.at(r2).text(0, c2);
+      return str;
+      }
+
+//---------------------------------------------------------
+//   accessibleCurrentCharacter
+/// Return current character or its name in the case of a symbol. For screen readers.
+//---------------------------------------------------------
+
+QString TextCursor::accessibleCurrentCharacter() const
+      {
+      if (_column < curLine().columns())
+            return accessibleChar(currentCharacter());
+      if (_row < _text->rows() - 1)
+            return QObject::tr("line feed");
+      return QObject::tr("blank"); // end of text
+      }
+
+//---------------------------------------------------------
+//   accessibileMessage
+/// Set the accMsg string to describe the result of having moved the cursor
+/// from P(oldRow,oldCol) to the current position. For use by screen readers.
+///
+/// The default message simply contains the characters that the cursor
+/// skipped over when moving between the old and current positions. This
+/// mimics the behavior of VoiceOver on macOS, but other screen readers do
+/// things a bit differently. (Many report the character or word to the right
+/// of the cursor regardless of the direction that the cursor moved, but that
+/// behavior is not implemented here.) You can override the default message
+/// by setting accMsg to a different value before this function is called.
+///
+/// If the cursor's movement caused a change in selection then the message
+/// will say which characters were selected and which were deselected (both
+/// can happen in a single move operation). All screen readers do this, so
+/// this message cannot be overridden.
+//---------------------------------------------------------
+
+void TextCursor::accessibileMessage(QString& accMsg, int oldRow, int oldCol, QString oldSelection, QTextCursor::MoveMode mode) const
+      {
+      int r1 = oldRow;
+      int c1 = oldCol;
+      int r2 = _row;
+      int c2 = _column;
+
+      const bool movedForwards = isSorted(r1, c1, r2, c2);
+
+      // ensure P1 before P2
+      if (!movedForwards)
+            swap(r1, c1, r2, c2);
+
+      if (mode == QTextCursor::MoveAnchor) {
+            if (accMsg.isEmpty()) {
+                  // Provide a default message based on skipped characters.
+                  accMsg = accessibleCharacter(extractText(r1, c1, r2, c2));
                   }
+
+            if (!oldSelection.isEmpty()) {
+                  // Cursor's movement has cancelled a previous selection.
+                  oldSelection = QObject::tr("%1 unselected").arg(oldSelection);
+
+                  if (accMsg.isEmpty()) // no characters were skipped
+                        accMsg = oldSelection;
+                  else
+                        accMsg = QObject::tr("%1, %2").arg(accMsg, oldSelection);
+                  }
+
+            return;
             }
-      return s;
+
+      // Skipped characters were added and/or removed from selection.
+      const int rs = _selectLine;
+      const int cs = _selectColumn;
+
+      bool selectForwards;
+      bool anchorOutsideRange;
+
+      if (isSorted(rs, cs, r1, c1)) {
+            // Selection anchor is before range of skipped characters.
+            anchorOutsideRange = true;
+            selectForwards = true; // forward movement selects characters
+            }
+      else if (isSorted(r2, c2, rs, cs)) {
+            // Selection anchor is after range of skipped characters.
+            anchorOutsideRange = true;
+            selectForwards = false; // forward movement deselects characters
+            }
+      else {
+            // Selection anchor is within the range of skipped characters
+            // so some characters have been selected and others deselected.
+            anchorOutsideRange = false;
+            selectForwards = false;
+      }
+
+      if (anchorOutsideRange) {
+            // Entire range of skipped characters was selected or deselected.
+            accMsg = accessibleCharacter(extractText(r1, c1, r2, c2));
+
+            if (movedForwards == selectForwards)
+                  accMsg = QObject::tr("%1 selected").arg(accMsg);
+            else
+                  accMsg = QObject::tr("%1 unselected").arg(accMsg);
+
+            return;
+            }
+
+      // cursor skipped over the selection anchor
+      QString str1 = accessibleCharacter(extractText(r1, c1, rs, cs));
+      QString str2 = accessibleCharacter(extractText(rs, cs, r2, c2));
+
+      if (movedForwards) {
+            str1 = QObject::tr("%1 unselected").arg(str1);
+            str2 = QObject::tr("%1 selected").arg(str2);
+            }
+      else {
+            str1 = QObject::tr("%1 selected").arg(str1);
+            str2 = QObject::tr("%1 unselected").arg(str2);
+            }
+
+      accMsg =  QObject::tr("%1, %2").arg(str1, str2);
       }
 
 //---------------------------------------------------------
@@ -468,7 +708,7 @@ TextFragment TextFragment::split(int column)
       TextFragment f;
       f.format = format;
 
-      for (const QChar& c : text) {
+      for (const QChar& c : qAsConst(text)) {
             if (col == column) {
                   if (idx) {
                         if (idx < text.size()) {
@@ -494,7 +734,7 @@ TextFragment TextFragment::split(int column)
 int TextFragment::columns() const
       {
       int col = 0;
-      for (const QChar& c : text) {
+      for (const QChar& c : qAsConst(text)) {
             if (c.isHighSurrogate())
                   continue;
             ++col;
@@ -519,8 +759,88 @@ void TextFragment::draw(QPainter* p, const TextBase* t) const
       {
       QFont f(font(t));
       f.setPointSizeF(f.pointSizeF() * MScore::pixelRatio);
+#ifndef Q_OS_MACOS
+      TextBase::drawTextWorkaround(p, f, pos, text);
+#else
       p->setFont(f);
       p->drawText(pos, text);
+#endif
+      }
+
+//---------------------------------------------------------
+//   drawTextWorkaround
+//---------------------------------------------------------
+
+void TextBase::drawTextWorkaround(QPainter* p, QFont& f, const QPointF pos, const QString text)
+      {
+      qreal mm = p->worldTransform().m11();
+      if (!(MScore::pdfPrinting) && (mm < 1.0) && f.bold() && !(f.underline() || f.strikeOut())) {
+            // workaround for https://musescore.org/en/node/284218
+            // and https://musescore.org/en/node/281601
+            // only needed for certain artificially emboldened fonts
+            // see https://musescore.org/en/node/281601#comment-900261
+            // in Qt 5.12.x this workaround should be no more necessary if
+            // env variable QT_MAX_CACHED_GLYPH_SIZE is set to 1.
+            // The workaround works badly if the text is at the same time
+            // bold and underlined.
+            p->save();
+            qreal dx = p->worldTransform().dx();
+            qreal dy = p->worldTransform().dy();
+            // diagonal elements will now be changed to 1.0
+            p->setTransform(QTransform(1.0, 0.0, 0.0, 1.0, dx, dy));
+            // correction factor for bold text drawing, due to the change of the diagonal elements
+            qreal factor = 1.0 / mm;
+            QFont fnew(f, p->device());
+            fnew.setPointSizeF(f.pointSizeF() / factor);
+            QRawFont fRaw = QRawFont::fromFont(fnew);
+            QTextLayout textLayout(text, f, p->device());
+            textLayout.beginLayout();
+            while (true) {
+                  QTextLine line = textLayout.createLine();
+                  if (!line.isValid())
+                        break;
+                  }
+            textLayout.endLayout();
+            // glyphruns with correct positions, but potentially wrong glyphs
+            // (see bug https://musescore.org/en/node/117191 regarding positions and DPI)
+            QList<QGlyphRun> glyphruns = textLayout.glyphRuns();
+            qreal offset = 0;
+            // glyphrun drawing has an offset equal to the max ascent of the text fragment
+            for (int i = 0; i < glyphruns.length(); i++) {
+                  qreal value = glyphruns.at(i).rawFont().ascent() / factor;
+                  if (value > offset)
+                        offset = value;
+                  }
+            for (int i = 0; i < glyphruns.length(); i++) {
+                  QVector<QPointF> positions1 = glyphruns.at(i).positions();
+                  QVector<QPointF> positions2;
+                  // calculate the new positions for the scaled geometry
+                  for (int j = 0; j < positions1.length(); j++) {
+                        QPointF newPoint = positions1.at(j) / factor;
+                        positions2.append(newPoint);
+                        }
+                  QGlyphRun glyphrun2 = glyphruns.at(i);
+                  glyphrun2.setPositions(positions2);
+                  // change the glyphs with the correct glyphs
+                  // and account for glyph substitution
+                  if (glyphrun2.rawFont().familyName() != fnew.family()) {
+                        QFont f2(fnew);
+                        f2.setFamily(glyphrun2.rawFont().familyName());
+                        glyphrun2.setRawFont(QRawFont::fromFont(f2));
+                        }
+                  else
+                        glyphrun2.setRawFont(fRaw);
+                  p->drawGlyphRun(QPointF(pos.x() / factor, pos.y() / factor - offset),glyphrun2);
+                  positions2.clear();
+                  }
+            // Restore the QPainter to its former state
+            p->setTransform(QTransform(mm, 0.0, 0.0, mm, dx, dy));
+            p->restore();
+            }
+      else {
+            p->setFont(f);
+            p->drawText(pos, text);
+            }
       }
 
 //---------------------------------------------------------
@@ -537,11 +857,10 @@ QFont TextFragment::font(const TextBase* t) const
             m *= t->spatium() / SPATIUM20;
       if (format.valign() != VerticalAlignment::AlignNormal)
             m *= subScriptSize;
-      font.setUnderline(format.underline() || format.preedit());
 
       QString family;
       if (format.fontFamily() == "ScoreText") {
-            family = t->score()->styleSt(Sid::MusicalTextFont);
+            family = t->score()->styleSt(Sid::musicalTextFont);
 
             // check if all symbols are available
             font.setFamily(family);
@@ -571,15 +890,19 @@ QFont TextFragment::font(const TextBase* t) const
             if (fail)
                   family = ScoreFont::fallbackTextFont();
             }
-      else
+      else {
             family = format.fontFamily();
 
+            font.setBold(format.bold());
+            font.setItalic(format.italic());
+            font.setUnderline(format.underline());
+            font.setStrikeOut(format.strike());
+            }
+
       font.setFamily(family);
-      font.setBold(format.bold());
-      font.setItalic(format.italic());
       Q_ASSERT(m > 0.0);
 
-      font.setPointSizeF(m);
+      font.setPointSizeF(m * t->mag());
       return font;
       }
 
@@ -626,21 +949,47 @@ void TextBlock::layout(TextBase* t)
                         }
                         break;
                   case ElementType::MEASURE: {
+                        // ignore courtesy keysig, timesig, but fall back if needed
                         Measure* m = toMeasure(e);
-                        layoutWidth = m->bbox().width();
+                        const BarLine* bl = m->endBarLine();
+                        layoutWidth = bl ? bl->segment()->x() + bl->width() : m->bbox().width();
                         }
                         break;
                   default:
                         break;
                   }
             }
+
       if (_fragments.empty()) {
             QFontMetricsF fm = t->fontMetrics();
             _bbox.setRect(0.0, -fm.ascent(), 1.0, fm.descent());
             _lineSpacing = fm.lineSpacing();
             }
+      else if (_fragments.size() == 1 && _fragments.at(0).text.isEmpty()) {
+            auto fi = _fragments.begin();
+            TextFragment& f = *fi;
+            f.pos.setX(x);
+            QFontMetricsF fm(f.font(t), MScore::paintDevice());
+            if (f.format.valign() != VerticalAlignment::AlignNormal) {
+                  qreal voffset = fm.xHeight() / subScriptSize;   // use original height
+                  if (f.format.valign() == VerticalAlignment::AlignSubScript)
+                        voffset *= subScriptOffset;
+                  else
+                        voffset *= superScriptOffset;
+                  f.pos.setY(voffset);
+                  }
+            else {
+                  f.pos.setY(0.0);
+                  }
+
+            QRectF temp(0.0, -fm.ascent(), 1.0, fm.descent());
+            _bbox |= temp;
+            _lineSpacing = qMax(_lineSpacing, fm.lineSpacing());
+            }
       else {
-            for (TextFragment& f : _fragments) {
+            const auto fiLast = --_fragments.end();
+            for (auto fi = _fragments.begin(); fi != _fragments.end(); ++fi) {
+                  TextFragment& f = *fi;
                   f.pos.setX(x);
                   QFontMetricsF fm(f.font(t), MScore::paintDevice());
                   if (f.format.valign() != VerticalAlignment::AlignNormal) {
@@ -651,14 +1000,25 @@ void TextBlock::layout(TextBase* t)
                               voffset *= superScriptOffset;
                         f.pos.setY(voffset);
                         }
-                  else
+                  else {
                         f.pos.setY(0.0);
-                  qreal w  = fm.width(f.text);
+                        }
+
+                  // Optimization: don't calculate character position
+                  // for the next fragment if there is no next fragment
+                  if (fi != fiLast) {
+                        const qreal w  = fm.width(f.text);
+                        x += w;
+                        }
+
                   _bbox   |= fm.tightBoundingRect(f.text).translated(f.pos);
-                  x += w;
                   _lineSpacing = qMax(_lineSpacing, fm.lineSpacing());
                   }
             }
+
+      // Apply style/custom line spacing
+      _lineSpacing *= t->textLineSpacing();
+
       qreal rx;
       if (t->align() & Align::RIGHT)
             rx = layoutWidth-_bbox.right();
@@ -673,6 +1033,24 @@ void TextBlock::layout(TextBase* t)
       }
 
 //---------------------------------------------------------
+//   fragmentsWithoutEmpty
+//---------------------------------------------------------
+
+QList<TextFragment>* TextBlock::fragmentsWithoutEmpty()
+      {
+      QList<TextFragment>* list = new QList<TextFragment>();
+      for (const auto &x :qAsConst(_fragments)) {
+            if (x.text.isEmpty()) {
+                  continue;
+                  }
+            else {
+                  list->append(x);
+                  }
+            }
+      return list;
+      }
+
+//---------------------------------------------------------
 //   xpos
 //---------------------------------------------------------
 
@@ -684,7 +1062,7 @@ qreal TextBlock::xpos(int column, const TextBase* t) const
                   return f.pos.x();
             QFontMetricsF fm(f.font(t), MScore::paintDevice());
             int idx = 0;
-            for (const QChar& c : f.text) {
+            for (const QChar& c : qAsConst(f.text)) {
                   ++idx;
                   if (c.isHighSurrogate())
                         continue;
@@ -707,7 +1085,7 @@ const TextFragment* TextBlock::fragment(int column) const
       int col = 0;
       auto f = _fragments.begin();
       for (; f != _fragments.end(); ++f) {
-            for (const QChar& c : f->text) {
+            for (const QChar& c : qAsConst(f->text)) {
                   if (c.isHighSurrogate())
                         continue;
                   if (column == col)
@@ -751,7 +1129,7 @@ int TextBlock::columns() const
       {
       int col = 0;
       for (const TextFragment& f : _fragments) {
-            for (const QChar& c : f.text) {
+            for (const QChar& c : qAsConst(f.text)) {
                   if (!c.isHighSurrogate())
                         ++col;
                   }
@@ -773,7 +1151,7 @@ int TextBlock::column(qreal x, TextBase* t) const
             if (x <= f.pos.x())
                   return col;
             qreal px = 0.0;
-            for (const QChar& c : f.text) {
+            for (const QChar& c : qAsConst(f.text)) {
                   ++idx;
                   if (c.isHighSurrogate())
                         continue;
@@ -795,6 +1173,7 @@ int TextBlock::column(qreal x, TextBase* t) const
 void TextBlock::insert(TextCursor* cursor, const QString& s)
       {
       int rcol, ridx;
+      removeEmptyFragment(); // since we are going to write text, we don't need an empty fragment to hold format info. if such exists, delete it
       auto i = fragment(cursor->column(), &rcol, &ridx);
       if (i != _fragments.end()) {
             if (!(i->format == *cursor->format())) {
@@ -818,6 +1197,31 @@ void TextBlock::insert(TextCursor* cursor, const QString& s)
       }
 
 //---------------------------------------------------------
+//
+//   insertEmptyFragmentIfNeeded
+//   used to insert an empty TextFragment in TextBlocks that have none
+//   that way, the formatting information (most importantly the font size) of the line is preserved
+//
+//---------------------------------------------------------
+
+void TextBlock::insertEmptyFragmentIfNeeded(TextCursor* cursor)
+      {
+      if (_fragments.size() == 0 || _fragments.at(0).text.isEmpty()) {
+            _fragments.insert(0, TextFragment(cursor, ""));
+            }
+      }
+
+//---------------------------------------------------------
+//   removeEmptyFragment
+//---------------------------------------------------------
+
+void TextBlock::removeEmptyFragment()
+      {
+      if (_fragments.size() > 0 && _fragments.at(0).text.isEmpty())
+            _fragments.removeAt(0);
+      }
+
+//---------------------------------------------------------
 //   fragment
 //    inputs:
 //      column is the column relative to the start of the TextBlock.
@@ -833,7 +1237,7 @@ QList<TextFragment>::iterator TextBlock::fragment(int column, int* rcol, int* ri
       for (auto i = _fragments.begin(); i != _fragments.end(); ++i) {
             *rcol = 0;
             *ridx = 0;
-            for (const QChar& c : i->text) {
+            for (const QChar& c : qAsConst(i->text)) {
                   if (col == column)
                         return i;
                   ++*ridx;
@@ -850,14 +1254,13 @@ QList<TextFragment>::iterator TextBlock::fragment(int column, int* rcol, int* ri
 //   remove
 //---------------------------------------------------------
 
-QString TextBlock::remove(int column)
+QString TextBlock::remove(int column, TextCursor* cursor)
       {
       int col = 0;
       QString s;
       for (auto i = _fragments.begin(); i != _fragments.end(); ++i) {
             int idx  = 0;
-            int rcol = 0;
-            for (const QChar& c : i->text) {
+            for (const QChar& c : qAsConst(i->text)) {
                   if (col == column) {
                         if (c.isSurrogate()) {
                               s = i->text.mid(idx, 2);
@@ -870,15 +1273,16 @@ QString TextBlock::remove(int column)
                         if (i->text.isEmpty())
                               _fragments.erase(i);
                         simplify();
+                        insertEmptyFragmentIfNeeded(cursor); // without this, cursorRect can't calculate the y position of the cursor correctly
                         return s;
                         }
                   ++idx;
                   if (c.isHighSurrogate())
                         continue;
                   ++col;
-                  ++rcol;
                   }
             }
+      insertEmptyFragmentIfNeeded(cursor); // without this, cursorRect can't calculate the y position of the cursor correctly
       return s;
 //      qDebug("TextBlock::remove: column %d not found", column);
       }
@@ -909,14 +1313,13 @@ void TextBlock::simplify()
 //   remove
 //---------------------------------------------------------
 
-QString TextBlock::remove(int start, int n)
+QString TextBlock::remove(int start, int n, TextCursor* cursor)
       {
       if (n == 0)
             return QString();
       int col = 0;
       QString s;
       for (auto i = _fragments.begin(); i != _fragments.end();) {
-            int rcol = 0;
             bool inc = true;
             for( int idx = 0; idx < i->text.length(); ) {
                   QChar c = i->text[idx];
@@ -933,19 +1336,21 @@ QString TextBlock::remove(int start, int n)
                               inc = false;
                               }
                         --n;
-                        if (n == 0)
+                        if (n == 0) {
+                              insertEmptyFragmentIfNeeded(cursor); // without this, cursorRect can't calculate the y position of the cursor correctly
                               return s;
+                              }
                         continue;
                         }
                   ++idx;
                   if (c.isHighSurrogate())
                         continue;
                   ++col;
-                  ++rcol;
                   }
             if (inc)
                   ++i;
             }
+      insertEmptyFragmentIfNeeded(cursor); // without this, cursorRect can't calculate the y position of the cursor correctly
       return s;
       }
 
@@ -1010,6 +1415,9 @@ void CharFormat::setFormat(FormatId id, QVariant data)
             case FormatId::Underline:
                   setUnderline(data.toBool());
                   break;
+            case FormatId::Strike:
+                  setStrike(data.toBool());
+                  break;
             case FormatId::Valign:
                   _valign = static_cast<VerticalAlignment>(data.toInt());
                   break;
@@ -1035,14 +1443,14 @@ void TextFragment::changeFormat(FormatId id, QVariant data)
 //   split
 //---------------------------------------------------------
 
-TextBlock TextBlock::split(int column)
+TextBlock TextBlock::split(int column, Ms::TextCursor* cursor)
       {
       TextBlock tl;
 
       int col = 0;
       for (auto i = _fragments.begin(); i != _fragments.end(); ++i) {
             int idx = 0;
-            for (const QChar& c : i->text) {
+            for (const QChar& c : qAsConst(i->text)) {
                   if (col == column) {
                         if (idx) {
                               if (idx < i->text.size()) {
@@ -1055,6 +1463,8 @@ TextBlock TextBlock::split(int column)
                               }
                         for (; i != _fragments.end(); i = _fragments.erase(i))
                               tl._fragments.append(*i);
+                        if (_fragments.size() == 0)
+                              insertEmptyFragmentIfNeeded(cursor);
                         return tl;
                         }
                   ++idx;
@@ -1066,6 +1476,8 @@ TextBlock TextBlock::split(int column)
       TextFragment tf("");
       if (_fragments.size() > 0)
             tf.format = _fragments.last().format;
+      else if (_fragments.size() == 0)
+            insertEmptyFragmentIfNeeded(cursor);
       tl._fragments.append(tf);
       return tl;
       }
@@ -1079,10 +1491,10 @@ QString TextBlock::text(int col1, int len) const
       {
       QString s;
       int col = 0;
-      for (auto f : _fragments) {
+      for (const auto &f : _fragments) {
             if (f.text.isEmpty())
                   continue;
-            for (const QChar& c : f.text) {
+            for (const QChar& c : qAsConst(f.text)) {
                   if (col >= col1 && (len < 0 || ((col-col1) < len)))
                         s += XmlWriter::xmlString(c.unicode());
                   if (!c.isHighSurrogate())
@@ -1100,8 +1512,9 @@ TextBase::TextBase(Score* s, Tid tid, ElementFlags f)
    : Element(s, f | ElementFlag::MOVABLE)
       {
       _tid                    = tid;
-      _family                 = "FreeSerif";
+      _family                 = "Edwin";
       _size                   = 10.0;
+      _textLineSpacing        = 1.0;
       _fontStyle              = FontStyle::Normal;
       _bgColor                = QColor(255, 255, 255, 0);
       _frameColor             = QColor(0, 0, 0, 255);
@@ -1121,9 +1534,9 @@ TextBase::TextBase(const TextBase& st)
    : Element(st)
       {
       _text                        = st._text;
-      _layout                      = st._layout;
       textInvalid                  = st.textInvalid;
       layoutInvalid                = st.layoutInvalid;
+      _layout                      = st._layout;
       frame                        = st.frame;
       _layoutToParentWidth         = st._layoutToParentWidth;
       hexState                     = -1;
@@ -1131,6 +1544,7 @@ TextBase::TextBase(const TextBase& st)
       _tid                         = st._tid;
       _family                      = st._family;
       _size                        = st._size;
+      _textLineSpacing             = st._textLineSpacing;
       _fontStyle                   = st._fontStyle;
       _bgColor                     = st._bgColor;
       _frameColor                  = st._frameColor;
@@ -1226,8 +1640,9 @@ static qreal parseNumProperty(const QString& s)
 
 void TextBase::createLayout()
       {
+      // reset all previous formatting information
       _layout.clear();
-      TextCursor cursor((Text*)this);
+      TextCursor cursor(this);
       cursor.init();
 
       int state = 0;
@@ -1248,11 +1663,15 @@ void TextBase::createLayout()
                   else if (c == '\n') {
                         if (rows() <= cursor.row())
                               _layout.append(TextBlock());
+                        if(_layout[cursor.row()].fragments().size() == 0)
+                              _layout[cursor.row()].insertEmptyFragmentIfNeeded(&cursor); // used to preserve the Font size of the line (font info is held in TextFragments, see PR #5881)
                         _layout[cursor.row()].setEol(true);
                         cursor.setRow(cursor.row() + 1);
                         cursor.setColumn(0);
                         if (rows() <= cursor.row())
                               _layout.append(TextBlock());
+                        if (_layout[cursor.row()].fragments().size() == 0)
+                              _layout[cursor.row()].insertEmptyFragmentIfNeeded(&cursor); // an empty fragment may be needed on either side of the newline
                         }
                   else {
                         if (symState)
@@ -1393,6 +1812,8 @@ void TextBase::layout1()
             _layout.append(TextBlock());
       QRectF bb;
       qreal y = 0;
+
+      // adjust the bounding box for the text item
       for (int i = 0; i < rows(); ++i) {
             TextBlock* t = &_layout[i];
             t->layout(this);
@@ -1416,12 +1837,16 @@ void TextBase::layout1()
                         // consider inner margins of frame
                         Box* b = toBox(parent());
                         yoff = b->topMargin()  * DPMM;
-                        h  = b->height() - yoff - b->bottomMargin() * DPMM;
+
+                        if (b->height() < bb.bottom())
+                              h = b->height() / 2 + bb.height();
+                        else
+                              h  = b->height() - yoff - b->bottomMargin() * DPMM;
                         }
                   else if (parent()->isPage()) {
                         Page* p = toPage(parent());
                         h = p->height() - p->tm() - p->bm();
-                        yoff = p->tm();
+                        yoff = _layoutRelativeToBottom ? -p->bm() : p->tm(); // used to keep footers inside page margins
                         }
                   else if (parent()->isMeasure())
                         ;
@@ -1551,6 +1976,7 @@ class XmlNesting : public QStack<QString> {
       void pushB() { pushToken("b"); }
       void pushI() { pushToken("i"); }
       void pushU() { pushToken("u"); }
+      void pushS() { pushToken("s"); }
 
       QString popToken() {
             QString s = pop();
@@ -1567,12 +1993,13 @@ class XmlNesting : public QStack<QString> {
                         break;
                   ps += s;
                   }
-            for (const QString& s : ps)
+            for (const QString& s : qAsConst(ps))
                   pushToken(s);
             }
       void popB() { popToken("b"); }
       void popI() { popToken("i"); }
       void popU() { popToken("u"); }
+      void popS() { popToken("s"); }
       };
 
 //---------------------------------------------------------
@@ -1585,6 +2012,7 @@ void TextBase::genText() const
       bool bold_      = false;
       bool italic_    = false;
       bool underline_ = false;
+      bool strike_    = false;
 
       for (const TextBlock& block : _layout) {
             for (const TextFragment& f : block.fragments()) {
@@ -1594,6 +2022,8 @@ void TextBase::genText() const
                         italic_ = true;
                   if (!f.format.underline() && underline())
                         underline_ = true;
+                  if (!f.format.strike() && strike())
+                        strike_ = true;
                   }
             }
       CharFormat fmt;
@@ -1610,11 +2040,14 @@ void TextBase::genText() const
             xmlNesting.pushI();
       if (underline_)
             xmlNesting.pushU();
+      if (strike_)
+            xmlNesting.pushS();
 
       for (const TextBlock& block : _layout) {
             for (const TextFragment& f : block.fragments()) {
-                  if (f.text.isEmpty())                     // skip empty fragments, not to
-                        continue;                           // insert extra HTML formatting
+                  // don't skip, empty text fragments hold information for empty lines
+//                  if (f.text.isEmpty())                     // skip empty fragments, not to
+//                        continue;                           // insert extra HTML formatting
                   const CharFormat& format = f.format;
                   if (fmt.bold() != format.bold()) {
                         if (format.bold())
@@ -1633,6 +2066,12 @@ void TextBase::genText() const
                               xmlNesting.pushU();
                         else
                               xmlNesting.popU();
+                        }
+                  if (fmt.strike() != format.strike()) {
+                        if (format.strike())
+                              xmlNesting.pushS();
+                        else
+                              xmlNesting.popS();
                         }
 
                   if (format.fontSize() != fmt.fontSize())
@@ -1745,6 +2184,7 @@ static constexpr std::array<Pid, 18> pids { {
       Pid::SUB_STYLE,
       Pid::FONT_FACE,
       Pid::FONT_SIZE,
+      Pid::TEXT_LINE_SPACING,
       Pid::FONT_STYLE,
       Pid::COLOR,
       Pid::FRAME_TYPE,
@@ -1771,28 +2211,24 @@ bool TextBase::readProperties(XmlReader& e)
             setXmlText(e.readXml());
       else if (tag == "bold") {
             bool val = e.readInt();
-            if (val)
-                  _fontStyle = _fontStyle + FontStyle::Bold;
-            else
-                  _fontStyle = _fontStyle - FontStyle::Bold;
+            setBold(val);
             if (isStyled(Pid::FONT_STYLE))
                   setPropertyFlags(Pid::FONT_STYLE, PropertyFlags::UNSTYLED);
             }
       else if (tag == "italic") {
             bool val = e.readInt();
-            if (val)
-                  _fontStyle = _fontStyle + FontStyle::Italic;
-            else
-                  _fontStyle = _fontStyle - FontStyle::Italic;
+            setItalic(val);
             if (isStyled(Pid::FONT_STYLE))
                   setPropertyFlags(Pid::FONT_STYLE, PropertyFlags::UNSTYLED);
             }
       else if (tag == "underline") {
             bool val = e.readInt();
-            if (val)
-                  _fontStyle = _fontStyle + FontStyle::Underline;
-            else
-                  _fontStyle = _fontStyle - FontStyle::Underline;
+            setUnderline(val);            if (isStyled(Pid::FONT_STYLE))
+                  setPropertyFlags(Pid::FONT_STYLE, PropertyFlags::UNSTYLED);
+            }
+      else if (tag == "strike") {
+            bool val = e.readInt();
+            setStrike(val);
             if (isStyled(Pid::FONT_STYLE))
                   setPropertyFlags(Pid::FONT_STYLE, PropertyFlags::UNSTYLED);
             }
@@ -1861,26 +2297,19 @@ void TextBase::dragTo(EditData& ed)
       }
 
 //---------------------------------------------------------
-//   dragAnchor
+//   dragAnchorLines
 //---------------------------------------------------------
 
-QLineF TextBase::dragAnchor() const
+QVector<QLineF> TextBase::dragAnchorLines() const
       {
-      qreal xp = 0.0;
-      for (Element* e = parent(); e; e = e->parent())
-            xp += e->x();
-      qreal yp;
-      if (parent()->isSegment()) {
-            System* system = toSegment(parent())->measure()->system();
-            yp = system->staffCanvasYpage(staffIdx());
+      QVector<QLineF> result(genericDragAnchorLines());
+
+      if (layoutToParentWidth() && !result.empty()) {
+            QLineF& line = result[0];
+            line.setP2(line.p2() + bbox().topLeft());
             }
-      else
-            yp = parent()->canvasPos().y();
-      QPointF p1(xp, yp);
-      QPointF p2 = canvasPos();
-      if (layoutToParentWidth())
-            p2 += bbox().topLeft();
-      return QLineF(p1, p2);
+
+      return result;
       }
 
 //---------------------------------------------------------
@@ -1927,19 +2356,11 @@ void TextBase::layoutEdit()
 bool TextBase::acceptDrop(EditData& data) const
       {
       // do not accept the drop if this text element is not being edited
-      if (!data.getData(this))
+      ElementEditData* eed = data.getData(this);
+      if (!eed || eed->type() != EditDataType::TextEditData)
             return false;
       ElementType type = data.dropElement->type();
       return type == ElementType::SYMBOL || type == ElementType::FSYMBOL;
-      }
-
-//---------------------------------------------------------
-//   setPlainText
-//---------------------------------------------------------
-
-void TextBase::setPlainText(const QString& s)
-      {
-      setXmlText(s.toHtmlEscaped());
       }
 
 //---------------------------------------------------------
@@ -1951,6 +2372,44 @@ void TextBase::setXmlText(const QString& s)
       _text = s;
       layoutInvalid = true;
       textInvalid   = false;
+      }
+
+//---------------------------------------------------------
+//   fragmentList
+//---------------------------------------------------------
+
+/*
+ Return the text as a single list of TextFragment
+ Used by the MusicXML formatted export to avoid parsing the xml text format
+ */
+
+QList<TextFragment> TextBase::fragmentList() const
+      {
+      QList<TextFragment> res;
+
+      const TextBase* text = this;
+      std::unique_ptr<TextBase> tmpText;
+      if (layoutInvalid) {
+            // Create temporary text object to avoid side effects
+            // of createLayout() call.
+            tmpText.reset(toTextBase(this->clone()));
+            tmpText->createLayout();
+            text = tmpText.get();
+            }
+      for (const TextBlock& block : text->_layout) {
+            for (const TextFragment& f : block.fragments()) {
+                  /* TODO TBD
+                  if (f.text.empty())                     // skip empty fragments, not to
+                        continue;                           // insert extra HTML formatting
+                   */
+                  res.append(f);
+                  if (block.eol()) {
+                        // simply append a newline
+                        res.last().text += "\n";
+                        }
+                  }
+            }
+      return res;
       }
 
 //---------------------------------------------------------
@@ -2047,7 +2506,11 @@ QString TextBase::convertFromHtml(const QString& ss) const
                               s += "<i>";
                         if (font.underline())
                               s += "<u>";
+                        if (font.strikeOut())
+                              s += "<s>";
                         s += f.text().toHtmlEscaped();
+                        if (font.strikeOut())
+                              s += "</s>";
                         if (font.underline())
                               s += "</u>";
                         if (font.italic())
@@ -2098,7 +2561,7 @@ QString TextBase::convertToHtml(const QString& s, const TextStyle& /*st*/)
 QString TextBase::tagEscape(QString s)
       {
       QStringList tags = { "sym", "b", "i", "u", "sub", "sup" };
-      for (QString tag : tags) {
+      for (const QString &tag : tags) {
             QString openTag = "<" + tag + ">";
             QString openProxy = "!!" + tag + "!!";
             QString closeTag = "</" + tag + ">";
@@ -2107,7 +2570,7 @@ QString TextBase::tagEscape(QString s)
             s.replace(closeTag, closeProxy);
             }
       s = XmlWriter::xmlString(s);
-      for (QString tag : tags) {
+      for (const QString &tag : tags) {
             QString openTag = "<" + tag + ">";
             QString openProxy = "!!" + tag + "!!";
             QString closeTag = "</" + tag + ">";
@@ -2158,6 +2621,7 @@ QString TextBase::accessibleInfo() const
             case Tid::POET:
             case Tid::TRANSLATOR:
             case Tid::MEASURE_NUMBER:
+            case Tid::MMREST_RANGE:
                   rez = score() ? score()->getTextStyleUserName(tid()) : textStyleUserName(tid());
                   break;
             default:
@@ -2169,7 +2633,7 @@ QString TextBase::accessibleInfo() const
             s.truncate(20);
             s += "…";
             }
-      return  QString("%1: %2").arg(rez).arg(s);
+      return  QString("%1: %2").arg(rez, s);
       }
 
 //---------------------------------------------------------
@@ -2187,6 +2651,7 @@ QString TextBase::screenReaderInfo() const
             case Tid::POET:
             case Tid::TRANSLATOR:
             case Tid::MEASURE_NUMBER:
+            case Tid::MMREST_RANGE:
                   rez = score() ? score()->getTextStyleUserName(tid()) : textStyleUserName(tid());
                   break;
             default:
@@ -2194,7 +2659,7 @@ QString TextBase::screenReaderInfo() const
                   break;
             }
       QString s = plainText().simplified();
-      return  QString("%1: %2").arg(rez).arg(s);
+      return  QString("%1: %2").arg(rez, s);
       }
 
 //---------------------------------------------------------
@@ -2213,34 +2678,6 @@ int TextBase::subtype() const
 QString TextBase::subtypeName() const
       {
       return score() ? score()->getTextStyleUserName(tid()) : textStyleUserName(tid());
-      }
-
-//---------------------------------------------------------
-//   fragmentList
-//---------------------------------------------------------
-
-/*
- Return the text as a single list of TextFragment
- Used by the MusicXML formatted export to avoid parsing the xml text format
- */
-
-QList<TextFragment> TextBase::fragmentList() const
-      {
-      QList<TextFragment> res;
-      for (const TextBlock& block : _layout) {
-            for (const TextFragment& f : block.fragments()) {
-                  /* TODO TBD
-                  if (f.text.empty())                     // skip empty fragments, not to
-                        continue;                           // insert extra HTML formatting
-                   */
-                  res.append(f);
-                  if (block.eol()) {
-                        // simply append a newline
-                        res.last().text += "\n";
-                        }
-                  }
-            }
-      return res;
       }
 
 //---------------------------------------------------------
@@ -2273,7 +2710,7 @@ bool TextBase::validateText(QString& s)
                         d.append("&amp;");
                   }
             else if (c == '<') {
-                  const char* ok[] { "b>", "/b>", "i>", "/i>", "u>", "/u", "font ", "/font>", "sym>", "/sym>" };
+                  const char* ok[] { "b>", "/b>", "i>", "/i>", "u>", "/u", "s>", "/s>", "font ", "/font>", "sym>", "/sym>", "sub>", "/sub>", "sup>", "/sup>" };
                   QString t = s.mid(i+1);
                   bool found = false;
                   for (auto k : ok) {
@@ -2319,6 +2756,9 @@ QFont TextBase::font() const
       QFont f(_family, m, bold() ? QFont::Bold : QFont::Normal, italic());
       if (underline())
             f.setUnderline(underline());
+      if (strike())
+            f.setStrikeOut(strike());
+
       return f;
       }
 
@@ -2346,6 +2786,8 @@ QVariant TextBase::getProperty(Pid propertyId) const
                   return size();
             case Pid::FONT_STYLE:
                   return int(fontStyle());
+            case Pid::TEXT_LINE_SPACING:
+                return textLineSpacing();
             case Pid::FRAME_TYPE:
                   return int(frameType());
             case Pid::FRAME_WIDTH:
@@ -2388,6 +2830,9 @@ bool TextBase::setProperty(Pid pid, const QVariant& v)
                   break;
             case Pid::FONT_STYLE:
                   setFontStyle(FontStyle(v.toInt()));
+                  break;
+            case Pid::TEXT_LINE_SPACING:
+                  setTextLineSpacing(v.toReal());
                   break;
             case Pid::FRAME_TYPE:
                   setFrameType(FrameType(v.toInt()));
@@ -2477,11 +2922,52 @@ int TextBase::getPropertyFlagsIdx(Pid id) const
       }
 
 //---------------------------------------------------------
+//   offsetSid
+//---------------------------------------------------------
+
+Sid TextBase::offsetSid() const
+      {
+      Tid defaultTid = Tid(propertyDefault(Pid::SUB_STYLE).toInt());
+      if (tid() != defaultTid)
+            return Sid::NOSTYLE;
+      bool above = placeAbove();
+      switch (tid()) {
+            case Tid::DYNAMICS:
+                  return above ? Sid::dynamicsPosAbove : Sid::dynamicsPosBelow;
+            case Tid::LYRICS_ODD:
+            case Tid::LYRICS_EVEN:
+                  return above ? Sid::lyricsPosAbove : Sid::lyricsPosBelow;
+            case Tid::REHEARSAL_MARK:
+                  return above ? Sid::rehearsalMarkPosAbove : Sid::rehearsalMarkPosBelow;
+            case Tid::STAFF:
+                  return above ? Sid::staffTextPosAbove : Sid::staffTextPosBelow;
+            case Tid::STICKING:
+                  return above ? Sid::stickingPosAbove : Sid::stickingPosBelow;
+            case Tid::SYSTEM:
+                  return above ? Sid::systemTextPosAbove : Sid::systemTextPosBelow;
+            case Tid::TEMPO:
+                  return above ? Sid::tempoPosAbove : Sid::tempoPosBelow;
+            case Tid::MEASURE_NUMBER:
+                  return above ? Sid::measureNumberPosAbove : Sid::measureNumberPosBelow;
+            case Tid::MMREST_RANGE:
+                  return above ? Sid::mmRestRangePosAbove : Sid::mmRestRangePosBelow;
+            default:
+                  break;
+            }
+      return Sid::NOSTYLE;
+      }
+
+//---------------------------------------------------------
 //   getPropertyStyle
 //---------------------------------------------------------
 
 Sid TextBase::getPropertyStyle(Pid id) const
       {
+      if (id == Pid::OFFSET) {
+            Sid sid = offsetSid();
+            if (sid != Sid::NOSTYLE)
+                  return sid;
+            }
       for (const StyledProperty& p : *_elementStyle) {
             if (p.pid == id)
                   return p.sid;
@@ -2507,13 +2993,13 @@ void TextBase::styleChanged()
       for (const StyledProperty& spp : *_elementStyle) {
             PropertyFlags f = _propertyFlagsList[i];
             if (f == PropertyFlags::STYLED)
-                  setProperty(spp.pid, styleValue(spp.pid, getPropertyStyle(spp.pid)));
+                  setProperty(spp.pid, safePropertyStyleValue(spp.pid));
             ++i;
             }
       for (const StyledProperty& spp : *textStyle(tid())) {
             PropertyFlags f = _propertyFlagsList[i];
             if (f == PropertyFlags::STYLED)
-                  setProperty(spp.pid, styleValue(spp.pid, getPropertyStyle(spp.pid)));
+                  setProperty(spp.pid, safePropertyStyleValue(spp.pid));
             ++i;
             }
       }
@@ -2573,7 +3059,7 @@ void TextBase::editCut(EditData& ed)
       QString s = _cursor->selectedText();
 
       if (!s.isEmpty()) {
-            QApplication::clipboard()->setText(s, QClipboard::Clipboard);
+            QApplication::clipboard()->setText(s);
             ed.curGrip = Grip::START;
             ed.key     = Qt::Key_Delete;
             ed.s       = QString();
@@ -2594,7 +3080,7 @@ void TextBase::editCopy(EditData& ed)
       TextCursor* _cursor = &ted->cursor;
       QString s = _cursor->selectedText();
       if (!s.isEmpty())
-            QApplication::clipboard()->setText(s, QClipboard::Clipboard);
+            QApplication::clipboard()->setText(s);
       }
 
 //---------------------------------------------------------
@@ -2616,7 +3102,7 @@ void TextBase::draw(QPainter* p) const
       {
       if (hasFrame()) {
             qreal baseSpatium = MScore::baseStyle().value(Sid::spatium).toDouble();
-            if (frameWidth().val() != 0.0) {
+            if (!qFuzzyIsNull(frameWidth().val())) {
                   QColor fColor = curColor(visible(), frameColor());
                   qreal frameWidthVal = frameWidth().val() * (sizeIsSpatiumDependent() ? spatium() : baseSpatium);
 
@@ -2669,17 +3155,9 @@ void TextBase::drawEditMode(QPainter* p, EditData& ed)
             int r2 = _cursor->row();
             int c1 = _cursor->selectColumn();
             int c2 = _cursor->column();
-
-            if (r1 > r2) {
-                  qSwap(r1, r2);
-                  qSwap(c1, c2);
-                  }
-            else if (r1 == r2) {
-                  if (c1 > c2)
-                        qSwap(c1, c2);
-                  }
+            sort(r1, c1, r2, c2);
             int row = 0;
-            for (const TextBlock& t : _layout) {
+            for (const TextBlock& t : qAsConst(_layout)) {
                   t.draw(p, this);
                   if (row >= r1 && row <= r2) {
                         QRectF br;
@@ -2706,9 +3184,9 @@ void TextBase::drawEditMode(QPainter* p, EditData& ed)
       if (!_cursor->hasSelection())
             p->drawRect(_cursor->cursorRect());
 
-      QMatrix matrix = p->matrix();
+      QTransform transform = p->worldTransform();
       p->translate(-pos);
-      p->setPen(QPen(QBrush(Qt::lightGray), 4.0 / matrix.m11()));  // 4 pixel pen size
+      p->setPen(QPen(QBrush(Qt::lightGray), 4.0 / transform.m11()));  // 4 pixel pen size
       p->setBrush(Qt::NoBrush);
 
       qreal m = spatium();
@@ -2765,6 +3243,7 @@ QString TextBase::stripText(bool removeStyle, bool removeSize, bool removeFace) 
       bool bold_      = false;
       bool italic_    = false;
       bool underline_ = false;
+      bool strike_    = false;
 
       for (const TextBlock& block : _layout) {
             for (const TextFragment& f : block.fragments()) {
@@ -2774,6 +3253,8 @@ QString TextBase::stripText(bool removeStyle, bool removeSize, bool removeFace) 
                         italic_ = true;
                   if (!f.format.underline() && underline())
                         underline_ = true;
+                  if (!f.format.strike() && strike())
+                        strike_ = true;
                   }
             }
       CharFormat fmt;
@@ -2791,6 +3272,8 @@ QString TextBase::stripText(bool removeStyle, bool removeSize, bool removeFace) 
                   xmlNesting.pushI();
             if (underline_)
                   xmlNesting.pushU();
+            if (strike_)
+                  xmlNesting.pushS();
             }
 
       for (const TextBlock& block : _layout) {
@@ -2816,6 +3299,12 @@ QString TextBase::stripText(bool removeStyle, bool removeSize, bool removeFace) 
                                     xmlNesting.pushU();
                               else
                                     xmlNesting.popU();
+                              }
+                        if (fmt.strike() != format.strike()) {
+                              if (format.strike())
+                                    xmlNesting.pushS();
+                              else
+                                    xmlNesting.popS();
                               }
                         }
 
@@ -2870,4 +3359,3 @@ void TextBase::undoChangeProperty(Pid id, const QVariant& v, PropertyFlags ps)
       }
 
 }
-

@@ -10,11 +10,9 @@
 //  the file LICENSE.GPL
 //=============================================================================
 
-#ifndef __TIMEDIALOG_H__
-#define __TIMEDIALOG_H__
+#pragma once
 
 #include "ui_timedialog.h"
-#include "libmscore/fraction.h"
 
 namespace Ms {
 
@@ -40,17 +38,19 @@ class TimeDialog : public QWidget, Ui::TimeDialogBase {
 
    private slots:
       void addClicked();
-      void zChanged(int);
+      void zChanged();
       void nChanged(int);
       void paletteChanged(int idx);
       void textChanged();
       void setDirty() { _dirty = true; }
 
+   signals:
+      void timeSigAdded(const TimeSig*);
+
    public:
       TimeDialog(QWidget* parent = 0);
       bool dirty() const { return _dirty; }
+      void showTimePalette(bool val);
       void save();
       };
 }
-
-#endif

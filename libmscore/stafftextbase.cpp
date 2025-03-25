@@ -10,12 +10,12 @@
 //  the file LICENCE.GPL
 //=============================================================================
 
+#include "measure.h"
 #include "score.h"
+#include "staff.h"
 #include "stafftextbase.h"
 #include "system.h"
-#include "staff.h"
 #include "xml.h"
-#include "measure.h"
 
 namespace Ms {
 
@@ -39,9 +39,9 @@ void StaffTextBase::write(XmlWriter& xml) const
             return;
       xml.stag(this);
 
-      for (ChannelActions s : _channelActions) {
+      for (const ChannelActions &s : _channelActions) {
             int channel = s.channel;
-            for (QString name : s.midiActionNames)
+            for (const QString &name : qAsConst(s.midiActionNames))
                   xml.tagE(QString("MidiAction channel=\"%1\" name=\"%2\"").arg(channel).arg(name));
             }
       for (int voice = 0; voice < VOICES; ++voice) {
@@ -61,7 +61,7 @@ void StaffTextBase::write(XmlWriter& xml) const
             else
                   swingUnit = TDuration(TDuration::DurationType::V_ZERO).name();
             int swingRatio = swingParameters()->swingRatio;
-            xml.tagE(QString("swing unit=\"%1\" ratio= \"%2\"").arg(swingUnit).arg(swingRatio));
+            xml.tagE(QString("swing unit=\"%1\" ratio=\"%2\"").arg(swingUnit).arg(swingRatio));
             }
       if (capo() != 0)
             xml.tagE(QString("capo fretId=\"%1\"").arg(capo()));

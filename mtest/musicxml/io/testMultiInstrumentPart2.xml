@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
-<score-partwise version="3.1">
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.0">
   <work>
     <work-number>MuseScore testfile</work-number>
     <work-title>Multi Instrument Part 2</work-title>
@@ -107,6 +107,21 @@
         </note>
       </measure>
     <measure number="3">
+      <print>
+        <part-name-display>
+          <display-text>Piano</display-text>
+          </part-name-display>
+        <part-abbreviation-display>
+          <display-text>Pno.</display-text>
+          </part-abbreviation-display>
+        </print>
+      <sound>
+        <instrument-change>
+          <score-instrument id="P1-I2">
+            <instrument-name>Flute</instrument-name>
+            </score-instrument>
+          </instrument-change>
+        </sound>
       <direction placement="above">
         <direction-type>
           <words font-weight="bold" font-size="12">Flute</words>
@@ -137,14 +152,14 @@
       </measure>
     <measure number="5">
       <note>
-        <rest/>
+        <rest measure="yes"/>
         <duration>4</duration>
         <voice>1</voice>
         </note>
       </measure>
     <measure number="6">
       <note>
-        <rest/>
+        <rest measure="yes"/>
         <duration>4</duration>
         <voice>1</voice>
         </note>
@@ -156,14 +171,14 @@
           </direction-type>
         </direction>
       <note>
-        <rest/>
+        <rest measure="yes"/>
         <duration>4</duration>
         <voice>1</voice>
         </note>
       </measure>
     <measure number="8">
       <note>
-        <rest/>
+        <rest measure="yes"/>
         <duration>4</duration>
         <voice>1</voice>
         </note>
@@ -190,14 +205,14 @@
           </clef>
         </attributes>
       <note>
-        <rest/>
+        <rest measure="yes"/>
         <duration>4</duration>
         <voice>1</voice>
         </note>
       </measure>
     <measure number="2">
       <note>
-        <rest/>
+        <rest measure="yes"/>
         <duration>4</duration>
         <voice>1</voice>
         </note>
@@ -209,14 +224,14 @@
           </direction-type>
         </direction>
       <note>
-        <rest/>
+        <rest measure="yes"/>
         <duration>4</duration>
         <voice>1</voice>
         </note>
       </measure>
     <measure number="4">
       <note>
-        <rest/>
+        <rest measure="yes"/>
         <duration>4</duration>
         <voice>1</voice>
         </note>
@@ -246,6 +261,21 @@
         </note>
       </measure>
     <measure number="7">
+      <print>
+        <part-name-display>
+          <display-text>Voice</display-text>
+          </part-name-display>
+        <part-abbreviation-display>
+          <display-text>Vo.</display-text>
+          </part-abbreviation-display>
+        </print>
+      <sound>
+        <instrument-change>
+          <score-instrument id="P2-I2">
+            <instrument-name>C Trumpet</instrument-name>
+            </score-instrument>
+          </instrument-change>
+        </sound>
       <direction placement="above">
         <direction-type>
           <words font-weight="bold" font-size="12">Trumpet</words>

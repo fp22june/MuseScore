@@ -33,6 +33,7 @@ Knob::Knob(QWidget* parent)
       _markSize  = 6;
       _border    = 2;
       points     = 0;
+      startY     = 0;
       }
 
 //---------------------------------------------------------
@@ -238,8 +239,8 @@ void Knob::paintEvent(QPaintEvent* /*ev*/)
       int rd = w/2;
       int x1 = x + rd;
       int y1 = y + rd;
-      int x2 = x1 + lrint(cos(r1) * double(rd));
-      int y2 = y1 + lrint(sin(r1) * double(rd));
+      int x2 = x1 + (int)lrint(cos(r1) * double(rd));
+      int y2 = y1 + (int)lrint(sin(r1) * double(rd));
       p.drawLine(x1, y1, x2, y2);
 
 

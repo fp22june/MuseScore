@@ -12,7 +12,6 @@
 
 
 #include "musescore.h"
-#include "libmscore/mscore.h"
 #include "startcenter.h"
 #include "scoreBrowser.h"
 #include "tourhandler.h"
@@ -58,35 +57,7 @@ Startcenter::Startcenter(QWidget* parent)
       connect(closeButton, SIGNAL(clicked()), this, SLOT(close()));
       setStyleSheet(QString("QPushButton { background-color: %1 }").arg(openScore->palette().color(QPalette::Base).name()));
 
-#ifdef USE_WEBENGINE
-      if (!noWebView) {
-            _webView = new MyWebView(this);
-            _webView->setMaximumWidth(200);
-
-            MyWebEnginePage* page = new MyWebEnginePage(this);
-            MyWebUrlRequestInterceptor* wuri = new MyWebUrlRequestInterceptor(page);
-            QWebEngineProfile* profile = page->profile();
-            profile->setRequestInterceptor(wuri);
-            _webView->setPage(page);
-
-            auto extendedVer = QString(VERSION) + "." + QString(BUILD_NUMBER);
-            QUrl connectPageUrl = QUrl(QString("https://connect2.musescore.com/?version=%1").arg(extendedVer));
-            _webView->setUrl(connectPageUrl);
-
-            horizontalLayout->addWidget(_webView);
-            
-            //workaround for the crashes sometimes happend in Chromium on macOS with Qt 5.12
-            connect(_webView, &QWebEngineView::renderProcessTerminated, this, [this, profile, connectPageUrl](QWebEnginePage::RenderProcessTerminationStatus terminationStatus, int exitCode)
-                    {
-                    qDebug() << "Login page loading terminated" << terminationStatus << " " << exitCode;
-                    profile->clearHttpCache();
-                    _webView->load(connectPageUrl);
-                    _webView->show();
-                    });
-            }
-#endif
-
-      if (enableExperimental)
+//      if (enableExperimental)
 // right now don’t know how it use in WebEngine @handrok
 //            QWebSettings::globalSettings()->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
 //      QWebSettings::globalSettings()->setAttribute(QWebSettings::PluginsEnabled, false);
@@ -115,8 +86,8 @@ void Startcenter::loadScore(QString s)
             newScore();
             }
       else {
-            mscore->openScore(s);
             close();
+            mscore->openScore(s);
             }
       }
 
@@ -207,63 +178,5 @@ void Startcenter::keyReleaseEvent(QKeyEvent *event)
       else
             AbstractDialog::keyReleaseEvent(event);
       }
-
-#ifdef USE_WEBENGINE
- 
-//---------------------------------------------------------
-//   MyWebView
-//---------------------------------------------------------
-
-MyWebView::MyWebView(QWidget *parent):
-      QWebEngineView(parent)
-      {
-      if (!enableExperimental)
-            setContextMenuPolicy(Qt::NoContextMenu);
-      }
-
-//---------------------------------------------------------
-//   ~MyWebView
-//---------------------------------------------------------
-
-MyWebView::~MyWebView()
-      {
-      disconnect(this, SIGNAL(loadFinished(bool)), this, SLOT(stopBusy(bool)));
-      }
-
-//---------------------------------------------------------
-//   sizeHint
-//---------------------------------------------------------
-
-QSize MyWebView::sizeHint() const
-      {
-      return QSize(200 , 600);
-      }
-
-
-bool MyWebEnginePage::acceptNavigationRequest(const QUrl & url, QWebEnginePage::NavigationType type, bool isMainFrame)
-      {
-      qDebug() << "acceptNavigationRequest(" << url << "," << type << "," << isMainFrame << ")";
-
-      if (type == QWebEnginePage::NavigationTypeLinkClicked)
-      {
-            QString path(url.path());
-            QFileInfo fi(path);
-            if (fi.suffix() == "mscz" || fi.suffix() == "xml"
-                  || fi.suffix() == "musicxml" || fi.suffix() == "mxl") {
-                  mscore->loadFile(url);
-                  QAction* a = getAction("startcenter");
-                  a->setChecked(false);
-                  mscore->showStartcenter(false);
-            }
-            else
-                  QDesktopServices::openUrl(url);
-
-            return false;
-      }
-      return true;
-      }
-
-
-#endif //USE_WEBENGINE
 }
 

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<museScore version="3.01">
+<museScore version="3.02">
   <Score>
     <LayerTag id="0" tag="default"></LayerTag>
     <currentLayer>0</currentLayer>
@@ -155,7 +155,7 @@
             <durationType>eighth</durationType>
             </Rest>
           <StaffText>
-            <swing unit="eighth" ratio= "60"/>
+            <swing unit="eighth" ratio="60"/>
             <linkedMain/>
             <style>Tempo</style>
             <text>Swing</text>
@@ -377,7 +377,7 @@
               <durationType>eighth</durationType>
               </Rest>
             <StaffText>
-              <swing unit="eighth" ratio= "60"/>
+              <swing unit="eighth" ratio="60"/>
               <linked>
                 </linked>
               <style>Tempo</style>
@@ -561,7 +561,7 @@
               <fractions>-1/8</fractions>
               </location>
             <StaffText>
-              <swing unit="eighth" ratio= "60"/>
+              <swing unit="eighth" ratio="60"/>
               <linked>
                 <location>
                   <staves>-1</staves>

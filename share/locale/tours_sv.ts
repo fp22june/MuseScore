@@ -1,4 +1,6 @@
-<?xml version="1.0" ?><!DOCTYPE TS><TS language="sv" version="2.1">
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE TS>
+<TS version="2.1" language="sv">
 <context>
     <name>TourXML</name>
     <message>
@@ -37,8 +39,8 @@
     The default is voice 1, and it should be used first for each staff.
     To enter notes into a different voice, click one of these icons.</source>
         <comment>note-input</comment>
-        <translation>För att ange noter med olika rytmer i samma takt, använd flera stämmor. Varje
-    notrad kan innehålla upp till fyra stämmor.
+        <translation>För att ange noter med olika rytmer i samma takt, använd flera stämmor.
+    Varje notrad kan innehålla upp till fyra stämmor.
     Förvalet är stämma 1, och den bör användas i första hand för varje system.
     För att ange noter i en annan stämma, klicka på en av dessa ikoner.</translation>
     </message>
@@ -107,15 +109,6 @@
         <comment>navigate-tour</comment>
         <translation>MuseScore ger dig många sätt att navigera i ditt partitur.
     Klicka på &quot;Nästa&quot; för mer information.</translation>
-    </message>
-    <message>
-        <source>The navigation keys on your keyboard such as PgUp, PgDn, Home, and End function as in other applications
-    to move between pages.
-    Keyboards that lack these keys often provide equivalents such as Fn+Up/Down/Left/Right.</source>
-        <comment>navigate-tour</comment>
-        <translation>Navigeringstangenterna på ditt tangentbord, såsom PgUp, PgDn, Home och End, fungerar som i andra program
-    för att flytta mellan sidor.
-    Tangentbord som saknar dessa tangenter har ofta något motsvarande, som Fn+Upp/Ned/Vänster/Höger.</translation>
     </message>
     <message>
         <source>Additional navigation tools include the Timeline and Navigator, both found in the View menu.</source>
@@ -215,39 +208,6 @@
     Klicka på &quot;Nästa&quot; för mer information.</translation>
     </message>
     <message>
-        <source>To make a single selection, click the element you want to select.
-    It becomes highlighted to indicate that it is selected.
-    You can use the left and right cursor keys to move the selection through the notes and rests of your score.
-    Tip: if you press the Alt key (Option on macOS) along with the cursor keys you can move through other elements too,
-    and also move up and down from staff to staff.</source>
-        <comment>select-tour</comment>
-        <translation>För att göra en enkel markering, klicka på elementet du vill markera.
-    Det får en synlig markering för att visa att det markerats.
-    Du kan använda vänster och höger piltangenter för att flytta markeringen genom noterna och takterna i ditt partitur.
-    Tips: om du trycker på Alt-tangenten (Option på MacOS) tillsammans med piltangenterna kan du flytta markeringen genom andra element också,
-    och flytta upp och ned från notsystem till notsystem.</translation>
-    </message>
-    <message>
-        <source>A range selection includes everything from one point in time to another across one or more staves.
-    It is indicated by a blue rectangle encompassing the entire range.
-    To make a range selection, click the first note, rest, or measure you want to select, then Shift+click the last.
-    You can also extend range selections by holding the Shift key while moving the cursor.</source>
-        <comment>select-tour</comment>
-        <translation>En intervallmarkering inkluderar allt från en punkt till en annan, över en eller flera notsystem.
-    Det indikeras av en blå rektangel som innesluter hela intervallet.
-    För att göra en intervallmarkering, klicka på den första noten, pausen, eller takten som du vill markera, och Skift+klicka sedan på den sista.
-    Du kan också utöka intervallmarkeringar genom att hålla ned Skift-tangenten medan du flyttar markören.</translation>
-    </message>
-    <message>
-        <source>Another way to make selections is to hold Shift while dragging.
-    If your selection includes notes, it will automatically be made as a range selection;
-    otherwise it will be made as a list selection.</source>
-        <comment>select-tour</comment>
-        <translation>Ett annat sätt att markera är att hålla ned Skift och dra.
-    Om du markering inkluderar noter kommer det automatiskt resultera i en intervallmarkering;
-    annars blir det en listmarkering.</translation>
-    </message>
-    <message>
         <source>Finally, the Selection Filter (found in the View menu) allows you to exclude elements of a given type from a range selection.</source>
         <comment>select-tour</comment>
         <translation>Slutligen: Markeringsfiltret (finns i Visa-menyn) låter dig utesluta element av en given typ från en intervallmarkering.</translation>
@@ -259,7 +219,7 @@
         <comment>inspector-tour</comment>
         <translation>Om du har ändrat ett värde kan du klicka på &quot;Återställ&quot;-knappen för att återställa den till förvalet.
     Om värdet styrs av en stilinställning kan du klicka på knappen &quot;Ange som stil&quot; för att ange nuvarande värde som det nya förvalet för stilen.
-    Du kan också ange stilförval genom Format &gt; Stil....</translation>
+    Du kan också ange stilförval genom Format &gt; Stil….</translation>
     </message>
     <message>
         <source>The quickest way to scroll up and down is to use your mouse wheel or equivalent touch gesture (for example, two-finger swipe).
@@ -267,6 +227,15 @@
         <comment>navigate-tour</comment>
         <translation>Det snabbaste sättet att rulla upp och ned är att använda ditt mushjul eller motsvarande pekgest (t.ex. tvåfingersvep).
  För att rulla horisontellt, håll &quot;Skift&quot; medan du använder mushjulet eller pekgest.</translation>
+    </message>
+    <message>
+        <source>The navigation keys on your keyboard such as &quot;PgUp&quot;, &quot;PgDn&quot;, &quot;Home&quot;, and &quot;End&quot; function as in other applications
+    to move between pages.
+    Keyboards that lack these keys often provide equivalents such as &quot;Fn+Up/Down/Left/Right&quot;.</source>
+        <comment>navigate-tour</comment>
+        <translation>Navigeringstangenterna på ditt skrivbord, som &quot;PgUp&quot;, &quot;PgDn&quot;, &quot;Home&quot; och &quot;End&quot;, fungerar som i andra program
+   för att flytta mellan sidor.
+   Tangentbord som saknar dessa tangenter har ofta likartade lösningar, som &quot;Fn+upp/ned/vänster/höger&quot;.</translation>
     </message>
     <message>
         <source>You can move the score short distances by clicking an empty area of the page and dragging.
@@ -297,7 +266,20 @@
     <message>
         <source>To create a triplet or other tuplet, select the duration representing the total length of the tuplet, then press &quot;Ctrl+number&quot; or use Add &gt; Tuplets.</source>
         <comment>note-input</comment>
-        <translation>För att skapa en triol eller en annan annandelning, klicka på notvärdet som motsvarar annandelningens totala längd, och tryck sedan &quot;Ctrl+siffra&quot; eller använd Lägg till &gt; Annandelningar.</translation>
+        <translation>För att skapa en triol eller en annat oregelbundet notvärde, klicka på notvärdet som motsvarar total längd, och tryck sedan &quot;Ctrl+siffra&quot; eller använd Lägg till &gt; Oregelbundna notvärden.</translation>
+    </message>
+    <message>
+        <source>To make a single selection, click the element you want to select.
+    It becomes highlighted to indicate that it is selected.
+    You can use the left and right cursor keys to move the selection through the notes and rests of your score.
+    Tip: if you press the &quot;Alt&quot; key (&quot;Option&quot; on macOS) along with the cursor keys you can move through other elements too,
+    and also move up and down from staff to staff.</source>
+        <comment>select-tour</comment>
+        <translation>För att göra en enstaka markering, klicka på elementet du vill markera.
+   Det märks med färg för att indikera att det är markerat.
+   Du kan använda vänster och höger piltangenter för att flytta markeringen genom noterna och pauserna i ditt partitur.
+   Tips: om du trycker på &quot;Alt&quot;-tangenten (&quot;Option&quot; i macOS) tillsammans med piltangenterna kan du flytta genom andra element också,
+   och dessutom flytta upp och ned mellan notsystem.</translation>
     </message>
     <message>
         <source>A list selection is a combination of single selections.
@@ -311,21 +293,41 @@
     och sedan välja ett av &quot;Markera&quot;-alternativen från den popuppmeny som visas.</translation>
     </message>
     <message>
+        <source>A range selection includes everything from one point in time to another across one or more staves.
+    It is indicated by a blue rectangle encompassing the entire range.
+    To make a range selection, click the first note, rest, or measure you want to select, then &quot;Shift&quot;+click the last.
+    You can also extend range selections by holding the &quot;Shift&quot; key while moving the cursor.</source>
+        <comment>select-tour</comment>
+        <translation>En intervallmarkering inkluderar allt från en tidpunkt till en annan över ett eller flera notsystem.
+   Det indikeras av en blå rektangel som innesluter hela intervallet.
+   För att göra en intervallmarkering, klicka på den första noten, pausen eller takten som du vill markera, och &quot;skift&quot;-klicka sedan den sista.
+   Du kan också utöka intervallmarkeringar genom att hålla ned &quot;skift&quot;-tangenten medan du flyttar markören.</translation>
+    </message>
+    <message>
+        <source>Another way to make selections is to hold &quot;Shift&quot; while dragging.
+    If your selection includes notes, it will automatically be made as a range selection;
+    otherwise it will be made as a list selection.</source>
+        <comment>select-tour</comment>
+        <translation>Ett annat sätt att göra markeringar är att hålla ned &quot;Skift&quot; med du drar.
+   Om din markering inkluderar noter kommer det automatiskt bli en intervallmarkering;
+   annars blir det en listmarkering.</translation>
+    </message>
+    <message>
         <source>Most elements on the lines palette span a range from a start element to an end element.
 
     To edit its range, double-click the line (which automatically selects its end handle) and:
 
-    - Press Shift-Right to move that handle forward.
+    - Press &quot;Shift+Right&quot; to move that handle forward.
 
-    - Press Shift-Left to move that handle backward.</source>
+    - Press &quot;Shift+Left&quot; to move that handle backward.</source>
         <comment>spanner-drop-apply</comment>
         <translation>De flesta element på linjepaletten omfattar ett intervall från ett startelement till ett slutelement.
 
-   För att redigera dess omfattning, dubbelklicka på linjen (vilket automatiskt väljer dess avslutande handtag) och:
+   För att redigera deras intervall, dubbelklicka på linjen (vilket automatiskt väljer dess sluthandtag) och:
 
-   - Tryck Skift-Höger för att flytta det handtaget framåt.
+   - Tryck &quot;Skift+höger&quot; för att flytta det handtaget framåt.
 
-   - Tryck Skift-Vänster för att flytta det handtaget bakåt.</translation>
+   - Tryck &quot;Skift+vänster&quot; för att flytta det handtaget bakåt.</translation>
     </message>
     <message>
         <source>Alternatively, first selecting a range of elements in the score and then double-clicking a line element in the palette will add that new element across the selected range.</source>
@@ -358,7 +360,7 @@
     Dessutom kan många kommandon kommas åt via tangentbordsgenvägar eller genom att högerklicka (macOS: &quot;Ctrl&quot;+klick) i partiturvyn.</translation>
     </message>
     <message>
-        <source>That's the end of this tour!
+        <source>That&apos;s the end of this tour!
     As you use MuseScore, more tours will pop up to further explain functionality.
     To disable these, deselect &quot;Continue showing tours&quot; before closing this window.
     You can also enable/disable and reset tours in Help &gt; Tours.</source>

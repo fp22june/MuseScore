@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<museScore version="3.01">
+<museScore version="3.02">
   <Score>
     <LayerTag id="0" tag="default"></LayerTag>
     <currentLayer>0</currentLayer>
     <Division>480</Division>
     <Style>
       <ArpeggioHiddenInStdIfTab>1</ArpeggioHiddenInStdIfTab>
-      <Spatium>1.76389</Spatium>
+      <Spatium>1.74978</Spatium>
       </Style>
     <showInvisible>1</showInvisible>
     <showUnprintable>1</showUnprintable>
@@ -102,7 +102,8 @@
               </Note>
             <Arpeggio>
               <linkedMain/>
-              <subtype>5</subtype>
+              <subtype>4</subtype>
+              <timeStretch>0.5</timeStretch>
               </Arpeggio>
             </Chord>
           </voice>
@@ -135,7 +136,8 @@
               </Note>
             <Arpeggio>
               <linkedMain/>
-              <subtype>4</subtype>
+              <subtype>5</subtype>
+              <timeStretch>0.5</timeStretch>
               </Arpeggio>
             </Chord>
           </voice>
@@ -147,7 +149,7 @@
       <Division>480</Division>
       <Style>
         <ArpeggioHiddenInStdIfTab>1</ArpeggioHiddenInStdIfTab>
-        <Spatium>1.76389</Spatium>
+        <Spatium>1.74978</Spatium>
         </Style>
       <showInvisible>1</showInvisible>
       <showUnprintable>1</showUnprintable>
@@ -272,7 +274,8 @@
               <Arpeggio>
                 <linked>
                   </linked>
-                <subtype>5</subtype>
+                <subtype>4</subtype>
+                <timeStretch>0.5</timeStretch>
                 </Arpeggio>
               </Chord>
             </voice>
@@ -310,7 +313,8 @@
               <Arpeggio>
                 <linked>
                   </linked>
-                <subtype>4</subtype>
+                <subtype>5</subtype>
+                <timeStretch>0.5</timeStretch>
                 </Arpeggio>
               </Chord>
             </voice>
@@ -361,7 +365,8 @@
                 <linked>
                   <indexDiff>4</indexDiff>
                   </linked>
-                <subtype>5</subtype>
+                <subtype>4</subtype>
+                <timeStretch>0.5</timeStretch>
                 </Arpeggio>
               </Chord>
             </voice>
@@ -399,7 +404,8 @@
               <Arpeggio>
                 <linked>
                   </linked>
-                <subtype>4</subtype>
+                <subtype>5</subtype>
+                <timeStretch>0.5</timeStretch>
                 </Arpeggio>
               </Chord>
             </voice>

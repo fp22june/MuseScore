@@ -18,7 +18,6 @@
  Definition of Score class.
 */
 
-#include "config.h"
 #include "input.h"
 #include "instrument.h"
 #include "select.h"
@@ -27,8 +26,13 @@
 #include "spannermap.h"
 #include "layoutbreak.h"
 #include "property.h"
+#include "sym.h"
 
 namespace Ms {
+
+namespace Avs {
+      class AvsOmr;
+}
 
 class Articulation;
 class Audio;
@@ -84,6 +88,7 @@ class UndoStack;
 class Volta;
 class XmlWriter;
 class Channel;
+class ScoreOrder;
 struct Interval;
 struct TEvent;
 struct LayoutContext;
@@ -91,13 +96,12 @@ struct LayoutContext;
 enum class Tid;
 enum class ClefType : signed char;
 enum class BeatType : char;
-enum class SymId;
 enum class Key;
 enum class HairpinType : signed char;
 enum class SegmentType;
 enum class OttavaType : char;
-
-extern bool showRubberBand;
+enum class Voicing : signed char;
+enum class HDuration : signed char;
 
 enum class POS : char { CURRENT, LEFT, RIGHT };
 
@@ -112,6 +116,9 @@ enum class Pad : char {
       NOTE32,
       NOTE64,
       NOTE128,
+      NOTE256,
+      NOTE512,
+      NOTE1024,
       //--------------------
       REST,
       DOT,
@@ -124,7 +131,7 @@ enum class Pad : char {
 //   LayoutMode
 //    PAGE   The normal page view, honors page and line breaks.
 //    LINE   The panoramic view, one long system
-//    FLOAT  The "reflow" mode, ignore page and line breaks
+//    FLOAT  The "reflow" mode, ignore page and line breaks, stave spacer up, fixed and down
 //    SYSTEM The "never ending page", page break are turned into line break
 //---------------------------------------------------------
 
@@ -199,7 +206,7 @@ struct Position {
       Segment* segment { 0 };
       int staffIdx     { -1 };
       int line         { 0 };
-      int fret         { FRET_NONE };
+      int fret         { INVALID_FRET_INDEX };
       QPointF pos;
       };
 
@@ -210,7 +217,8 @@ struct Position {
 enum class LayoutFlag : char {
       NO_FLAGS       = 0,
       FIX_PITCH_VELO = 1,
-      PLAY_EVENTS    = 2
+      PLAY_EVENTS    = 2,
+      REBUILD_MIDI_MAPPING = 4,
       };
 
 typedef QFlags<LayoutFlag> LayoutFlags;
@@ -259,6 +267,16 @@ class CmdState {
       UpdateMode _updateMode { UpdateMode::DoNothing };
       Fraction _startTick {-1, 1};            // start tick for mode LayoutTick
       Fraction _endTick   {-1, 1};              // end tick for mode LayoutTick
+      int _startStaff = -1;
+      int _endStaff = -1;
+      const Element* _el = nullptr;
+      const MeasureBase* _mb = nullptr;
+      bool _oneElement = true;
+      bool _oneMeasureBase = true;
+
+      bool _locked = false;
+
+      void setMeasureBase(const MeasureBase* mb);
 
    public:
       LayoutFlags layoutFlags;
@@ -274,8 +292,17 @@ class CmdState {
       bool updateAll() const   { return int(_updateMode) >= int(UpdateMode::UpdateAll); }
       bool updateRange() const { return _updateMode == UpdateMode::Update; }
       void setTick(const Fraction& t);
+      void setStaff(int staff);
+      void setElement(const Element* e);
+      void unsetElement(const Element* e);
       Fraction startTick() const { return _startTick; }
       Fraction endTick() const   { return _endTick; }
+      int startStaff() const { return _startStaff; }
+      int endStaff() const { return _endStaff; }
+      const Element* element() const;
+
+      void lock() { _locked = true; }
+      void unlock() { _locked = false; }
 #ifndef NDEBUG
       void dump();
 #endif
@@ -298,7 +325,18 @@ class UpdateState {
 //   ScoreContentState
 //---------------------------------------------------------
 
-typedef std::pair<const Score*, int> ScoreContentState;
+class ScoreContentState {
+      const Score* score;
+      int num;
+   public:
+      ScoreContentState() : score(nullptr), num(0) {}
+      ScoreContentState(const Score* s, int stateNum) : score(s), num(stateNum) {}
+
+      bool operator==(const ScoreContentState& s2) const { return score == s2.score && num == s2.num; }
+      bool operator!=(const ScoreContentState& s2) const { return !(*this == s2); }
+
+      bool isNewerThan(const ScoreContentState& s2) const { return score == s2.score && num > s2.num; }
+      };
 
 class MasterScore;
 
@@ -315,8 +353,6 @@ class Movements : public std::vector<MasterScore*> {
       UndoStack* _undo;
       QList<Page*> _pages;          // pages are build from systems
       MStyle _style;
-      Text* _headerText  { 0 };
-      Text* _footerText  { 0 };
 
    public:
       Movements();
@@ -328,10 +364,6 @@ class Movements : public std::vector<MasterScore*> {
       UndoStack* undo() const                 { return _undo;                }
       MStyle& style()                         { return _style;               }
       const MStyle& style() const             { return _style;               }
-      Text* headerText() const                { return _headerText;          }
-      Text* footerText() const                { return _footerText;          }
-      void setHeaderText(Text* t)             { _headerText = t;             }
-      void setFooterText(Text* t)             { _footerText = t;             }
       };
 
 //---------------------------------------------------------------------------------------
@@ -376,6 +408,7 @@ class Score : public QObject, public ScoreElement {
             FILE_TOO_NEW,
             FILE_OLD_300_FORMAT,
             FILE_CORRUPTED,
+            FILE_CRITICALLY_CORRUPTED,
             FILE_USER_ABORT,
             FILE_IGNORE_ERROR
             };
@@ -386,6 +419,9 @@ class Score : public QObject, public ScoreElement {
       MasterScore* _masterScore { 0 };
       QList<MuseScoreView*> viewer;
       Excerpt* _excerpt  { 0 };
+
+      std::vector<Text*> _headersText;
+      std::vector<Text*> _footersText;
 
       QString _mscoreVersion;
       int _mscoreRevision;
@@ -411,12 +447,13 @@ class Score : public QObject, public ScoreElement {
       // objects generated by layout:
       //
       QList<Page*> _pages;          // pages are build from systems
-      QList<System*> _systems;      // measures are akkumulated to systems
+      QList<System*> _systems;      // measures are accumulated to systems
 
       InputState _is;
       MStyle _style;
 
       bool _created { false };            ///< file is never saved, has generated name
+      bool _startedEmpty { false };       ///< The score was created from an empty template (typically ":/data/My_First_Score.mscx") during this session, so it doesn't need to be saved if it hasn't been modified.
       QString _tmpName;                   ///< auto saved with this name if not empty
       QString _importedFilePath;          // file from which the score was imported, or empty
 
@@ -435,14 +472,13 @@ class Score : public QObject, public ScoreElement {
                                                 ///< saves will not overwrite the backup file.
       bool _defaultsRead        { false };      ///< defaults were read at MusicXML import, allow export of defaults in convertermode
       bool _isPalette           { false };
-
-      Fraction _pos[3];                    ///< 0 - current, 1 - left loop, 2 - right loop
+      ScoreOrder* _scoreOrder   { nullptr };    ///< used for score ordering
 
       int _mscVersion { MSCVERSION };   ///< version of current loading *.msc file
 
       QMap<QString, QString> _metaTags;
 
-      constexpr static double _defaultTempo = 2.0; //defautl tempo is equal 120 bpm
+      constexpr static double _defaultTempo = 2.0; //default tempo is equal 120 bpm
 
       Selection _selection;
       SelectionFilter _selectionFilter;
@@ -450,14 +486,16 @@ class Score : public QObject, public ScoreElement {
       PlayMode _playMode { PlayMode::SYNTHESIZER };
 
       qreal _noteHeadWidth { 0.0 };       // cached value
-      QString accInfo;                    ///< information used by the screen-reader
+      QString accInfo;                    ///< information about selected element(s) for use by screen-readers
+      QString accMessage;                 ///< temporary status message for use by screen-readers
 
       //------------------
 
       ChordRest* nextMeasure(ChordRest* element, bool selectBehavior = false, bool mmRest = false);
       ChordRest* prevMeasure(ChordRest* element, bool mmRest = false);
       void cmdSetBeamMode(Beam::Mode);
-      void cmdResetStyle();
+      void cmdResetAllStyle();
+      void cmdResetTextStyleOverrides();
       void cmdFlip();
       Note* getSelectedNote();
       ChordRest* upStaff(ChordRest* cr);
@@ -465,7 +503,7 @@ class Score : public QObject, public ScoreElement {
       ChordRest* nextTrack(ChordRest* cr);
       ChordRest* prevTrack(ChordRest* cr);
 
-      void padToggle(Pad n);
+      void padToggle(Pad p, const EditData& ed);
       void addTempo();
       void addMetronome();
 
@@ -479,16 +517,12 @@ class Score : public QObject, public ScoreElement {
       void cmdIncDecDuration(int nSteps, bool stepDotted = false);
       void cmdAddBracket();
       void cmdAddParentheses();
+      void cmdAddBraces();
       void resetUserStretch();
 
-      bool layoutSystem(qreal& minWidth, qreal w, bool, bool);
       void createMMRest(Measure*, Measure*, const Fraction&);
-      bool layoutSystem1(qreal& minWidth, bool, bool);
-      QList<System*> layoutSystemRow(qreal w, bool, bool);
-      bool doReLayout();
 
       void beamGraceNotes(Chord*, bool);
-
 
       void checkSlurs();
       void checkScore();
@@ -518,7 +552,10 @@ class Score : public QObject, public ScoreElement {
 
       void deleteSpannersFromRange(const Fraction& t1, const Fraction& t2, int trackStart, int trackEnd, const SelectionFilter& filter);
       void deleteAnnotationsFromRange(Segment* segStart, Segment* segEnd, int trackStart, int trackEnd, const SelectionFilter& filter);
-      ChordRest* deleteRange(Segment* segStart, Segment* segEnd, int trackStart, int trackEnd, const SelectionFilter& filter);
+      std::vector<ChordRest*> deleteRange(Segment* segStart, Segment* segEnd, int trackStart, int trackEnd,
+                                          const SelectionFilter& filter);
+
+      void update(bool resetCmdState);
 
    protected:
       int _fileDivision; ///< division of current loading *.msc file
@@ -531,8 +568,8 @@ class Score : public QObject, public ScoreElement {
       void cmdPitchDown();
       void cmdPitchUpOctave();
       void cmdPitchDownOctave();
-      void cmdPadNoteIncreaseTAB();
-      void cmdPadNoteDecreaseTAB();
+      void cmdPadNoteIncreaseTAB(const EditData& ed);
+      void cmdPadNoteDecreaseTAB(const EditData& ed);
       void cmdToggleMmrest();
       void cmdToggleHideEmpty();
       void cmdSetVisible();
@@ -573,6 +610,7 @@ class Score : public QObject, public ScoreElement {
       void addMeasure(MeasureBase*, MeasureBase*);
       void readStaff(XmlReader&);
       bool read(XmlReader&);
+      void linkMeasures(Score* score);
 
       Excerpt* excerpt()            { return _excerpt; }
       void setExcerpt(Excerpt* e)   { _excerpt = e;     }
@@ -581,12 +619,16 @@ class Score : public QObject, public ScoreElement {
       void layoutSystemElements(System* system, LayoutContext& lc);
       void getNextMeasure(LayoutContext&);      // get next measure for layout
 
+      void resetAllPositions();
+
       void cmdRemovePart(Part*);
       void cmdAddTie(bool addToChord = false);
+      void cmdToggleTie();
+      static std::vector<Note*> cmdTieNoteList(const Selection& selection, bool noteEntryMode);
       void cmdAddOttava(OttavaType);
       void cmdAddStretch(qreal);
       void cmdResetNoteAndRestGroupings();
-      void cmdResetAllPositions();
+      void cmdResetAllPositions(bool undoable = true);
       void cmdDoubleDuration()      { cmdIncDecDuration(-1, false); }
       void cmdHalfDuration()        { cmdIncDecDuration( 1, false); }
       void cmdIncDurationDotted()   { cmdIncDecDuration(-1, true); }
@@ -601,6 +643,9 @@ class Score : public QObject, public ScoreElement {
       bool trKeys, bool transposeChordNames, bool useDoubleSharpsFlats);
 
       bool appendMeasuresFromScore(Score* score, const Fraction& startTick, const Fraction& endTick);
+
+      MeasureBase* insertMeasuresFromScore (Score* scoreSource, const Selection& selectionSource, MeasureBase& mbInsert);
+
       bool appendScore(Score*, bool addPageBreak = false, bool addSectionBreak = true);
 
       void write(XmlWriter&, bool onlySelection);
@@ -615,7 +660,7 @@ class Score : public QObject, public ScoreElement {
       Staff* staff(int n) const              { return ((n >= 0) && (n < _staves.size())) ? _staves.at(n) : nullptr; }
 
       Measure* pos2measure(const QPointF&, int* staffIdx, int* pitch, Segment**, QPointF* offset) const;
-      void dragPosition(const QPointF&, int* staffIdx, Segment**) const;
+      void dragPosition(const QPointF&, int* staffIdx, Segment**, qreal spacingFactor = 0.5) const;
 
       void undoAddElement(Element* element);
       void undoAddCR(ChordRest* element, Measure*, const Fraction& tick);
@@ -637,21 +682,24 @@ class Score : public QObject, public ScoreElement {
       void undoChangeTuning(Note*, qreal);
       void undoChangeUserMirror(Note*, MScore::DirectionH);
       void undoChangeKeySig(Staff* ostaff, const Fraction& tick, KeySigEvent);
-      void undoChangeClef(Staff* ostaff, Element*, ClefType st);
+      void undoChangeClef(Staff* ostaff, Element*, ClefType st, bool forInstrumentChange = false);
       bool undoPropertyChanged(Element* e, Pid t, const QVariant& st, PropertyFlags ps = PropertyFlags::NOSTYLE);
       void undoPropertyChanged(ScoreElement*, Pid, const QVariant& v, PropertyFlags ps = PropertyFlags::NOSTYLE);
       inline virtual UndoStack* undoStack() const;
       void undo(UndoCommand*, EditData* = 0) const;
-      void undoRemoveMeasures(Measure*, Measure*);
+      void undoRemoveMeasures(Measure*, Measure*, bool preserveTies = false);
       void undoAddBracket(Staff* staff, int level, BracketType type, int span);
       void undoRemoveBracket(Bracket*);
       void undoInsertTime(const Fraction& tick, const Fraction& len);
       void undoChangeStyleVal(Sid idx, const QVariant& v);
       void undoChangePageNumberOffset(int po);
 
+      void updateInstrumentChangeTranspositions(Ms::KeySigEvent& key, Ms::Staff* staff, const Ms::Fraction& tick);
+
       Note* setGraceNote(Chord*,  int pitch, NoteType type, int len);
 
-      Segment* setNoteRest(Segment*, int track, NoteVal nval, Fraction, Direction stemDirection = Direction::AUTO, bool rhythmic = false);
+      Segment* setNoteRest(Segment*, int track, NoteVal nval, Fraction, Direction stemDirection = Direction::AUTO, bool forceAccidental = false, bool rhythmic = false, InputState* externalInputState = nullptr);
+      Segment* setChord(Segment*, int track, Chord* chord, Fraction, Direction stemDirection = Direction::AUTO);
       void changeCRlen(ChordRest* cr, const TDuration&);
       void changeCRlen(ChordRest* cr, const Fraction&, bool fillWithRest=true);
       void createCRSequence(const Fraction& f, ChordRest* cr, const Fraction& tick);
@@ -665,7 +713,9 @@ class Score : public QObject, public ScoreElement {
       Chord* addChord(const Fraction& tick, TDuration d, Chord* oc, bool genTie, Tuplet* tuplet);
 
       ChordRest* addClone(ChordRest* cr, const Fraction& tick, const TDuration& d);
-      Rest* setRest(const Fraction& tick,  int track, const Fraction&, bool useDots, Tuplet* tuplet, bool useFullMeasureRest = true);
+      Rest* setRest(const Fraction& tick, int track, const Fraction&, bool useDots, Tuplet* tuplet, bool useFullMeasureRest = true);
+      std::vector<Rest*> setRests(const Fraction& tick, int track, const Fraction&, bool useDots, Tuplet* tuplet,
+                                  bool useFullMeasureRest = true);
 
       void upDown(bool up, UpDownMode);
       void upDownDelta(int pitchDelta);
@@ -674,22 +724,23 @@ class Score : public QObject, public ScoreElement {
       // undo/redo ops
       void addArticulation(SymId);
       bool addArticulation(Element*, Articulation* atr);
+      void toggleAccidental(AccidentalType, const EditData& ed);
       void changeAccidental(AccidentalType);
       void changeAccidental(Note* oNote, Ms::AccidentalType);
 
       void addElement(Element*);
       void removeElement(Element*);
 
-      Note* addPitch(NoteVal&, bool addFlag);
+      Note* addPitch(NoteVal&, bool addFlag, InputState* externalInputState = nullptr);
       void addPitch(int pitch, bool addFlag, bool insert);
       Note* addTiedMidiPitch(int pitch, bool addFlag, Chord* prevChord);
       Note* addMidiPitch(int pitch, bool addFlag);
-      Note* addNote(Chord*, NoteVal& noteVal);
+      Note* addNote(Chord*, const NoteVal& noteVal, bool forceAccidental = false, InputState* externalInputState = nullptr);
 
-      NoteVal noteValForPosition(Position pos, bool &error);
+      NoteVal noteValForPosition(Position pos, AccidentalType at, bool &error);
 
       void deleteItem(Element*);
-      void deleteMeasures(MeasureBase* firstMeasure, MeasureBase* lastMeasure);
+      void deleteMeasures(MeasureBase* firstMeasure, MeasureBase* lastMeasure, bool preserveTies = false);
       void cmdDeleteSelection();
       void cmdFullMeasureRest();
 
@@ -707,22 +758,26 @@ class Score : public QObject, public ScoreElement {
 
       void startCmd();                          // start undoable command
       void endCmd(bool rollback = false);       // end undoable command
-      void update();
+      void update() { update(true); }
       void undoRedo(bool undo, EditData*);
 
       void cmdRemoveTimeSig(TimeSig*);
       void cmdAddTimeSig(Measure*, int staffIdx, TimeSig*, bool local);
 
       virtual inline void setUpdateAll();
-      virtual inline void setLayoutAll();
-      virtual inline void setLayout(const Fraction& f);
+      inline void setLayoutAll(int staff = -1, const Element* e = nullptr);
+      inline void setLayout(const Fraction& tick, int staff, const Element* e = nullptr);
+      inline void setLayout(const Fraction& tick1, const Fraction& tick2, int staff1, int staff2, const Element* e = nullptr);
       virtual inline CmdState& cmdState();
+      virtual inline const CmdState& cmdState() const;
       virtual inline void addLayoutFlags(LayoutFlags);
       virtual inline void setInstrumentsChanged(bool);
       void addRefresh(const QRectF&);
 
       void cmdRelayout();
       void cmdToggleAutoplace(bool all);
+      void cmdApplyInputState();
+      void cmdCycleVoiceFilter(int voice=0);
 
       bool playNote() const                 { return _updateState._playNote; }
       void setPlayNote(bool v)              { _updateState._playNote = v;    }
@@ -734,14 +789,17 @@ class Score : public QObject, public ScoreElement {
       void deletePostponed();
 
       void changeVoice(int);
+      void cmdToggleMouseEntry(void);
 
       void colorItem(Element*);
       QList<Part*>& parts()                { return _parts; }
       const QList<Part*>& parts() const    { return _parts; }
 
       void appendPart(Part* p);
+      void appendPart(const InstrumentTemplate*);
       void updateStaffIndex();
       void sortStaves(QList<int>& dst);
+      void mapExcerptTracks(QList<int>& l);
 
       bool showInvisible() const       { return _showInvisible; }
       bool showUnprintable() const     { return _showUnprintable; }
@@ -760,9 +818,8 @@ class Score : public QObject, public ScoreElement {
 
       bool saveFile(QFileInfo& info);
       bool saveFile(QIODevice* f, bool msczFormat, bool onlySelection = false);
-      bool saveCompressedFile(QFileInfo&, bool onlySelection);
-      bool saveCompressedFile(QFileDevice*, QFileInfo&, bool onlySelection, bool createThumbnail = true);
-      bool exportFile();
+      bool saveCompressedFile(QFileInfo&, bool onlySelection, bool createThumbnail = true);
+      bool saveCompressedFile(QIODevice*, const QString& fileName, bool onlySelection, bool createThumbnail = true);
 
       void print(QPainter* printer, int page);
       ChordRest* getSelectedChordRest() const;
@@ -793,16 +850,21 @@ class Score : public QObject, public ScoreElement {
       Segment* tick2segmentMM(const Fraction& tick, bool first, SegmentType st) const;
       Segment* tick2segmentMM(const Fraction& tick) const;
       Segment* tick2segmentMM(const Fraction& tick, bool first) const;
-      Segment* tick2segmentEnd(int track, const Fraction& tick) const;
-      Segment* tick2leftSegment(const Fraction& tick) const;
-      Segment* tick2rightSegment(const Fraction& tick) const;
+      Segment* tick2leftSegment(const Fraction& tick, bool useMMrest = false) const;
+      Segment* tick2rightSegment(const Fraction& tick, bool useMMrest = false) const;
+      Segment* tick2leftSegmentMM(const Fraction& tick) { return tick2leftSegment(tick, /* useMMRest */ true); }
       void fixTicks();
       void rebuildTempoAndTimeSigMaps(Measure* m);
       Element* nextElement();
       Element* prevElement();
+      ChordRest* cmdNextPrevSystem(ChordRest*, bool);
+      Box* cmdNextPrevFrame(MeasureBase*, bool) const;
+      Element* cmdNextPrevSection(Element*, bool) const;
+      MeasureBase* getNextPrevSectionBreak(MeasureBase*, bool) const;
+      Element* getScoreElementOfMeasureBase(MeasureBase*) const;
 
       void cmd(const QAction*, EditData&);
-      int fileDivision(int t) const { return ((qint64)t * MScore::division + _fileDivision/2) / _fileDivision; }
+      int fileDivision(int t) const { return (t * MScore::division + _fileDivision / 2) / _fileDivision; }
       void setFileDivision(int t) { _fileDivision = t; }
 
       QString importedFilePath() const           { return _importedFilePath; }
@@ -812,6 +874,8 @@ class Score : public QObject, public ScoreElement {
       ScoreContentState state() const;
       void setCreated(bool val)      { _created = val;        }
       bool created() const           { return _created;       }
+      void setStartedEmpty(bool val) { _startedEmpty = val;   }
+      bool startedEmpty() const      { return _startedEmpty;  }
       bool savedCapture() const      { return _savedCapture;  }
       bool saved() const             { return _saved;         }
       void setSaved(bool v)          { _saved = v;            }
@@ -831,8 +895,8 @@ class Score : public QObject, public ScoreElement {
       virtual MStyle& style()              { return _style;                  }
       virtual const MStyle& style() const  { return _style;                  }
 
-      void setStyle(const MStyle& s);
-      bool loadStyle(const QString&, bool ignore = false);
+      void setStyle(const MStyle& s, const bool overlap = false);
+      bool loadStyle(const QString&, bool ign = false, const bool overlap = false);
       bool saveStyle(const QString&);
 
       QVariant styleV(Sid idx) const  { return style().value(idx);   }
@@ -859,8 +923,8 @@ class Score : public QObject, public ScoreElement {
       void setLoopInTick(const Fraction& tick)      { setPos(POS::LEFT, tick);    }
       void setLoopOutTick(const Fraction& tick)     { setPos(POS::RIGHT, tick);   }
 
-      Fraction pos(POS pos) const                   {  return _pos[int(pos)]; }
-      void setPos(POS pos, Fraction tick);
+      inline Fraction pos(POS pos) const;
+      inline void setPos(POS pos, Fraction tick);
 
       bool noteEntryMode() const                   { return inputState().noteEntryMode(); }
       void setNoteEntryMode(bool val)              { inputState().setNoteEntryMode(val); }
@@ -875,7 +939,7 @@ class Score : public QObject, public ScoreElement {
       void setInputTrack(int t)                { inputState().setTrack(t);    }
 
       void spatiumChanged(qreal oldValue, qreal newValue);
-      void styleChanged();
+      void styleChanged() override;
 
       void cmdPaste(const QMimeData* ms, MuseScoreView* view, Fraction scale = Fraction(1, 1));
       bool pasteStaff(XmlReader&, Segment* dst, int staffIdx, Fraction scale = Fraction(1, 1));
@@ -892,7 +956,7 @@ class Score : public QObject, public ScoreElement {
       void addLyrics(const Fraction& tick, int staffIdx, const QString&);
 
       void updateSwing();
-      void createPlayEvents(Measure* start = nullptr, Measure* end = nullptr);
+      void createPlayEvents(Measure const * start = nullptr, Measure const * const end = nullptr);
 
       void updateCapo();
       void updateVelo();
@@ -916,12 +980,18 @@ class Score : public QObject, public ScoreElement {
       bool isPalette() const { return _isPalette; }
       void setPaletteMode(bool palette) { _isPalette = palette; }
 
+      bool enableVerticalSpread() const;
+      void setEnableVerticalSpread(bool val);
+      qreal maxSystemDistance() const;
+      ScoreOrder* scoreOrder() const        { return _scoreOrder;  }
+      void setScoreOrder(ScoreOrder* order) { _scoreOrder = order; }
+
       void lassoSelect(const QRectF&);
       void lassoSelectEnd();
 
       Page* searchPage(const QPointF&) const;
-      QList<System*> searchSystem(const QPointF& p) const;
-      Measure* searchMeasure(const QPointF& p) const;
+      QList<System*> searchSystem(const QPointF& p, const System* preferredSystem = nullptr, qreal spacingFactor = 0.5, qreal preferredSpacingFactor = 1.0) const;
+      Measure* searchMeasure(const QPointF& p, const System* preferredSystem = nullptr, qreal spacingFactor = 0.5, qreal preferredSpacingFactor = 1.0) const;
 
       bool getPosition(Position* pos, const QPointF&, int voice) const;
 
@@ -934,9 +1004,8 @@ class Score : public QObject, public ScoreElement {
       void adjustBracketsIns(int sidx, int eidx);
       void adjustKeySigs(int sidx, int eidx, KeyList km);
 
-      Measure* searchLabel(const QString& s, Measure* startMeasure = nullptr, Measure* endMeasure = nullptr);
-      Measure* searchLabelWithinSectionFirst(const QString& s, Measure* sectionStartMeasure, Measure* sectionEndMeasure);
       virtual inline const RepeatList& repeatList() const;
+      virtual inline const RepeatList& repeatList2() const;
       qreal utick2utime(int tick) const;
       int utime2utick(qreal utime) const;
 
@@ -971,14 +1040,16 @@ class Score : public QObject, public ScoreElement {
       Segment* firstSegment(SegmentType s) const;
       Segment* firstSegmentMM(SegmentType s) const;
       Segment* lastSegment() const;
+      Segment* lastSegmentMM() const;
 
       void connectTies(bool silent=false);
+      void connectArpeggios();
+      void fixupLaissezVibrer();
 
       qreal point(const Spatium sp) const { return sp.val() * spatium(); }
 
       void scanElements(void* data, void (*func)(void*, Element*), bool all=true);
       void scanElementsInRange(void* data, void (*func)(void*, Element*), bool all = true);
-      QByteArray buildCanonical(int track);
       int fileDivision() const { return _fileDivision; } ///< division of current loading *.msc file
       void splitStaff(int staffIdx, int splitPoint);
       QString tmpName() const           { return _tmpName;      }
@@ -992,6 +1063,7 @@ class Score : public QObject, public ScoreElement {
       Element* selectMove(const QString& cmd);
       Element* move(const QString& cmd);
       void cmdEnterRest(const TDuration& d);
+      void enterRest(const TDuration& d, InputState* externalInputState = nullptr);
       void cmdAddInterval(int, const std::vector<Note*>&);
       void cmdCreateTuplet(ChordRest*, Tuplet*);
       void removeAudio();
@@ -999,9 +1071,6 @@ class Score : public QObject, public ScoreElement {
       void doLayout();
       void doLayoutRange(const Fraction&, const Fraction&);
       void layoutLinear(bool layoutAll, LayoutContext& lc);
-
-      void layoutSystemsUndoRedo();
-      void layoutPagesUndoRedo();
 
       void layoutChords1(Segment* segment, int staffIdx);
       qreal layoutChords2(std::vector<Note*>& notes, bool up);
@@ -1011,12 +1080,11 @@ class Score : public QObject, public ScoreElement {
       void setSynthesizerState(const SynthesizerState& s);
 
       void updateHairpin(Hairpin*);       // add/modify hairpin to pitchOffset list
-      void removeHairpin(Hairpin*);       // remove hairpin from pitchOffset list
 
       MasterScore* masterScore() const    { return _masterScore; }
       void setMasterScore(MasterScore* s) { _masterScore = s;    }
       void createRevision();
-      void writeSegments(XmlWriter& xml, int strack, int etrack, Segment* first, Segment* last, bool, bool);
+      void writeSegments(XmlWriter& xml, int strack, int etrack, Segment* sseg, Segment* eseg, bool, bool);
 
       const QMap<QString, QString>& metaTags() const   { return _metaTags; }
       QMap<QString, QString>& metaTags()               { return _metaTags; }
@@ -1064,7 +1132,8 @@ class Score : public QObject, public ScoreElement {
       void cmdSelectSection();
       void respace(std::vector<ChordRest*>* elements);
       void transposeSemitone(int semitone);
-      void insertMeasure(ElementType type, MeasureBase*, bool createEmptyMeasures = false);
+      void transposeDiatonicAlterations(TransposeDirection direction);
+      void insertMeasure(ElementType type, MeasureBase*, bool createEmptyMeasures = false, bool moveSignaturesClef = true);
       Audio* audio() const         { return _audio;    }
       void setAudio(Audio* a)      { _audio = a;       }
       PlayMode playMode() const    { return _playMode; }
@@ -1076,8 +1145,6 @@ class Score : public QObject, public ScoreElement {
 
       QList<Score*> scoreList();
       bool switchLayer(const QString& s);
-      //@ appends to the score a named part as last part
-      void appendPart(const QString&);
       //@ appends to the score a number of measures
       void appendMeasures(int);
 
@@ -1086,7 +1153,7 @@ class Score : public QObject, public ScoreElement {
       bool isSpannerStartEnd(const Fraction& tick, int track) const;
       void removeSpanner(Spanner*);
       void addSpanner(Spanner*);
-      void cmdAddSpanner(Spanner* spanner, const QPointF& pos);
+      void cmdAddSpanner(Spanner* spanner, const QPointF& pos, bool firstStaffOnly = false);
       void cmdAddSpanner(Spanner* spanner, int staffIdx, Segment* startSegment, Segment* endSegment);
       void checkSpanner(const Fraction& startTick, const Fraction& lastTick);
       const std::set<Spanner*> unmanagedSpanners() { return _unmanagedSpanner; }
@@ -1115,9 +1182,10 @@ class Score : public QObject, public ScoreElement {
       Note* upAltCtrl(Note*) const;
       Element* downAlt(Element*);
       Note* downAltCtrl(Note*) const;
+      Element* moveAlt(Element*, Direction);
 
-      Element* firstElement();
-      Element* lastElement();
+      Element* firstElement(bool frame = true);
+      Element* lastElement(bool frame = true);
 
       int nmeasures() const;
       bool hasLyrics();
@@ -1127,6 +1195,7 @@ class Score : public QObject, public ScoreElement {
       QString extractLyrics();
       int keysig();
       int duration();
+      int durationWithoutRepeats();
 
       void cmdInsertClef(Clef* clef, ChordRest* cr);
 
@@ -1137,9 +1206,16 @@ class Score : public QObject, public ScoreElement {
       void cmdResequenceRehearsalMarks();
       void cmdExchangeVoice(int, int);
       void cmdRemoveEmptyTrailingMeasures();
+      void cmdRealizeChordSymbols(bool lit = true, Voicing v = Voicing(-1), HDuration durationType = HDuration(-1));
+
+      Measure* firstTrailingMeasure(ChordRest** cr = nullptr);
+      ChordRest* cmdTopStaff(ChordRest* cr = nullptr);
 
       void setAccessibleInfo(QString s)   { accInfo = s.remove(":").remove(";"); }
       QString accessibleInfo() const      { return accInfo;          }
+
+      void setAccessibleMessage(QString s) { accMessage = s; } // retain ':' and ';'
+      QString accessibleMessage() const    { return accMessage; }
 
       QImage createThumbnail();
       QString createRehearsalMarkText(RehearsalMark* current) const;
@@ -1169,10 +1245,10 @@ class Score : public QObject, public ScoreElement {
 
       bool isTopScore() const;
 
-      Text* headerText() const                { return movements()->headerText();          }
-      Text* footerText() const                { return movements()->footerText();          }
-      void setHeaderText(Text* t)             { movements()->setHeaderText(t);             }
-      void setFooterText(Text* t)             { movements()->setFooterText(t);             }
+      Text* headerText(int index) const               { return _headersText[index];     }
+      Text* footerText(int index) const               { return _footersText[index];     }
+      void setHeaderText(Text* t, int index)          { _headersText.at(index) = t;     }
+      void setFooterText(Text* t, int index)          { _footersText.at(index) = t;     }
 
       void cmdAddPitch(int note, bool addFlag, bool insert);
       void forAllLyrics(std::function<void(Lyrics*)> f);
@@ -1180,7 +1256,7 @@ class Score : public QObject, public ScoreElement {
       System* getNextSystem(LayoutContext&);
       void hideEmptyStaves(System* system, bool isFirstSystem);
       void layoutLyrics(System*);
-      void createBeams(Measure*);
+      void createBeams(LayoutContext&, Measure*);
 
       constexpr static double defaultTempo()  { return _defaultTempo; }
 
@@ -1206,7 +1282,8 @@ class MasterScore : public Score {
       TimeSigMap* _sigmap;
       TempoMap* _tempomap;
       RepeatList* _repeatList;
-      bool _expandRepeats     { true };
+      RepeatList* _repeatList2;
+      bool _expandRepeats     { MScore::playRepeats };
       bool _playlistDirty     { true };
       QList<Excerpt*> _excerpts;
       std::vector<PartChannelSettingsLink> _playbackSettingsLinks;
@@ -1222,6 +1299,10 @@ class MasterScore : public Score {
 
       Omr* _omr               { 0 };
       bool _showOmr           { false };
+
+      std::shared_ptr<Avs::AvsOmr> _avsOmr { nullptr };
+
+      Fraction _pos[3];                    ///< 0 - current, 1 - left loop, 2 - right loop
 
       int _midiPortCount      { 0 };                  // A count of JACK/ALSA midi out ports
       QQueue<MidiInputEvent> _midiInputQueue;         // MIDI events that have yet to be processed
@@ -1263,8 +1344,10 @@ class MasterScore : public Score {
       void setPlaylistClean()                                         { _playlistDirty = false; }
 
       void setExpandRepeats(bool expandRepeats);
+      bool expandRepeats() const { return _expandRepeats; }
       void updateRepeatListTempo();
       virtual const RepeatList& repeatList() const override;
+      virtual const RepeatList& repeatList2() const override;
 
       virtual QList<Excerpt*>& excerpts() override                    { return _excerpts;   }
       virtual const QList<Excerpt*>& excerpts() const override        { return _excerpts;   }
@@ -1279,10 +1362,13 @@ class MasterScore : public Score {
       void addMovement(MasterScore* score);
 
       virtual void setUpdateAll() override;
-      virtual void setLayoutAll() override;
-      virtual void setLayout(const Fraction&) override;
+
+      void setLayoutAll(int staff = -1, const Element* e = nullptr);
+      void setLayout(const Fraction& tick, int staff, const Element* e = nullptr);
+      void setLayout(const Fraction& tick1, const Fraction& tick2, int staff1, int staff2, const Element* e = nullptr);
 
       virtual CmdState& cmdState() override                           { return _cmdState;                     }
+      const CmdState& cmdState() const override                       { return _cmdState;                     }
       virtual void addLayoutFlags(LayoutFlags val) override           { _cmdState.layoutFlags |= val;         }
       virtual void setInstrumentsChanged(bool val) override           { _cmdState._instrumentsChanged = val;  }
 
@@ -1295,22 +1381,27 @@ class MasterScore : public Score {
       bool isSavable() const;
       void setTempomap(TempoMap* tm);
 
-      bool saveFile();
+      bool saveFile(bool generateBackup = true);
       FileError read1(XmlReader&, bool ignoreVersionError);
       FileError loadCompressedMsc(QIODevice*, bool ignoreVersionError);
       FileError loadMsc(QString name, bool ignoreVersionError);
       FileError loadMsc(QString name, QIODevice*, bool ignoreVersionError);
       FileError read114(XmlReader&);
       FileError read206(XmlReader&);
-      FileError read301(XmlReader&);
+      FileError read302(XmlReader&);
       QByteArray readToBuffer();
       QByteArray readCompressedToBuffer();
+      int readStyleDefaultsVersion();
+      int styleDefaultByMscVersion(const int mscVer) const;
 
       Omr* omr() const                         { return _omr;     }
       void setOmr(Omr* o)                      { _omr = o;        }
       void removeOmr();
       bool showOmr() const                     { return _showOmr; }
       void setShowOmr(bool v)                  { _showOmr = v;    }
+
+      std::shared_ptr<Avs::AvsOmr> avsOmr() const      { return _avsOmr; }
+      void setAvsOmr(std::shared_ptr<Avs::AvsOmr> omr) { _avsOmr = omr;  }
 
       int midiPortCount() const                { return _midiPortCount;            }
       void setMidiPortCount(int val)           { _midiPortCount = val;             }
@@ -1330,6 +1421,10 @@ class MasterScore : public Score {
       void updateExpressive(Synthesizer* synth);
       void updateExpressive(Synthesizer* synth, bool expressive, bool force = false);
       void setSoloMute();
+
+      using Score::pos;
+      Fraction pos(POS pos) const { return _pos[int(pos)]; }
+      void setPos(POS pos, Fraction tick);
 
       void addExcerpt(Excerpt*);
       void removeExcerpt(Excerpt*);
@@ -1375,6 +1470,7 @@ class ScoreLoad {
 
 inline UndoStack* Score::undoStack() const             { return _masterScore->undoStack();      }
 inline const RepeatList& Score::repeatList()  const    { return _masterScore->repeatList();     }
+inline const RepeatList& Score::repeatList2()  const   { return _masterScore->repeatList2();    }
 inline TempoMap* Score::tempomap() const               { return _masterScore->tempomap();       }
 inline TimeSigMap* Score::sigmap() const               { return _masterScore->sigmap();         }
 inline QList<Excerpt*>& Score::excerpts()              { return _masterScore->excerpts();       }
@@ -1383,17 +1479,26 @@ inline QQueue<MidiInputEvent>* Score::midiInputQueue()          { return _master
 inline std::list<MidiInputEvent>* Score::activeMidiPitches()    { return _masterScore->activeMidiPitches(); }
 
 inline void Score::setUpdateAll()                      { _masterScore->setUpdateAll();          }
-inline void Score::setLayoutAll()                      { _masterScore->setLayoutAll();          }
-inline void Score::setLayout(const Fraction& f)        { _masterScore->setLayout(f);         }
+
+inline void Score::setLayoutAll(int staff, const Element* e) { _masterScore->setLayoutAll(staff, e); }
+inline void Score::setLayout(const Fraction& tick, int staff, const Element* e) { _masterScore->setLayout(tick, staff, e); }
+inline void Score::setLayout(const Fraction& tick1, const Fraction& tick2, int staff1, int staff2, const Element* e) { _masterScore->setLayout(tick1, tick2, staff1, staff2, e); }
 
 inline CmdState& Score::cmdState()                     { return _masterScore->cmdState();        }
+inline const CmdState& Score::cmdState() const         { return _masterScore->cmdState();        }
 inline void Score::addLayoutFlags(LayoutFlags f)       { _masterScore->addLayoutFlags(f);        }
 inline void Score::setInstrumentsChanged(bool v)       { _masterScore->setInstrumentsChanged(v); }
 inline Movements* Score::movements()                   { return _masterScore->movements();       }
 inline const Movements* Score::movements() const       { return _masterScore->movements();       }
 
+inline Fraction Score::pos(POS pos) const              { return _masterScore->pos(pos);          }
+inline void Score::setPos(POS pos, Fraction tick)      { _masterScore->setPos(pos, tick);        }
+
 extern MasterScore* gscore;
-extern void fixTicks();
+
+extern MStyle* styleDefaults114();
+extern MStyle* styleDefaults206();
+extern MStyle* styleDefaults301();
 
 Q_DECLARE_OPERATORS_FOR_FLAGS(LayoutFlags);
 

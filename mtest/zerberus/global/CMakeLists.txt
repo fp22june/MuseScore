@@ -12,10 +12,14 @@
 
 set(TARGET tst_sfzglobal)
 
-include(${PROJECT_SOURCE_DIR}/mtest/cmake.inc)
+include(${PROJECT_SOURCE_DIR}/mtest/CreateMtestTarget.cmake)
 
 include_directories(
       ${SNDFILE_INCDIR}
       )
 
-target_link_libraries(tst_sfzglobal zerberus synthesizer audiofile ${SNDFILE_LIB} testutils)
+if (MSVC OR MINGW)
+      target_link_libraries(tst_sfzglobal audio audiofile sndfiledll testutils)
+else (MSVC OR MINGW)
+      target_link_libraries(tst_sfzglobal audio audiofile ${SNDFILE_LIB} testutils)
+endif (MSVC OR MINGW)

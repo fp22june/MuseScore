@@ -11,15 +11,16 @@
 //=============================================================================
 
 #include "bracket.h"
-#include "xml.h"
-#include "style.h"
-#include "utils.h"
-#include "staff.h"
-#include "score.h"
-#include "system.h"
-#include "sym.h"
-#include "mscore.h"
 #include "bracketItem.h"
+#include "measure.h"
+#include "mscore.h"
+#include "score.h"
+#include "staff.h"
+#include "style.h"
+#include "sym.h"
+#include "system.h"
+#include "utils.h"
+#include "xml.h"
 
 namespace Ms {
 
@@ -30,15 +31,35 @@ namespace Ms {
 Bracket::Bracket(Score* s)
    : Element(s)
       {
+      ay1          = 0;
       h2           = 3.5 * spatium();
       _firstStaff  = 0;
       _lastStaff   = 0;
       _bi          = 0;
+      _braceSymbol = SymId::noSym;
+      _magx        = 1.;
       setGenerated(true);     // brackets are not saved
       }
 
 Bracket::~Bracket()
       {
+      }
+
+//---------------------------------------------------------
+//   playTick
+//---------------------------------------------------------
+
+Fraction Bracket::playTick() const
+      {
+      // Brackets always have a tick value of zero, so play from the start of the first measure in the system that the bracket belongs to.
+      const auto sys = system();
+      if (sys) {
+            const auto firstMeasure = sys->firstMeasure();
+            if (firstMeasure)
+                  return firstMeasure->tick();
+            }
+
+      return tick();
       }
 
 //---------------------------------------------------------
@@ -59,7 +80,7 @@ qreal Bracket::width() const
       qreal w;
       switch (bracketType()) {
             case BracketType::BRACE:
-                  if (score()->styleSt(Sid::MusicalSymbolFont) == "Emmentaler" || score()->styleSt(Sid::MusicalSymbolFont) == "Gonville")
+                  if (score()->styleSt(Sid::musicalSymbolFont) == "Emmentaler" || score()->styleSt(Sid::musicalSymbolFont) == "Gonville")
                         w = score()->styleP(Sid::akkoladeWidth) + score()->styleP(Sid::akkoladeBarDistance);
                   else
                         w = (symWidth(_braceSymbol) * _magx) + score()->styleP(Sid::akkoladeBarDistance);
@@ -91,11 +112,22 @@ void Bracket::setStaffSpan(int a, int b)
       _lastStaff = b;
 
       if (bracketType() == BracketType::BRACE &&
-         score()->styleSt(Sid::MusicalSymbolFont) != "Emmentaler" && score()->styleSt(Sid::MusicalSymbolFont) != "Gonville")
+         score()->styleSt(Sid::musicalSymbolFont) != "Emmentaler" && score()->styleSt(Sid::musicalSymbolFont) != "Gonville")
             {
             int v = _lastStaff - _firstStaff + 1;
-            // total default height of a system of n staves / height of a 5 line staff
-            _magx = v + ((v - 1) * score()->styleS(Sid::akkoladeDistance).val() / 4.0);
+
+            // if staves inner staves are hidden, decrease span
+            for (int staffIndex = _firstStaff; staffIndex <= _lastStaff; ++staffIndex) {
+                  if (system() && !system()->staff(staffIndex)->show())
+                        --v;
+                  }
+
+            if (score()->styleSt(Sid::musicalSymbolFont) == "Leland")
+                  v = qMin(4, v);
+
+            // 1.625 is a "magic" number based on akkoladeDistance/4.0 (default value 6.5).
+            _magx = v + ((v - 1) * 1.625);
+
             if (v == 1)
                   _braceSymbol = SymId::braceSmall;
             else if (v <= 2)
@@ -114,13 +146,13 @@ void Bracket::setStaffSpan(int a, int b)
 void Bracket::layout()
       {
       path = QPainterPath();
-      if (h2 == 0.0)
+      if (qFuzzyIsNull(h2 ))
             return;
 
       _shape.clear();
       switch (bracketType()) {
             case BracketType::BRACE: {
-                  if (score()->styleSt(Sid::MusicalSymbolFont) == "Emmentaler" || score()->styleSt(Sid::MusicalSymbolFont) == "Gonville") {
+                  if (score()->styleSt(Sid::musicalSymbolFont) == "Emmentaler" || score()->styleSt(Sid::musicalSymbolFont) == "Gonville") {
                         _braceSymbol = SymId::noSym;
                         qreal w = score()->styleP(Sid::akkoladeWidth);
 
@@ -152,6 +184,8 @@ void Bracket::layout()
                         _shape.add(bbox());
                         }
                   else {
+                        if (_braceSymbol == SymId::noSym)
+                              _braceSymbol = SymId::brace;
                         qreal h = h2 * 2;
                         qreal w = symWidth(_braceSymbol) * _magx;
                         bbox().setRect(0, 0, w, h);
@@ -164,7 +198,7 @@ void Bracket::layout()
                   qreal w = score()->styleP(Sid::bracketWidth) * .5;
                   qreal x = -w;
 
-                  qreal bd   = _spatium * .25;
+                  qreal bd   = (score()->styleSt(Sid::musicalSymbolFont) == "Leland") ? _spatium * .5 : _spatium * .25;
                   _shape.add(QRectF(x, -bd, w * 2, 2 * (h2+bd)));
                   _shape.add(symBbox(SymId::bracketTop).translated(QPointF(-w, -bd)));
                   _shape.add(symBbox(SymId::bracketBottom).translated(QPointF(-w, bd + 2*h2)));
@@ -207,7 +241,7 @@ void Bracket::layout()
 
 void Bracket::draw(QPainter* painter) const
       {
-      if (h2 == 0.0)
+      if (qFuzzyIsNull(h2 ))
             return;
       switch (bracketType()) {
             case BracketType::BRACE: {
@@ -218,12 +252,11 @@ void Bracket::draw(QPainter* painter) const
                         }
                   else {
                         qreal h        = 2 * h2;
-                        qreal _spatium = spatium();
-                        qreal mag      = h / (4 *_spatium);
+                        qreal mag      = h / (100 * magS());
                         painter->setPen(curColor());
                         painter->save();
                         painter->scale(_magx, mag);
-                        drawSymbol(_braceSymbol, painter, QPointF(0, h/mag));
+                        drawSymbol(_braceSymbol, painter, QPointF(0, 100 * magS()));
                         painter->restore();
                         }
                   }
@@ -232,7 +265,7 @@ void Bracket::draw(QPainter* painter) const
                   qreal h        = 2 * h2;
                   qreal _spatium = spatium();
                   qreal w        = score()->styleP(Sid::bracketWidth);
-                  qreal bd       = _spatium * .25;
+                  qreal bd       = (score()->styleSt(Sid::musicalSymbolFont) == "Leland") ? _spatium * .5 : _spatium * .25;
                   QPen pen(curColor(), w, Qt::SolidLine, Qt::FlatCap);
                   painter->setPen(pen);
                   painter->drawLine(QLineF(0.0, -bd - w * .5, 0.0, h + bd + w * .5));
@@ -256,11 +289,10 @@ void Bracket::draw(QPainter* painter) const
                   break;
             case BracketType::LINE: {
                   qreal h = 2 * h2;
-                  qreal _spatium = spatium();
                   qreal w = 0.67 * score()->styleP(Sid::bracketWidth);
                   QPen pen(curColor(), w, Qt::SolidLine, Qt::FlatCap);
                   painter->setPen(pen);
-                  qreal bd = _spatium * .25;
+                  qreal bd = score()->styleP(Sid::staffLineWidth) * 0.5;
                   painter->drawLine(QLineF(0.0, -bd, 0.0, h + bd));
                   }
                   break;
@@ -277,17 +309,15 @@ void Bracket::startEdit(EditData& ed)
       {
       Element::startEdit(ed);
       ay1 = pagePos().y();
-      ed.grips   = 1;
-      ed.curGrip = Grip::START;
       }
 
 //---------------------------------------------------------
-//   updateGrips
+//   gripsPositions
 //---------------------------------------------------------
 
-void Bracket::updateGrips(EditData& ed) const
+std::vector<QPointF> Bracket::gripsPositions(const EditData&) const
       {
-      ed.grip[0].translate(QPointF(0.0, h2 * 2) + pagePos());
+      return { QPointF(0.0, h2 * 2) + pagePos() };
       }
 
 //---------------------------------------------------------
@@ -297,7 +327,7 @@ void Bracket::updateGrips(EditData& ed) const
 void Bracket::endEdit(EditData& ed)
       {
 //      endEditDrag(ed);
-      score()->setLayoutAll();
+      triggerLayoutAll();
       score()->update();
       ed.element = 0;         // score layout invalidates element
       }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 3.1 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
-<score-partwise version="3.1">
+<!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
+<score-partwise version="4.0">
   <work>
     <work-number>MuseScore testfile</work-number>
     <work-title>Directions 2</work-title>
@@ -77,54 +77,44 @@
           <line>2</line>
           </clef>
         </attributes>
-      <direction placement="above">
+      <direction placement="above" system="only-top">
         <direction-type>
           <words font-weight="bold" font-size="12">Lento</words>
           </direction-type>
         <sound tempo="52.5"/>
         </direction>
       <note>
-        <rest/>
+        <rest measure="yes"/>
         <duration>4</duration>
         <voice>1</voice>
         </note>
       </measure>
     <measure number="2">
       <note>
-        <rest/>
+        <rest measure="yes"/>
         <duration>4</duration>
         <voice>1</voice>
         </note>
-      <backup>
-        <duration>3</duration>
-        </backup>
-      <direction placement="above">
+      <direction placement="above" system="only-top">
         <direction-type>
           <words font-weight="bold" font-size="12">Andante</words>
           </direction-type>
-        <sound tempo="91.9998"/>
+        <offset>-3</offset>
+        <sound tempo="92"/>
         </direction>
-      <forward>
-        <duration>3</duration>
-        </forward>
       </measure>
     <measure number="3">
       <note>
-        <rest/>
+        <rest measure="yes"/>
         <duration>4</duration>
         <voice>1</voice>
         </note>
-      <backup>
-        <duration>2</duration>
-        </backup>
-      <direction placement="above">
+      <direction placement="above" system="only-top">
         <direction-type>
           <rehearsal font-weight="bold" font-size="14">A</rehearsal>
           </direction-type>
+        <offset>-2</offset>
         </direction>
-      <forward>
-        <duration>2</duration>
-        </forward>
       <barline location="right">
         <bar-style>light-heavy</bar-style>
         </barline>
@@ -152,7 +142,7 @@
           </clef>
         </attributes>
       <note>
-        <rest/>
+        <rest measure="yes"/>
         <duration>4</duration>
         <voice>1</voice>
         <staff>1</staff>
@@ -161,7 +151,7 @@
         <duration>4</duration>
         </backup>
       <note>
-        <rest/>
+        <rest measure="yes"/>
         <duration>4</duration>
         <voice>5</voice>
         <staff>2</staff>
@@ -169,7 +159,7 @@
       </measure>
     <measure number="2">
       <note>
-        <rest/>
+        <rest measure="yes"/>
         <duration>4</duration>
         <voice>1</voice>
         <staff>1</staff>
@@ -178,7 +168,7 @@
         <duration>4</duration>
         </backup>
       <note>
-        <rest/>
+        <rest measure="yes"/>
         <duration>4</duration>
         <voice>5</voice>
         <staff>2</staff>
@@ -186,7 +176,7 @@
       </measure>
     <measure number="3">
       <note>
-        <rest/>
+        <rest measure="yes"/>
         <duration>4</duration>
         <voice>1</voice>
         <staff>1</staff>
@@ -195,7 +185,7 @@
         <duration>4</duration>
         </backup>
       <note>
-        <rest/>
+        <rest measure="yes"/>
         <duration>4</duration>
         <voice>5</voice>
         <staff>2</staff>

@@ -42,6 +42,7 @@ void SynthesizerState::write(XmlWriter& xml, bool force /* = false */) const
 
 void SynthesizerState::read(XmlReader& e)
       {
+      std::list<SynthesizerGroup> tempGroups;
       while (e.readNextStartElement()) {
             SynthesizerGroup group;
             group.setName(e.name().toString());
@@ -54,7 +55,12 @@ void SynthesizerState::read(XmlReader& e)
                   else
                         e.unknown();
                   }
-            push_back(group);
+            tempGroups.push_back(group);
+            }
+
+      if (!tempGroups.empty()) {
+            // Replace any previously set state if we have read a new state
+            swap(tempGroups);
             setIsDefault(false);
             }
       }
@@ -102,7 +108,7 @@ int SynthesizerState::ccToUse() const
       int method = 1;
       int cc = -1;
 
-      for (IdValue idVal : g) {
+      for (const IdValue &idVal : g) {
             if (idVal.id == 4)
                   method = idVal.data.toInt();
             else if (idVal.id == 5) {
@@ -120,7 +126,7 @@ int SynthesizerState::ccToUse() const
                               cc = 11;
                               break;
                         default:
-                              qWarning("Unrecognised CCToUse index from synthesizer: %d", idVal.data.toInt());
+                              qDebug("Unrecognised CCToUse index from synthesizer: %d", idVal.data.toInt());
                         }
                   }
             }
@@ -128,7 +134,7 @@ int SynthesizerState::ccToUse() const
       if (method == 0)        // velocity only
             return -1;
 
-      return cc;  
+      return cc;
       }
 
 //---------------------------------------------------------
@@ -141,7 +147,7 @@ int SynthesizerState::method() const
 
       int method = -1;
 
-      for (IdValue idVal : g) {
+      for (const IdValue &idVal : g) {
             if (idVal.id == 4) {
                   method = idVal.data.toInt();
                   break;

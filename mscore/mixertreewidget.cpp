@@ -18,9 +18,9 @@
 //=============================================================================
 
 #include "mixertreewidget.h"
-#include "mixertrackitem.h"
-#include "mixertrackchannel.h"
-#include "mixer.h"
+#include "mixer/mixertrackitem.h"
+#include "mixer/mixertrackchannel.h"
+#include "mixer/mixer.h"
 #include "mixeroptions.h"
 #include "libmscore/part.h"
 

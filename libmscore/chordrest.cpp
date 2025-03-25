@@ -19,18 +19,15 @@
 #include "staff.h"
 #include "tuplet.h"
 #include "score.h"
-#include "sym.h"
 #include "slur.h"
 #include "beam.h"
 #include "breath.h"
 #include "barline.h"
 #include "articulation.h"
 #include "tempo.h"
-#include "tempotext.h"
 #include "note.h"
 #include "arpeggio.h"
 #include "dynamic.h"
-#include "stafftext.h"
 #include "sig.h"
 #include "clef.h"
 #include "lyrics.h"
@@ -47,6 +44,8 @@
 #include "page.h"
 #include "hook.h"
 #include "rehearsalmark.h"
+#include "instrchange.h"
+#include "mcursor.h"
 
 namespace Ms {
 
@@ -62,7 +61,8 @@ ChordRest::ChordRest(Score* s)
       _tabDur      = 0;
       _up          = true;
       _beamMode    = Beam::Mode::AUTO;
-      _small       = false;
+      m_isSmall    = false;
+      _melismaEnd  = false;
       _crossMeasure = CrossMeasure::UNKNOWN;
       }
 
@@ -77,7 +77,8 @@ ChordRest::ChordRest(const ChordRest& cr, bool link)
 
       _beamMode     = cr._beamMode;
       _up           = cr._up;
-      _small        = cr._small;
+      m_isSmall     = cr.m_isSmall;
+      _melismaEnd   = cr._melismaEnd;
       _crossMeasure = cr._crossMeasure;
 
       for (Lyrics* l : cr._lyrics) {        // make deep copy
@@ -121,7 +122,7 @@ ChordRest::~ChordRest()
 void ChordRest::scanElements(void* data, void (*func)(void*, Element*), bool all)
       {
       if (_beam && (_beam->elements().front() == this)
-       && !measure()->slashStyle(staffIdx()))
+       && !measure()->stemless(staffIdx()))
             _beam->scanElements(data, func, all);
       for (Lyrics* l : _lyrics)
             l->scanElements(data, func, all);
@@ -177,14 +178,18 @@ void ChordRest::writeProperties(XmlWriter& xml) const
 
       for (Lyrics* lyrics : _lyrics)
             lyrics->write(xml);
+
+      const int curTick = xml.curTick().ticks();
+
       if (!isGrace()) {
             Fraction t(globalTicks());
             if (staff())
                   t /= staff()->timeStretch(xml.curTick());
             xml.incCurTick(t);
             }
-      for (auto i : score()->spanner()) {     // TODO: don’t search whole list
-            Spanner* s = i.second;
+
+      for (auto i : score()->spannerMap().findOverlapping(curTick - 1, curTick + 1)) {
+            Spanner* s = i.value;
             if (s->generated() || !s->isSlur() || toSlur(s)->broken() || !xml.canWrite(s))
                   continue;
 
@@ -251,7 +256,7 @@ bool ChordRest::readProperties(XmlReader& e)
                   bm = Beam::Mode(val.toInt());
             _beamMode = Beam::Mode(bm);
             }
-      else if (tag == "Articulation") {
+      else if (tag == "Articulation" || tag == "Ornament") { // + 4.x compat
             Articulation* atr = new Articulation(score());
             atr->setTrack(track());
             atr->read(e);
@@ -262,7 +267,7 @@ bool ChordRest::readProperties(XmlReader& e)
             e.skipCurrentElement();
             }
       else if (tag == "small")
-            _small = e.readInt();
+            m_isSmall = e.readInt();
       else if (tag == "duration")
             setTicks(e.readFraction());
       else if (tag == "ticklen") {      // obsolete (version < 1.12)
@@ -325,14 +330,14 @@ void ChordRest::readAddConnector(ConnectorInfoReader* info, bool pasteMode)
                         spanner->setStartElement(this);
                         if (pasteMode) {
                               score()->undoAddElement(spanner);
-                              for (ScoreElement* ee : spanner->linkList()) {
-                                    if (ee == spanner)
+                              for (ScoreElement* linkedSpanner : spanner->linkList()) {
+                                    if (linkedSpanner == spanner)
                                           continue;
-                                    Spanner* ls = toSpanner(ee);
+                                    Spanner* ls = toSpanner(linkedSpanner);
                                     ls->setTick(spanner->tick());
-                                    for (ScoreElement* eee : linkList()) {
-                                          ChordRest* cr = toChordRest(eee);
-                                          if (cr->score() == eee->score() && cr->staffIdx() == ls->staffIdx()) {
+                                    for (ScoreElement* linkedCR : linkList()) {
+                                          ChordRest* cr = toChordRest(linkedCR);
+                                          if (cr->score() == linkedSpanner->score() && cr->staffIdx() == ls->staffIdx()) {
                                                 ls->setTrack(cr->track());
                                                 if (ls->isSlur())
                                                       ls->setStartElement(cr);
@@ -349,14 +354,14 @@ void ChordRest::readAddConnector(ConnectorInfoReader* info, bool pasteMode)
                         spanner->setTick2(tick());
                         spanner->setEndElement(this);
                         if (pasteMode) {
-                              for (ScoreElement* ee : spanner->linkList()) {
-                                    if (ee == spanner)
+                              for (ScoreElement* linkedSpanner : spanner->linkList()) {
+                                    if (linkedSpanner == spanner)
                                           continue;
-                                    Spanner* ls = static_cast<Spanner*>(ee);
+                                    Spanner* ls = static_cast<Spanner*>(linkedSpanner);
                                     ls->setTick2(spanner->tick2());
-                                    for (ScoreElement* eee : linkList()) {
-                                          ChordRest* cr = toChordRest(eee);
-                                          if (cr->score() == eee->score() && cr->staffIdx() == ls->staffIdx()) {
+                                    for (ScoreElement* linkedCR : linkList()) {
+                                          ChordRest* cr = toChordRest(linkedCR);
+                                          if (cr->score() == linkedSpanner->score() && cr->staffIdx() == ls->staffIdx()) {
                                                 ls->setTrack2(cr->track());
                                                 if (ls->type() == ElementType::SLUR)
                                                       ls->setEndElement(cr);
@@ -381,7 +386,7 @@ void ChordRest::readAddConnector(ConnectorInfoReader* info, bool pasteMode)
 
 void ChordRest::setSmall(bool val)
       {
-      _small = val;
+      m_isSmall = val;
       }
 
 //---------------------------------------------------------
@@ -407,17 +412,12 @@ Element* ChordRest::drop(EditData& data)
                   {
                   Breath* b = toBreath(e);
                   b->setPos(QPointF());
-                  int track = staffIdx() * VOICES;
-                  b->setTrack(track);
+                  // allow breath marks in voice > 1
+                  b->setTrack(this->track());
+                  b->setPlacement(b->track() & 1 ? Placement::BELOW : Placement::ABOVE);
+                  Fraction bt = tick() + actualTicks();    
 
-                  // find start tick of next note in staff
-#if 0
-                  int bt = tick() + actualTicks();    // this could make sense if we allowed breath marks in voice > 1
-#else
-                  Segment* next = segment()->nextCR(track);
-                  Fraction bt = next ? next->tick() : score()->lastSegment()->tick();
-#endif
-
+                  bt = tick() + actualTicks();
                   // TODO: insert automatically in all staves?
 
                   Segment* seg = m->undoGetSegment(SegmentType::Breath, bt);
@@ -506,16 +506,17 @@ Element* ChordRest::drop(EditData& data)
 
             case ElementType::NOTE: {
                   Note* note = toNote(e);
-                  NoteVal nval;
-                  nval.pitch = note->pitch();
-                  nval.tpc1 = note->tpc1();
-                  nval.headGroup = note->headGroup();
-                  nval.fret = note->fret();
-                  nval.string = note->string();
-                  score()->setNoteRest(segment(), track(), nval, ticks(), Direction::AUTO);
-                  delete e;
+                  Segment* seg = segment();
+                  score()->undoRemoveElement(this);
+                  Chord* chord = new Chord(score());
+                  chord->setTrack(track());
+                  chord->setDurationType(durationType());
+                  chord->setTicks(ticks());
+                  chord->setTuplet(tuplet());
+                  chord->add(note);
+                  score()->undoAddCR(chord, seg->measure(), seg->tick());
+                  return note;
                   }
-                  break;
 
             case ElementType::HARMONY:
                   {
@@ -535,15 +536,9 @@ Element* ChordRest::drop(EditData& data)
             case ElementType::TEXT:
             case ElementType::STAFF_TEXT:
             case ElementType::SYSTEM_TEXT:
+            case ElementType::STICKING:
             case ElementType::STAFF_STATE:
-            case ElementType::INSTRUMENT_CHANGE:
-                  if (e->isInstrumentChange() && part()->instruments()->find(tick().ticks()) != part()->instruments()->end()) {
-                        qDebug()<<"InstrumentChange already exists at tick = "<<tick().ticks();
-                        delete e;
-                        return 0;
-                        }
                   // fall through
-
             case ElementType::REHEARSAL_MARK:
                   {
                   e->setParent(segment());
@@ -556,6 +551,27 @@ Element* ChordRest::drop(EditData& data)
                   score()->undoAddElement(e);
                   return e;
                   }
+            case ElementType::INSTRUMENT_CHANGE:
+                  if (part()->instruments()->find(tick().ticks()) != part()->instruments()->end()) {
+                        qDebug() << "InstrumentChange already exists at tick = " << tick().ticks();
+                        delete e;
+                        return 0;
+                        }
+                  else {
+                        InstrumentChange* ic = toInstrumentChange(e);
+                        ic->setParent(segment());
+                        ic->setTrack((track() / VOICES) * VOICES);
+
+                        const Instrument* instr = part()->instrument(tick());
+                        if (!instr) {
+                            delete e;
+                            return 0;
+                        }
+
+                        ic->setInstrument(*instr);
+                        score()->undoAddElement(ic);
+                        return e;
+                        }
             case ElementType::FIGURED_BASS:
                   {
                   bool bNew;
@@ -614,20 +630,15 @@ Element* ChordRest::drop(EditData& data)
                   }
                   break;
 
-            case ElementType::HAIRPIN:
-                  {
-                  const Hairpin* hairpin = toHairpin(e);
-                  ChordRest* endCR = this;
-                  if (hairpin->ticks().isNotZero()) {
-                        const Fraction tick2 = tick() + hairpin->ticks() - Fraction::eps();
-                        endCR = score()->findCR(tick2, track());
-                        }
-                  score()->addHairpin(hairpin->hairpinType(), this, endCR);
-                  delete e;
-                  }
-                  return nullptr;
-
             default:
+                  if (e->isSpanner()) {
+                        Spanner* spanner = toSpanner(e);
+                        spanner->setTick(tick());
+                        spanner->setTrack(track());
+                        spanner->setTrack2(track());
+                        score()->undoAddElement(spanner);
+                        return e;
+                        }
                   qDebug("cannot drop %s", e->name());
                   delete e;
                   return 0;
@@ -706,7 +717,8 @@ QString ChordRest::durationUserName() const
                         tupletType = QObject::tr("Nonuplet");
                         break;
                   default:
-                        tupletType = QObject::tr("Custom tuplet");
+                        //: %1 is tuplet ratio numerator (i.e. the number of notes in the tuplet)
+                        tupletType = QObject::tr("%1 note tuplet").arg(tuplet()->ratio().numerator());
                   }
             }
       QString dotString = "";
@@ -729,7 +741,7 @@ QString ChordRest::durationUserName() const
             default:
                   dotString += durationType().durationTypeUserName();
             }
-      return QString("%1%2").arg(tupletType).arg(dotString);
+      return QString("%1%2").arg(tupletType, dotString);
       }
 
 //---------------------------------------------------------
@@ -778,9 +790,9 @@ void ChordRest::remove(Element* e)
 
 //---------------------------------------------------------
 //   removeDeleteBeam
-//      beamed - the chordrest is beamed (will get a (new) beam)
-//          remove ChordRest from beam
-//          delete beam if empty
+///   Remove ChordRest from beam, delete beam if empty.
+///   \param beamed - if the chordrest is beamed (will get
+///                   a (new) beam)
 //---------------------------------------------------------
 
 void ChordRest::removeDeleteBeam(bool beamed)
@@ -790,9 +802,23 @@ void ChordRest::removeDeleteBeam(bool beamed)
             _beam->remove(this);
             if (b->empty())
                   score()->undoRemoveElement(b);
+            else
+                  b->layout1();
             }
       if (!beamed && isChord())
             toChord(this)->layoutStem();
+      }
+
+//---------------------------------------------------------
+//   replaceBeam
+//---------------------------------------------------------
+
+void ChordRest::replaceBeam(Beam* newBeam)
+      {
+      if (_beam == newBeam)
+            return;
+      removeDeleteBeam(true);
+      newBeam->add(this);
       }
 
 //---------------------------------------------------------
@@ -824,7 +850,7 @@ void ChordRest::localSpatiumChanged(qreal oldValue, qreal newValue)
 QVariant ChordRest::getProperty(Pid propertyId) const
       {
       switch (propertyId) {
-            case Pid::SMALL:      return QVariant(small());
+            case Pid::SMALL:      return QVariant(isSmall());
             case Pid::BEAM_MODE:  return int(beamMode());
             case Pid::STAFF_MOVE: return staffMove();
             case Pid::DURATION_TYPE: return QVariant::fromValue(actualDurationType());
@@ -914,6 +940,16 @@ bool ChordRest::isGraceAfter() const
       }
 
 //---------------------------------------------------------
+//   hasBreathMark - determine if chordrest has breath-mark
+//---------------------------------------------------------
+Breath* ChordRest::hasBreathMark() const
+      {
+      Fraction end = tick() + actualTicks();
+      Segment* s = measure()->findSegment(SegmentType::Breath, end);
+      return s ? toBreath(s->element(track())) : 0;
+      }
+
+//---------------------------------------------------------
 //   writeBeam
 //---------------------------------------------------------
 
@@ -994,19 +1030,21 @@ void ChordRest::processSiblings(std::function<void(Element*)> func)
 //   nextArticulationOrLyric
 //---------------------------------------------------------
 
-Element* ChordRest::nextArticulationOrLyric(Element* /*e*/)
+Element* ChordRest::nextArticulationOrLyric(Element* e)
       {
-#if 0 // TODO:fermata
-      auto i = std::find(_articulations.begin(), _articulations.end(), e);
-      if (i != _articulations.end()) {
-            if (i != _articulations.end()-1) {
-                  return *(i+1);
-                  }
-            else {
-                  if (!_lyrics.empty())
-                        return _lyrics[0];
-                  else
-                        return nullptr;
+      if (isChord() && e->isArticulation()) {
+            Chord* c = toChord(this);
+            auto i = std::find(c->articulations().begin(), c->articulations().end(), e);
+            if (i != c->articulations().end()) {
+                  if (i != c->articulations().end() - 1) {
+                        return *(i+1);
+                        }
+                  else {
+                        if (!_lyrics.empty())
+                              return _lyrics[0];
+                        else
+                              return nullptr;
+                        }
                   }
             }
       else {
@@ -1016,7 +1054,6 @@ Element* ChordRest::nextArticulationOrLyric(Element* /*e*/)
                       return *(i+1);
                   }
             }
-#endif
       return 0;
       }
 
@@ -1024,29 +1061,28 @@ Element* ChordRest::nextArticulationOrLyric(Element* /*e*/)
 //   prevArticulationOrLyric
 //---------------------------------------------------------
 
-Element* ChordRest::prevArticulationOrLyric(Element* /*e*/)
+Element* ChordRest::prevArticulationOrLyric(Element* e)
       {
-#if 0 // TODO:fermata
       auto i = std::find(_lyrics.begin(), _lyrics.end(), e);
       if (i != _lyrics.end()) {
             if (i != _lyrics.begin()) {
                   return *(i-1);
                   }
             else {
-                  if (!_articulations.empty())
-                        return _articulations.back();
+                  if (isChord() && !toChord(this)->articulations().empty())
+                        return toChord(this)->articulations().back();
                   else
                         return nullptr;
                   }
             }
-      else {
-            auto i = std::find(_articulations.begin(), _articulations.end(), e);
-            if (i != _articulations.end()) {
-                  if (i != _articulations.begin())
-                        return *(i-1);
+      else if (isChord() && e->isArticulation()) {
+            Chord* c = toChord(this);
+            auto j = std::find(c->articulations().begin(), c->articulations().end(), e);
+            if (j != c->articulations().end()) {
+                  if (j != c->articulations().begin())
+                        return *(j-1);
                   }
             }
-#endif
       return 0;
       }
 
@@ -1057,7 +1093,6 @@ Element* ChordRest::prevArticulationOrLyric(Element* /*e*/)
 Element* ChordRest::nextElement()
       {
       Element* e = score()->selection().element();
-#if 0 // TODO:fermata
       if (!e && !score()->selection().elements().isEmpty())
             e = score()->selection().elements().first();
       switch (e->type()) {
@@ -1070,15 +1105,14 @@ Element* ChordRest::nextElement()
                         break;
                   }
             default: {
-                  if (!_articulations.empty())
-                        return _articulations[0];
+                  if (isChord() && !toChord(this)->articulations().empty())
+                        return toChord(this)->articulations()[0];
                   else if (!_lyrics.empty())
                         return _lyrics[0];
                   else
                         break;
                   }
             }
-#endif
       int staffId = e->staffIdx();
       return segment()->nextElement(staffId);
       }
@@ -1090,7 +1124,6 @@ Element* ChordRest::nextElement()
 Element* ChordRest::prevElement()
       {
       Element* e = score()->selection().element();
-#if 0 // TODO:fermata
       if (!e && !score()->selection().elements().isEmpty())
             e = score()->selection().elements().last();
       switch (e->type()) {
@@ -1109,7 +1142,11 @@ Element* ChordRest::prevElement()
                   break;
                   }
             }
-#endif
+
+      Tuplet* tuplet = this->tuplet();
+      if (tuplet && this == tuplet->elements().front())
+            return tuplet;
+
       int staffId = e->staffIdx();
       return segment()->prevElement(staffId);
       }
@@ -1150,25 +1187,18 @@ Element* ChordRest::prevSegmentElement()
 QString ChordRest::accessibleExtraInfo() const
       {
       QString rez = "";
-#if 0       // TODO:fermata
-      for (Articulation* a : articulations()) {
-            if (!score()->selectionFilter().canSelect(a))
-                  continue;
-            rez = QString("%1 %2").arg(rez).arg(a->screenReaderInfo());
-            }
-#endif
       for (Element* l : lyrics()) {
             if (!score()->selectionFilter().canSelect(l))
                   continue;
-            rez = QString("%1 %2").arg(rez).arg(l->screenReaderInfo());
+            rez = QString("%1 %2").arg(rez, l->screenReaderInfo());
             }
 
       if (segment()) {
             for (Element* e : segment()->annotations()) {
                   if (!score()->selectionFilter().canSelect(e))
                         continue;
-                  if (e->staffIdx() == staffIdx() )
-                        rez = QString("%1 %2").arg(rez).arg(e->screenReaderInfo());
+                  if (e->track() == track())
+                        rez = QString("%1 %2").arg(rez, e->screenReaderInfo());
                   }
 
             SpannerMap& smap = score()->spannerMap();
@@ -1181,25 +1211,48 @@ QString ChordRest::accessibleExtraInfo() const
                       s->type() == ElementType::TIE    ) //ties are added in notes
                         continue;
 
-                  Segment* seg = 0;
                   if (s->type() == ElementType::SLUR) {
                         if (s->tick() == tick() && s->track() == track())
-                              rez = QObject::tr("%1 Start of %2").arg(rez).arg(s->screenReaderInfo());
+                              rez = QObject::tr("%1 Start of %2").arg(rez, s->screenReaderInfo());
                         if (s->tick2() == tick() && s->track2() == track())
-                              rez = QObject::tr("%1 End of %2").arg(rez).arg(s->screenReaderInfo());
+                              rez = QObject::tr("%1 End of %2").arg(rez, s->screenReaderInfo());
                         }
-                  else  {
-                        if (s->tick() == tick() && s->staffIdx() == staffIdx())
-                              rez = QObject::tr("%1 Start of %2").arg(rez).arg(s->screenReaderInfo());
-                        seg = segment()->next1MM(SegmentType::ChordRest);
-                        if (!seg)
-                              continue;
-                        if (s->tick2() == seg->tick() && s->staffIdx() == staffIdx())
-                              rez = QObject::tr("%1 End of %2").arg(rez).arg(s->screenReaderInfo());
+                  else if (s->staffIdx() == staffIdx()) {
+                        bool start = s->tick()  == tick();
+                        bool end   = s->tick2() == tick() + ticks();
+                        if (start && end)
+                              rez = QObject::tr("%1 Start and end of %2").arg(rez, s->screenReaderInfo());
+                        else if (start)
+                              rez = QObject::tr("%1 Start of %2").arg(rez, s->screenReaderInfo());
+                        else if (end)
+                              rez = QObject::tr("%1 End of %2").arg(rez, s->screenReaderInfo());
                         }
                   }
             }
       return rez;
+      }
+
+//---------------------------------------------------------
+//   isMelismaEnd
+//    returns true if chordrest represents the end of a melisma
+//---------------------------------------------------------
+
+bool ChordRest::isMelismaEnd() const
+      {
+      return _melismaEnd;
+      }
+
+//---------------------------------------------------------
+//   setMelismaEnd
+//---------------------------------------------------------
+
+void ChordRest::setMelismaEnd(bool v)
+      {
+      _melismaEnd = v;
+      // TODO: don't take "false" at face value
+      // check to see if some other melisma ends here,
+      // in which case we can leave this set to true
+      // for now, rely on the fact that we'll generate the value correctly on layout
       }
 
 //---------------------------------------------------------
@@ -1210,8 +1263,8 @@ Shape ChordRest::shape() const
       {
       Shape shape;
       {
-      qreal x1 = 1000000.0;
-      qreal x2 = -1000000.0;
+      qreal x1 = DBL_MAX;
+      qreal x2 = -DBL_MAX;
       bool adjustWidth = false;
       for (Lyrics* l : _lyrics) {
             if (!l || !l->addToSkyline())
@@ -1233,8 +1286,8 @@ Shape ChordRest::shape() const
       }
 
       {
-      qreal x1 = 1000000.0;
-      qreal x2 = -1000000.0;
+      qreal x1 = DBL_MAX;
+      qreal x2 = -DBL_MAX;
       bool adjustWidth = false;
       for (Element* e : segment()->annotations()) {
             if (!e || !e->addToSkyline())
@@ -1242,16 +1295,46 @@ Shape ChordRest::shape() const
             if (e->isHarmony() && e->staffIdx() == staffIdx()) {
                   Harmony* h = toHarmony(e);
                   // calculate bbox only (do not reset position)
-                  h->layout1();
+                  if (h->bbox().isEmpty()) h->layout1();
                   const qreal margin = styleP(Sid::minHarmonyDistance) * 0.5;
                   x1 = qMin(x1, e->bbox().x() - margin + e->pos().x());
                   x2 = qMax(x2, e->bbox().x() + e->bbox().width() + margin + e->pos().x());
                   adjustWidth = true;
                   }
+            else if (e->isFretDiagram()) {
+                  FretDiagram* fd = toFretDiagram(e);
+                  qreal margin = styleP(Sid::fretMinDistance) * 0.5;
+                  bool firstBeat = tick() == measure()->tick();
+                  if (fd->pos().x() == 0)
+                        fd->layoutHorizontal();
+                  else if (fd->bbox().isEmpty())
+                        fd->calculateBoundingRect();
+                  qreal leftX = firstBeat ? 0 : e->bbox().x() - margin + e->pos().x();
+                  qreal rightX = e->bbox().x() + e->bbox().width() + margin + e->pos().x();
+                  x1 = qMin(x1, leftX);
+                  x2 = qMax(x2, rightX);
+                  adjustWidth = true;
+                  if (fd->harmony()) {
+                        Harmony* h = fd->harmony();
+                        margin = styleP(Sid::minHarmonyDistance) * 0.5;
+                        if (h->bbox().isEmpty())
+                              h->layout1();
+                        leftX = firstBeat ? 0 : h->bbox().x() - margin + h->pos().x() + e->pos().x();
+                        rightX = h->bbox().x() + h->bbox().width() + margin + h->pos().x() + e->pos().x();
+                        x1 = qMin(x1, leftX);
+                        x2 = qMax(x2, rightX);
+                        adjustWidth = true;
+                        }
+                  }
             }
       if (adjustWidth)
             shape.addHorizontalSpacing(Shape::SPACING_HARMONY, x1, x2);
       }
+
+      if (isMelismaEnd()) {
+            qreal right = rightEdge();
+            shape.addHorizontalSpacing(Shape::SPACING_LYRICS, right, right);
+            }
 
       return shape;
       }
@@ -1259,6 +1342,15 @@ Shape ChordRest::shape() const
 //---------------------------------------------------------
 //   lyrics
 //---------------------------------------------------------
+
+Lyrics* ChordRest::lyrics(int no) const
+      {
+      for (Lyrics* l : _lyrics) {
+            if (l->no() == no)
+                  return l;
+            }
+      return 0;
+      }
 
 Lyrics* ChordRest::lyrics(int no, Placement p) const
       {
@@ -1310,7 +1402,7 @@ void ChordRest::removeMarkings(bool /* keepTremolo */)
 bool ChordRest::isBefore(const ChordRest* o) const
       {
       if (!o || this == o)
-            return true;
+            return false;
       int otick = o->tick().ticks();
       int t     = tick().ticks();
       if (t == otick) { // At least one of the chord is a grace, order the grace notes
@@ -1319,8 +1411,11 @@ bool ChordRest::isBefore(const ChordRest* o) const
             bool oGrace      = o->isGrace();
             bool grace       = isGrace();
             // normal note are initialized at graceIndex 0 and graceIndex is 0 based
-            int oGraceIndex  = oGrace ? toChord(o)->graceIndex() +  1 : 0;
-            int graceIndex   = grace ? toChord(this)->graceIndex() + 1 : 0;
+            int oGraceIndex  = toChord(o)->graceIndex();
+            int graceIndex   = toChord(this)->graceIndex();
+            // Smaller indexes are further away from the note, and larger indexes are closer to the note.
+            // We want to reverse that. Subtracting a 0-based index from the size results in a 1-based index,
+            // which is exactly what we want.
             if (oGrace)
                   oGraceIndex = toChord(o->parent())->graceNotes().size() - oGraceIndex;
             if (grace)
@@ -1345,6 +1440,63 @@ void ChordRest::undoAddAnnotation(Element* a)
       a->setTrack(a->systemFlag() ? 0 : track());
       a->setParent(seg);
       score()->undoAddElement(a);
+      }
+
+//----------------------------------------------------------------
+//    getNotesAtPosition - Get all notes corresponding
+//          to the vertical segment of a ChordRest input. Only one
+//          instrument - the ChordRest's instrument - is taken into
+//          account if onlyOne = true, else the entire score -
+//          currently not implemented for pianoview
+//----------------------------------------------------------------
+
+void ChordRest::getNotesAtPosition(std::vector<Note*>& notesAtPosition, bool onlyOne)
+      {
+      auto part = staff()->part();
+      auto firstTrackOfPart = onlyOne ? part->startTrack()  : 0;
+      auto lastTrackOfPart  = onlyOne ? part->endTrack()    : score()->ntracks();
+      auto currentPosition = tick();
+
+      MCursor c;
+      c.setScore(score()->masterScore());
+      if (!notesAtPosition.empty())
+            notesAtPosition.clear();
+      for (int track = firstTrackOfPart; track < lastTrackOfPart; track++) {
+            c.move(track, currentPosition);
+            if (auto e = c.currentElement()) {
+                  if (e->isChord()) {
+                        auto notes = toChord(e)->notes();
+                        for (auto note : notes) {
+                              notesAtPosition.emplace_back(note);
+                              }
+                        }
+                  }
+            }
+      }
+
+//----------------------------------------------------------------
+//    getChordRestsAtPosition - same as getNotesAtPosition except
+//          now stores ChordRests to include rests for the purposes
+//          of vertical movement of selection of the same tick
+//----------------------------------------------------------------
+
+void ChordRest::getChordRestsAtPosition(std::vector<ChordRest*>& chordRestsAtPosition, bool onlyOne)
+      {
+      auto part = staff()->part();
+      auto firstTrackOfPart = onlyOne ? part->startTrack() : 0;
+      auto lastTrackOfPart  = onlyOne ? part->endTrack()   : score()->ntracks();
+      auto currentPosition = tick();
+
+      MCursor c;
+      c.setScore(score()->masterScore());
+      if (!chordRestsAtPosition.empty())
+            chordRestsAtPosition.clear();
+      for (int track = firstTrackOfPart; track < lastTrackOfPart; track++) {
+            c.move(track, currentPosition);
+            if (auto e = c.currentElement())
+                  if (e->isChord() || e->isRest())
+                        chordRestsAtPosition.emplace_back(toChordRest(e));
+            }
       }
 
 }

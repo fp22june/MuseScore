@@ -35362,7 +35362,7 @@ and freely available for all of us.</text>
           <transposingClefType>F</transposingClefType>
           </Clef>
         <Tempo>
-          <tempo>1.66667</tempo>
+          <tempo>1.6666666666666667</tempo>
           <followText>1</followText>
           <visible>0</visible>
           <text><font size="12.1267"></font>𝅘𝅥 = 100</text>
@@ -58956,7 +58956,7 @@ Přeju Ti všechno nejlepší k narozeninám.
           <showCourtesySig>1</showCourtesySig>
           </TimeSig>
         <Tempo>
-          <tempo>1.66667</tempo>
+          <tempo>1.6666666666666667</tempo>
           <followText>1</followText>
           <visible>0</visible>
           <text><font size="12.1267"></font>𝅘𝅥 = 100</text>
@@ -69558,7 +69558,7 @@ In memoriam.</text>
           <transposingClefType>F</transposingClefType>
           </Clef>
         <Tempo>
-          <tempo>1.66667</tempo>
+          <tempo>1.6666666666666667</tempo>
           <followText>1</followText>
           <visible>0</visible>
           <text><font size="12.1267"></font>𝅘𝅥 = 100</text>
@@ -80419,7 +80419,7 @@ Variations each time you hear them.</text>
           <showCourtesySig>1</showCourtesySig>
           </TimeSig>
         <Tempo>
-          <tempo>1.66667</tempo>
+          <tempo>1.6666666666666667</tempo>
           <followText>1</followText>
           <visible>0</visible>
           <text><font size="12.1267"></font>𝅘𝅥 = 100</text>

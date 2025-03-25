@@ -10,24 +10,22 @@
 //  the file LICENCE.GPL
 //=============================================================================
 
-#include "navigate.h"
-#include "element.h"
-#include "clef.h"
-#include "score.h"
-#include "note.h"
-#include "rest.h"
-#include "chord.h"
-#include "system.h"
-#include "segment.h"
-#include "harmony.h"
-#include "utils.h"
-#include "input.h"
-#include "measure.h"
-#include "page.h"
-#include "spanner.h"
-#include "system.h"
-#include "staff.h"
 #include "barline.h"
+#include "clef.h"
+#include "chord.h"
+#include "element.h"
+#include "input.h"
+#include "navigate.h"
+#include "measure.h"
+#include "note.h"
+#include "page.h"
+#include "rest.h"
+#include "score.h"
+#include "segment.h"
+#include "spanner.h"
+#include "staff.h"
+#include "system.h"
+#include "utils.h"
 
 namespace Ms {
 
@@ -267,12 +265,93 @@ Note* Score::downAltCtrl(Note* note) const
       }
 
 //---------------------------------------------------------
+//   moveAlt - Updated upAlt/downAlt to let tick (beat) take
+//      precedence - facilitate up/down traveling in a
+//      vertical time domain
+//
+//    element: Note() or Rest()
+//    return: Note() or Rest()
+//
+//    return next higher/lower pitched note in chord
+//    or top/bottom of next/previous track's chord if at wit's end
+//---------------------------------------------------------
+
+Element* Score::moveAlt(Element* element, Direction direction)
+      {
+      Element* result = nullptr;
+      ChordRest* cr   = nullptr;
+      auto originalTrack = element->track();
+      bool moveUp = (direction == Direction::UP);
+      bool isNote = element->isNote();
+      bool isRest = element->isRest();
+
+      if (isNote) {
+            cr = toChordRest(element->parent());
+            auto note = toNote(element);
+            auto chord = note->chord();
+            const std::vector<Note*>& notes = chord->notes();
+            auto it = std::find(notes.begin(), notes.end(), note);
+            // Traverse notes within same ChordRest until at extremum
+            auto condition = moveUp ? notes.end() : notes.begin();
+            if (moveUp)
+                  ++it;
+            if (it != condition) {
+                  if (!moveUp)
+                        --it;
+                  result = *it;
+                  }
+            }
+      else if (isRest)
+            cr = toChordRest(element);
+
+      if (!result) {
+            // Traverse same-beat tracks
+            std::vector<ChordRest*> chordRestsOfBeat;
+            if (!cr)
+                  return nullptr;
+
+            cr->getChordRestsAtPosition(chordRestsOfBeat, false);
+            if (moveUp)
+                  std::reverse(chordRestsOfBeat.begin(), chordRestsOfBeat.end());
+
+            for (auto it : chordRestsOfBeat) {
+                  auto targetCR = it;
+                  auto targetTrack = targetCR->track();
+                  if (moveUp && (targetTrack >= originalTrack))
+                        continue;
+                  else if (!moveUp && (targetTrack <= originalTrack))
+                        continue;
+                  if (targetCR)
+                        result = targetCR;
+                  break;
+                  }
+
+            if (result && (result->track() == originalTrack)) {
+                  result = element;
+                  }
+            }
+
+      if (result && result->isChord()) {
+            auto chord = toChord(result);
+            result = moveUp ? chord->downNote() : chord->upNote();
+            }
+
+      return result;
+      }
+
+
+//---------------------------------------------------------
 //   firstElement
 //---------------------------------------------------------
 
-Element* Score::firstElement()
+Element* Score::firstElement(bool frame)
       {
-      Segment *s = firstSegment(SegmentType::All);
+      if (frame) {
+            MeasureBase* mb = measures()->first();
+            if (mb && mb->isBox())
+                  return mb;
+            }
+      Segment *s = firstSegmentMM(SegmentType::All);
       return s ? s->element(0) : nullptr;
       }
 
@@ -280,10 +359,15 @@ Element* Score::firstElement()
 //   lastElement
 //---------------------------------------------------------
 
-Element* Score::lastElement()
+Element* Score::lastElement(bool frame)
       {
+      if (frame) {
+            MeasureBase* mb = measures()->last();
+            if (mb && mb->isBox())
+                  return mb;
+            }
       Element* re = 0;
-      Segment* seg = lastSegment();
+      Segment* seg = lastSegmentMM();
       if (!seg)
             return nullptr;
       while (true) {
@@ -527,7 +611,9 @@ Element* Score::nextElement()
       while (e) {
             switch (e->type()) {
                   case ElementType::NOTE:
-                  case ElementType::CHORD: {
+                  case ElementType::REST:
+                  case ElementType::CHORD:
+                  case ElementType::TUPLET: {
                         Element* next = e->nextElement();
                         if (next)
                               return next;
@@ -564,13 +650,23 @@ Element* Score::nextElement()
                        else
                              return score()->firstElement();
                        }
+#if 1
+                  case ElementType::VOLTA_SEGMENT:
+#else
+                  case ElementType::VOLTA_SEGMENT: {
+                        // TODO: see Spanner::nextSpanner()
+                        System* sys = toSpannerSegment(e)->system();
+                        if (sys)
+                              staffId = sys->firstVisibleStaff();
+                        }
+                        // fall through
+#endif
                   case ElementType::SLUR_SEGMENT:
                   case ElementType::TEXTLINE_SEGMENT:
                   case ElementType::HAIRPIN_SEGMENT:
                   case ElementType::OTTAVA_SEGMENT:
                   case ElementType::TRILL_SEGMENT:
                   case ElementType::VIBRATO_SEGMENT:
-                  case ElementType::VOLTA_SEGMENT:
                   case ElementType::LET_RING_SEGMENT:
                   case ElementType::PALM_MUTE_SEGMENT:
                   case ElementType::PEDAL_SEGMENT: {
@@ -587,7 +683,7 @@ Element* Score::nextElement()
                                     Element* nextEl = nextSegment->firstElementOfSegment(nextSegment, staffId);
                                     if (nextEl)
                                           return nextEl;
-                                    nextSegment = nextSegment->next1();
+                                    nextSegment = nextSegment->next1MM();
                                     }
                               }
                         break;
@@ -604,12 +700,31 @@ Element* Score::nextElement()
                         else
                               break;
                         }
+                  case ElementType::VBOX:
+                  case ElementType::HBOX:
+                  case ElementType::TBOX: {
+                        MeasureBase* mb = toMeasureBase(e)->nextMM();
+                        if (!mb) {
+                              break;
+                              }
+                        else if (mb->isMeasure()) {
+                              ChordRest* cr = selection().currentCR();
+                              int si = cr ? cr->staffIdx() : 0;
+                              return toMeasure(mb)->nextElementStaff(si);
+                              }
+                        else {
+                              return mb;
+                              }
+                        }
+                  case ElementType::LAYOUT_BREAK: {
+                        staffId = 0; // otherwise it will equal -1, which breaks the navigation
+                        }
                   default:
                         break;
                   }
             e = e->parent();
             }
-      return score()->firstElement();
+      return score()->lastElement();
       }
 
 //---------------------------------------------------------
@@ -626,7 +741,8 @@ Element* Score::prevElement()
             switch (e->type()) {
                   case ElementType::NOTE:
                   case ElementType::REST:
-                  case ElementType::CHORD: {
+                  case ElementType::CHORD:
+                  case ElementType::TUPLET: {
                         Element* prev = e->prevElement();
                         if (prev)
                               return prev;
@@ -655,13 +771,23 @@ Element* Score::prevElement()
                         Segment* s = toSegment(e);
                         return s->prevElement(staffId);
                         }
+#if 1
+                  case ElementType::VOLTA_SEGMENT:
+#else
+                  case ElementType::VOLTA_SEGMENT: {
+                        // TODO: see Spanner::nextSpanner()
+                        System* sys = toSpannerSegment(e)->system();
+                        if (sys)
+                              staffId = sys->firstVisibleStaff();
+                        }
+                        // fall through
+#endif
                   case ElementType::SLUR_SEGMENT:
                   case ElementType::TEXTLINE_SEGMENT:
                   case ElementType::HAIRPIN_SEGMENT:
                   case ElementType::OTTAVA_SEGMENT:
                   case ElementType::TRILL_SEGMENT:
                   case ElementType::VIBRATO_SEGMENT:
-                  case ElementType::VOLTA_SEGMENT:
                   case ElementType::PEDAL_SEGMENT: {
                         SpannerSegment* s = toSpannerSegment(e);
                         Spanner* sp = s->spanner();
@@ -711,12 +837,34 @@ Element* Score::prevElement()
                         else
                               break;
                         }
+                  case ElementType::VBOX:
+                  case ElementType::HBOX:
+                  case ElementType::TBOX: {
+                        MeasureBase* mb = toMeasureBase(e)->prevMM();
+                        if (!mb) {
+                              break;
+                              }
+                        else if (mb->isMeasure()) {
+                              ChordRest* cr = selection().currentCR();
+                              int si = cr ? cr->staffIdx() : 0;
+                              Segment* s = toMeasure(mb)->last();
+                              if (s)
+                                    return s->lastElementForNavigation(si);
+                              }
+                        else {
+                              return mb;
+                              }
+                        }
+                        break;
+                  case ElementType::LAYOUT_BREAK: {
+                        staffId = 0; // otherwise it will equal -1, which breaks the navigation
+                        }
                   default:
                         break;
                   }
             e = e->parent();
             }
-      return score()->lastElement();
+      return score()->firstElement();
       }
 
 }

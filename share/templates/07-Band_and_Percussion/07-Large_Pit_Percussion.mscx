@@ -1,15 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<museScore version="3.01">
-  <programVersion>3.0.0</programVersion>
-  <programRevision>3543170</programRevision>
+<museScore version="3.02">
   <Score>
     <LayerTag id="0" tag="default"></LayerTag>
     <currentLayer>0</currentLayer>
-    <Synthesizer>
-      </Synthesizer>
     <Division>480</Division>
     <Style>
-      <Spatium>0.764</Spatium>
+      <enableVerticalSpread>1</enableVerticalSpread>
+      <Spatium>0.75</Spatium>
       </Style>
     <showInvisible>1</showInvisible>
     <showUnprintable>1</showUnprintable>
@@ -43,7 +40,7 @@
         <barLineSpan>3</barLineSpan>
         </Staff>
       <trackName>Electric Piano</trackName>
-      <Instrument>
+      <Instrument id="electric-piano">
         <longName>Electric Piano</longName>
         <shortName>El. Pno.</shortName>
         <trackName>Electric Piano</trackName>
@@ -78,21 +75,21 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
-            <velocity>150</velocity>
-            <gateTime>100</gateTime>
-        </Articulation>
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
         <Articulation name="sforzatoStaccato">
-              <velocity>150</velocity>
-              <gateTime>50</gateTime>
-        </Articulation>
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
         <Articulation name="marcatoStaccato">
-              <velocity>120</velocity>
-              <gateTime>50</gateTime>
-        </Articulation>
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
         <Articulation name="marcatoTenuto">
-              <velocity>120</velocity>
-              <gateTime>100</gateTime>
-        </Articulation>
+          <velocity>120</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
         <Channel>
           <program value="4"/>
           <synti>Fluid</synti>
@@ -109,7 +106,7 @@
         <barLineSpan>2</barLineSpan>
         </Staff>
       <trackName>Electric Guitar</trackName>
-      <Instrument>
+      <Instrument id="electric-guitar">
         <longName>Electric Guitar</longName>
         <shortName>El. Guit.</shortName>
         <trackName>Electric Guitar</trackName>
@@ -153,6 +150,18 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>120</velocity>
           <gateTime>100</gateTime>
           </Articulation>
@@ -171,7 +180,7 @@
         <barLineSpan>1</barLineSpan>
         </Staff>
       <trackName>Acoustic Guitar</trackName>
-      <Instrument>
+      <Instrument id="guitar-steel">
         <longName>Acoustic Guitar</longName>
         <shortName>Ac. Guit.</shortName>
         <trackName>Acoustic Guitar</trackName>
@@ -215,6 +224,18 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>120</velocity>
           <gateTime>100</gateTime>
           </Articulation>
@@ -232,7 +253,7 @@
         <defaultClef>F8vb</defaultClef>
         </Staff>
       <trackName>Electric Bass</trackName>
-      <Instrument>
+      <Instrument id="electric-bass">
         <longName>Electric Bass</longName>
         <shortName>El. B.</shortName>
         <trackName>Electric Bass</trackName>
@@ -274,6 +295,18 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>120</velocity>
           <gateTime>100</gateTime>
           </Articulation>
@@ -294,7 +327,7 @@
         <barLineSpan>3</barLineSpan>
         </Staff>
       <trackName>Glockenspiel</trackName>
-      <Instrument>
+      <Instrument id="glockenspiel">
         <longName>Glockenspiel</longName>
         <shortName>Glk.</shortName>
         <trackName>Glockenspiel</trackName>
@@ -332,6 +365,18 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>120</velocity>
           <gateTime>100</gateTime>
           </Articulation>
@@ -351,7 +396,7 @@
         <barLineSpan>2</barLineSpan>
         </Staff>
       <trackName>Crotales</trackName>
-      <Instrument>
+      <Instrument id="crotales">
         <longName>Crotales</longName>
         <shortName>Cro.</shortName>
         <trackName>Crotales</trackName>
@@ -389,6 +434,18 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>120</velocity>
           <gateTime>100</gateTime>
           </Articulation>
@@ -408,7 +465,7 @@
         <barLineSpan>1</barLineSpan>
         </Staff>
       <trackName>Xylophone</trackName>
-      <Instrument>
+      <Instrument id="xylophone">
         <longName>Xylophone</longName>
         <shortName>Xyl.</shortName>
         <trackName>Xylophone</trackName>
@@ -446,6 +503,18 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>120</velocity>
           <gateTime>100</gateTime>
           </Articulation>
@@ -462,7 +531,7 @@
           </StaffType>
         </Staff>
       <trackName>Tubular Bells</trackName>
-      <Instrument>
+      <Instrument id="tubular-bells">
         <longName>Tubular Bells</longName>
         <shortName>Tu. Be.</shortName>
         <trackName>Tubular Bells</trackName>
@@ -496,6 +565,18 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>120</velocity>
           <gateTime>100</gateTime>
           </Articulation>
@@ -511,10 +592,10 @@
           <name>stdNormal</name>
           </StaffType>
         <bracket type="0" span="4" col="0"/>
-        <barLineSpan>3</barLineSpan>
+        <barLineSpan>1</barLineSpan>
         </Staff>
       <trackName>Vibraphone 1</trackName>
-      <Instrument>
+      <Instrument id="vibraphone">
         <longName>Vibraphone 1</longName>
         <shortName>Vib. 1</shortName>
         <trackName>Vibraphone</trackName>
@@ -548,6 +629,18 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>120</velocity>
           <gateTime>100</gateTime>
           </Articulation>
@@ -562,10 +655,10 @@
         <StaffType group="pitched">
           <name>stdNormal</name>
           </StaffType>
-        <barLineSpan>2</barLineSpan>
+        <barLineSpan>1</barLineSpan>
         </Staff>
       <trackName>Vibraphone 2</trackName>
-      <Instrument>
+      <Instrument id="vibraphone">
         <longName>Vibraphone 2</longName>
         <shortName>Vib. 2</shortName>
         <trackName>Vibraphone</trackName>
@@ -599,6 +692,18 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>120</velocity>
           <gateTime>100</gateTime>
           </Articulation>
@@ -616,7 +721,7 @@
         <barLineSpan>1</barLineSpan>
         </Staff>
       <trackName>Vibraphone 3</trackName>
-      <Instrument>
+      <Instrument id="vibraphone">
         <longName>Vibraphone 3</longName>
         <shortName>Vib. 3</shortName>
         <trackName>Vibraphone</trackName>
@@ -650,6 +755,18 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>120</velocity>
           <gateTime>100</gateTime>
           </Articulation>
@@ -666,7 +783,7 @@
           </StaffType>
         </Staff>
       <trackName>Vibraphone 4</trackName>
-      <Instrument>
+      <Instrument id="vibraphone">
         <longName>Vibraphone 4</longName>
         <shortName>Vib. 4</shortName>
         <trackName>Vibraphone</trackName>
@@ -700,6 +817,18 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>120</velocity>
           <gateTime>100</gateTime>
           </Articulation>
@@ -714,8 +843,9 @@
         <StaffType group="pitched">
           <name>stdNormal</name>
           </StaffType>
-        <bracket type="0" span="8" col="0"/>
-        <bracket type="1" span="2" col="1"/>
+        <bracket type="-1" span="2" col="1"/>
+        <bracket type="0" span="8" col="2"/>
+        <bracket type="1" span="2" col="3"/>
         <barLineSpan>7</barLineSpan>
         </Staff>
       <Staff id="15">
@@ -726,7 +856,7 @@
         <barLineSpan>6</barLineSpan>
         </Staff>
       <trackName>Marimba 1</trackName>
-      <Instrument>
+      <Instrument id="marimba">
         <longName>Marimba 1</longName>
         <shortName>Mba. 1</shortName>
         <trackName>Marimba</trackName>
@@ -761,6 +891,18 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>120</velocity>
           <gateTime>100</gateTime>
           </Articulation>
@@ -775,7 +917,8 @@
         <StaffType group="pitched">
           <name>stdNormal</name>
           </StaffType>
-        <bracket type="1" span="2" col="1"/>
+        <bracket type="-1" span="2" col="2"/>
+        <bracket type="1" span="2" col="3"/>
         <barLineSpan>5</barLineSpan>
         </Staff>
       <Staff id="17">
@@ -786,7 +929,7 @@
         <barLineSpan>4</barLineSpan>
         </Staff>
       <trackName>Marimba 2</trackName>
-      <Instrument>
+      <Instrument id="marimba">
         <longName>Marimba 2</longName>
         <shortName>Mba. 2</shortName>
         <trackName>Marimba</trackName>
@@ -821,6 +964,18 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>120</velocity>
           <gateTime>100</gateTime>
           </Articulation>
@@ -838,7 +993,7 @@
         <barLineSpan>3</barLineSpan>
         </Staff>
       <trackName>Marimba 3</trackName>
-      <Instrument>
+      <Instrument id="marimba">
         <longName>Marimba 3</longName>
         <shortName>Mba. 3</shortName>
         <trackName>Marimba</trackName>
@@ -873,6 +1028,18 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>120</velocity>
           <gateTime>100</gateTime>
           </Articulation>
@@ -890,7 +1057,7 @@
         <barLineSpan>2</barLineSpan>
         </Staff>
       <trackName>Marimba 4</trackName>
-      <Instrument>
+      <Instrument id="marimba">
         <longName>Marimba 4</longName>
         <shortName>Mba. 4</shortName>
         <trackName>Marimba</trackName>
@@ -925,6 +1092,18 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>120</velocity>
           <gateTime>100</gateTime>
           </Articulation>
@@ -943,7 +1122,7 @@
         <barLineSpan>1</barLineSpan>
         </Staff>
       <trackName>Marimba 5</trackName>
-      <Instrument>
+      <Instrument id="marimba">
         <longName>Marimba 5</longName>
         <shortName>Mba. 5</shortName>
         <trackName>Marimba</trackName>
@@ -978,6 +1157,18 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>120</velocity>
           <gateTime>100</gateTime>
           </Articulation>
@@ -995,7 +1186,7 @@
         <defaultClef>F</defaultClef>
         </Staff>
       <trackName>Marimba 6</trackName>
-      <Instrument>
+      <Instrument id="marimba">
         <longName>Marimba 6</longName>
         <shortName>Mba. 6</shortName>
         <trackName>Marimba</trackName>
@@ -1030,6 +1221,18 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>120</velocity>
           <gateTime>100</gateTime>
           </Articulation>
@@ -1049,7 +1252,7 @@
         <barLineSpan>3</barLineSpan>
         </Staff>
       <trackName>Timpani</trackName>
-      <Instrument>
+      <Instrument id="timpani">
         <longName>Timpani</longName>
         <shortName>Timp.</shortName>
         <trackName>Timpani</trackName>
@@ -1084,6 +1287,18 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>120</velocity>
           <gateTime>100</gateTime>
           </Articulation>
@@ -1103,7 +1318,7 @@
         <barLineSpan>2</barLineSpan>
         </Staff>
       <trackName>Drumset</trackName>
-      <Instrument>
+      <Instrument id="drumset">
         <longName>Drumset</longName>
         <shortName>Drs.</shortName>
         <trackName>Drumset</trackName>
@@ -1317,11 +1532,24 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>120</velocity>
           <gateTime>100</gateTime>
           </Articulation>
         <Channel>
           <controller ctrl="0" value="1"/>
+          <controller ctrl="32" value="0"/>
           <program value="0"/>
           <synti>Fluid</synti>
           </Channel>
@@ -1337,7 +1565,7 @@
         <barLineSpan>1</barLineSpan>
         </Staff>
       <trackName>Auxiliary Percussion 1</trackName>
-      <Instrument>
+      <Instrument id="percussion">
         <longName>Auxiliary Percussion 1</longName>
         <shortName>Aux. 1</shortName>
         <trackName>Percussion</trackName>
@@ -1523,11 +1751,24 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>120</velocity>
           <gateTime>100</gateTime>
           </Articulation>
         <Channel>
           <controller ctrl="0" value="1"/>
+          <controller ctrl="32" value="0"/>
           <program value="48"/>
           <synti>Fluid</synti>
           </Channel>
@@ -1542,7 +1783,7 @@
         <defaultClef>PERC</defaultClef>
         </Staff>
       <trackName>Auxiliary Percussion 2</trackName>
-      <Instrument>
+      <Instrument id="percussion">
         <longName>Auxiliary Percussion 2</longName>
         <shortName>Aux. 2</shortName>
         <trackName>Percussion</trackName>
@@ -1728,11 +1969,24 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>120</velocity>
           <gateTime>100</gateTime>
           </Articulation>
         <Channel>
           <controller ctrl="0" value="1"/>
+          <controller ctrl="32" value="0"/>
           <program value="48"/>
           <synti>Fluid</synti>
           </Channel>
@@ -1741,7 +1995,8 @@
     <Part>
       <Staff id="26">
         <StaffType group="percussion">
-          <name>perc5Line</name>
+          <name>perc1Line</name>
+          <lines>1</lines>
           <keysig>0</keysig>
           </StaffType>
         <defaultClef>PERC</defaultClef>
@@ -1749,31 +2004,31 @@
         <barLineSpan>3</barLineSpan>
         </Staff>
       <trackName>Snare Drum</trackName>
-      <Instrument>
+      <Instrument id="marching-snare">
         <longName>Snare Drum</longName>
         <shortName>S.D.</shortName>
         <trackName>Snare Drum</trackName>
         <instrumentId>drum.snare-drum</instrumentId>
         <useDrumset>1</useDrumset>
         <Drum pitch="48">
-          <head>diamond</head>
-          <line>4</line>
+          <head>normal</head>
+          <line>1</line>
           <voice>0</voice>
           <name>Buzz</name>
           <stem>1</stem>
-          <shortcut>A</shortcut>
+          <shortcut>B</shortcut>
           </Drum>
         <Drum pitch="50">
           <head>normal</head>
-          <line>4</line>
+          <line>1</line>
           <voice>0</voice>
           <name>Battery Snare</name>
           <stem>1</stem>
-          <shortcut>B</shortcut>
+          <shortcut>A</shortcut>
           </Drum>
         <Drum pitch="52">
-          <head>cross</head>
-          <line>4</line>
+          <head>xcircle</head>
+          <line>1</line>
           <voice>0</voice>
           <name>Rim Shot</name>
           <stem>1</stem>
@@ -1781,62 +2036,62 @@
           </Drum>
         <Drum pitch="53">
           <head>cross</head>
-          <line>3</line>
+          <line>-1</line>
           <voice>0</voice>
           <name>Rim Click</name>
           <stem>1</stem>
           <shortcut>D</shortcut>
           </Drum>
         <Drum pitch="55">
-          <head>cross</head>
-          <line>2</line>
+          <head>plus</head>
+          <line>-1</line>
           <voice>0</voice>
           <name>Stick Click</name>
           <stem>1</stem>
           <shortcut>E</shortcut>
           </Drum>
         <Drum pitch="57">
-          <head>mi</head>
-          <line>4</line>
+          <head>slashed1</head>
+          <line>1</line>
           <voice>0</voice>
           <name>Stick Shot</name>
           <stem>1</stem>
           <shortcut>F</shortcut>
           </Drum>
         <Drum pitch="59">
-          <head>slash</head>
-          <line>5</line>
+          <head>cross</head>
+          <line>2</line>
           <voice>0</voice>
           <name>Shell</name>
           <stem>1</stem>
           <shortcut>G</shortcut>
           </Drum>
         <Drum pitch="60">
-          <head>triangle-down</head>
-          <line>4</line>
+          <head>ti</head>
+          <line>1</line>
           <voice>0</voice>
           <name>Visual (BS,X-Over,Etc)</name>
           <stem>1</stem>
           </Drum>
         <Drum pitch="72">
           <head>cross</head>
-          <line>1</line>
-          <voice>2</voice>
-          <name>Ride Cymbal</name>
+          <line>-2</line>
+          <voice>0</voice>
+          <name>Ride Cymbal 1</name>
           <stem>1</stem>
           </Drum>
         <Drum pitch="74">
-          <head>xcircle</head>
-          <line>1</line>
-          <voice>2</voice>
-          <name>Open High Hat</name>
+          <head>cross</head>
+          <line>-1</line>
+          <voice>0</voice>
+          <name>Open Hi-Hat</name>
           <stem>1</stem>
           </Drum>
         <Drum pitch="76">
           <head>cross</head>
-          <line>1</line>
-          <voice>2</voice>
-          <name>Closed High Hat</name>
+          <line>-1</line>
+          <voice>0</voice>
+          <name>Closed Hi-Hat</name>
           <stem>1</stem>
           </Drum>
         <clef>PERC</clef>
@@ -1865,6 +2120,18 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>130</velocity>
           <gateTime>100</gateTime>
           </Articulation>
@@ -1874,6 +2141,7 @@
           </Articulation>
         <Channel>
           <controller ctrl="0" value="1"/>
+          <controller ctrl="32" value="0"/>
           <program value="56"/>
           <synti>Fluid</synti>
           </Channel>
@@ -1889,13 +2157,13 @@
         <barLineSpan>2</barLineSpan>
         </Staff>
       <trackName>Quads</trackName>
-      <Instrument>
+      <Instrument id="marching-tenor-drums">
         <longName>Tenor Drums</longName>
         <shortName>T.D.</shortName>
         <trackName>Tenor Drums</trackName>
         <instrumentId>drum.tenor-drum</instrumentId>
         <useDrumset>1</useDrumset>
-        <Drum pitch="24">
+        <Drum pitch="36">
           <head>normal</head>
           <line>7</line>
           <voice>0</voice>
@@ -1903,34 +2171,40 @@
           <stem>1</stem>
           <shortcut>A</shortcut>
           </Drum>
-        <Drum pitch="25">
+        <Drum pitch="37">
           <head>cross</head>
           <line>7</line>
           <voice>0</voice>
           <name>Drum 4 Rim</name>
           <stem>1</stem>
-          <shortcut>B</shortcut>
           </Drum>
-        <Drum pitch="26">
-          <head>diamond</head>
+        <Drum pitch="38">
+          <head>normal</head>
           <line>7</line>
           <voice>0</voice>
           <name>Drum 4 Buzz</name>
           <stem>1</stem>
           </Drum>
-        <Drum pitch="27">
-          <head>xcircle</head>
+        <Drum pitch="39">
+          <head>plus</head>
           <line>7</line>
           <voice>0</voice>
           <name>Drum 4 Muted</name>
           <stem>1</stem>
           </Drum>
-        <Drum pitch="28">
-          <head>slash</head>
+        <Drum pitch="40">
+          <head>la</head>
           <line>7</line>
           <voice>0</voice>
           <name>Drum 4 Shell</name>
           <stem>1</stem>
+          </Drum>
+        <Drum pitch="43">
+          <head>diamond</head>
+          <line>-1</line>
+          <voice>0</voice>
+          <name>sticks</name>
+          <stem>2</stem>
           </Drum>
         <Drum pitch="48">
           <head>normal</head>
@@ -1938,7 +2212,7 @@
           <voice>0</voice>
           <name>Drum 3</name>
           <stem>1</stem>
-          <shortcut>C</shortcut>
+          <shortcut>B</shortcut>
           </Drum>
         <Drum pitch="49">
           <head>cross</head>
@@ -1946,114 +2220,128 @@
           <voice>0</voice>
           <name>Drum 3 Rim</name>
           <stem>1</stem>
-          <shortcut>D</shortcut>
           </Drum>
         <Drum pitch="50">
-          <head>diamond</head>
+          <head>normal</head>
           <line>5</line>
           <voice>0</voice>
           <name>Drum 3 Buzz</name>
           <stem>1</stem>
           </Drum>
         <Drum pitch="51">
-          <head>xcircle</head>
+          <head>plus</head>
           <line>5</line>
           <voice>0</voice>
           <name>Drum 3 Muted</name>
           <stem>1</stem>
           </Drum>
         <Drum pitch="52">
-          <head>slash</head>
+          <head>la</head>
           <line>5</line>
           <voice>0</voice>
           <name>Drum 3 Shell</name>
           <stem>1</stem>
           </Drum>
-        <Drum pitch="72">
+        <Drum pitch="60">
           <head>normal</head>
           <line>3</line>
           <voice>0</voice>
           <name>Drum 2</name>
           <stem>1</stem>
-          <shortcut>E</shortcut>
+          <shortcut>C</shortcut>
           </Drum>
-        <Drum pitch="73">
+        <Drum pitch="61">
           <head>cross</head>
           <line>3</line>
           <voice>0</voice>
           <name>Drum 2 Rim</name>
           <stem>1</stem>
-          <shortcut>F</shortcut>
           </Drum>
-        <Drum pitch="74">
-          <head>diamond</head>
+        <Drum pitch="62">
+          <head>normal</head>
           <line>3</line>
           <voice>0</voice>
           <name>Drum 2 Buzz</name>
           <stem>1</stem>
           </Drum>
-        <Drum pitch="75">
-          <head>xcircle</head>
+        <Drum pitch="63">
+          <head>plus</head>
           <line>3</line>
           <voice>0</voice>
           <name>Drum 2 Muted</name>
           <stem>1</stem>
           </Drum>
-        <Drum pitch="96">
+        <Drum pitch="72">
           <head>normal</head>
           <line>1</line>
           <voice>0</voice>
           <name>Drum 1</name>
           <stem>1</stem>
-          <shortcut>G</shortcut>
+          <shortcut>D</shortcut>
           </Drum>
-        <Drum pitch="97">
+        <Drum pitch="73">
           <head>cross</head>
           <line>1</line>
           <voice>0</voice>
           <name>Drum 1 Rim</name>
           <stem>1</stem>
           </Drum>
-        <Drum pitch="98">
-          <head>diamond</head>
+        <Drum pitch="74">
+          <head>normal</head>
           <line>1</line>
           <voice>0</voice>
           <name>Drum 1 Buzz</name>
           <stem>1</stem>
           </Drum>
-        <Drum pitch="99">
-          <head>xcircle</head>
+        <Drum pitch="75">
+          <head>plus</head>
           <line>1</line>
           <voice>0</voice>
           <name>Drum 1 Muted</name>
           <stem>1</stem>
           </Drum>
-        <Drum pitch="120">
+        <Drum pitch="84">
           <head>normal</head>
           <line>-1</line>
           <voice>0</voice>
-          <name>Spock</name>
+          <name>Spock 1</name>
           <stem>1</stem>
+          <shortcut>E</shortcut>
           </Drum>
-        <Drum pitch="121">
+        <Drum pitch="85">
           <head>cross</head>
           <line>-1</line>
           <voice>0</voice>
-          <name>Spock Rim</name>
+          <name>Spock 1 Rim</name>
           <stem>1</stem>
           </Drum>
-        <Drum pitch="122">
-          <head>diamond</head>
+        <Drum pitch="86">
+          <head>normal</head>
           <line>-1</line>
           <voice>0</voice>
-          <name>Spock Buzz</name>
+          <name>Spock 1 Buzz</name>
           <stem>1</stem>
           </Drum>
-        <Drum pitch="123">
+        <Drum pitch="96">
+          <head>normal</head>
+          <line>-2</line>
+          <voice>0</voice>
+          <name>Spock 2</name>
+          <stem>1</stem>
+          <shortcut>F</shortcut>
+          </Drum>
+        <Drum pitch="97">
           <head>cross</head>
-          <line>-1</line>
+          <line>-2</line>
           <voice>0</voice>
-          <name>Stick Click</name>
+          <name>Spock 2 Rim</name>
+          <stem>1</stem>
+          </Drum>
+        <Drum pitch="98">
+          <head>normal</head>
+          <line>-2</line>
+          <voice>0</voice>
+          <name>Spock 2 Buzz</name>
           <stem>1</stem>
           </Drum>
         <clef>PERC</clef>
@@ -2082,6 +2370,18 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>130</velocity>
           <gateTime>100</gateTime>
           </Articulation>
@@ -2091,6 +2391,7 @@
           </Articulation>
         <Channel>
           <controller ctrl="0" value="1"/>
+          <controller ctrl="32" value="0"/>
           <program value="95"/>
           <synti>Fluid</synti>
           </Channel>
@@ -2106,88 +2407,94 @@
         <barLineSpan>1</barLineSpan>
         </Staff>
       <trackName>Bass Drums</trackName>
-      <Instrument>
+      <Instrument id="marching-bass-drums">
         <longName>Bass Drums</longName>
         <shortName>B.D.</shortName>
         <trackName>Bass Drums</trackName>
         <instrumentId>drum.bass-drum</instrumentId>
         <useDrumset>1</useDrumset>
-        <Drum pitch="1">
+        <Drum pitch="37">
           <head>normal</head>
           <line>7</line>
           <voice>0</voice>
-          <name>Bass Drum 1</name>
+          <name>Bass Drum 5</name>
           <stem>1</stem>
           <shortcut>A</shortcut>
           </Drum>
-        <Drum pitch="2">
+        <Drum pitch="39">
           <head>cross</head>
           <line>7</line>
           <voice>0</voice>
-          <name>Bass Drum 1 Rim Knock</name>
+          <name>Bass Drum 5 Rim Knock</name>
           <stem>1</stem>
-          <shortcut>B</shortcut>
           </Drum>
-        <Drum pitch="24">
+        <Drum pitch="49">
           <head>normal</head>
           <line>5</line>
           <voice>0</voice>
-          <name>Bass Drum 2</name>
+          <name>Bass Drum 4</name>
           <stem>1</stem>
-          <shortcut>C</shortcut>
+          <shortcut>B</shortcut>
           </Drum>
-        <Drum pitch="26">
+        <Drum pitch="51">
           <head>cross</head>
           <line>5</line>
           <voice>0</voice>
-          <name>Bass Drum 2 Rim Knock</name>
+          <name>Bass Drum 4 Rim Knock</name>
           <stem>1</stem>
-          <shortcut>D</shortcut>
           </Drum>
-        <Drum pitch="48">
+        <Drum pitch="61">
           <head>normal</head>
           <line>3</line>
           <voice>0</voice>
           <name>Bass Drum 3</name>
           <stem>1</stem>
-          <shortcut>E</shortcut>
+          <shortcut>C</shortcut>
           </Drum>
-        <Drum pitch="50">
+        <Drum pitch="63">
           <head>cross</head>
           <line>3</line>
           <voice>0</voice>
           <name>Bass Drum 3 Rim Knock</name>
           <stem>1</stem>
+          </Drum>
+        <Drum pitch="73">
+          <head>normal</head>
+          <line>1</line>
+          <voice>0</voice>
+          <name>Bass Drum 2</name>
+          <stem>1</stem>
+          <shortcut>D</shortcut>
+          </Drum>
+        <Drum pitch="75">
+          <head>cross</head>
+          <line>1</line>
+          <voice>0</voice>
+          <name>Bass Drum 2 Rim Knock</name>
+          <stem>1</stem>
+          </Drum>
+        <Drum pitch="85">
+          <head>normal</head>
+          <line>-1</line>
+          <voice>0</voice>
+          <name>Bass Drum 1</name>
+          <stem>1</stem>
+          <shortcut>E</shortcut>
+          </Drum>
+        <Drum pitch="87">
+          <head>cross</head>
+          <line>-1</line>
+          <voice>0</voice>
+          <name>Bass Drum 1 Rim Knock</name>
+          <stem>1</stem>
+          </Drum>
+        <Drum pitch="90">
+          <head>slash</head>
+          <line>4</line>
+          <voice>0</voice>
+          <name>Simultaneous Hit</name>
+          <stem>1</stem>
           <shortcut>F</shortcut>
-          </Drum>
-        <Drum pitch="69">
-          <head>normal</head>
-          <line>1</line>
-          <voice>0</voice>
-          <name>Bass Drum 4</name>
-          <stem>1</stem>
-          <shortcut>G</shortcut>
-          </Drum>
-        <Drum pitch="71">
-          <head>cross</head>
-          <line>1</line>
-          <voice>0</voice>
-          <name>Bass Drum 4 Rim Knock</name>
-          <stem>1</stem>
-          </Drum>
-        <Drum pitch="96">
-          <head>normal</head>
-          <line>-1</line>
-          <voice>0</voice>
-          <name>Bass Drum 5</name>
-          <stem>1</stem>
-          </Drum>
-        <Drum pitch="98">
-          <head>cross</head>
-          <line>-1</line>
-          <voice>0</voice>
-          <name>Bass Drum 5 Rim Knock</name>
-          <stem>1</stem>
           </Drum>
         <clef>PERC</clef>
         <Articulation>
@@ -2215,6 +2522,18 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>130</velocity>
           <gateTime>100</gateTime>
           </Articulation>
@@ -2224,7 +2543,8 @@
           </Articulation>
         <Channel>
           <controller ctrl="0" value="1"/>
-          <program value="57"/>
+          <controller ctrl="32" value="0"/>
+          <program value="59"/>
           <synti>Fluid</synti>
           </Channel>
         </Instrument>
@@ -2232,13 +2552,14 @@
     <Part>
       <Staff id="29">
         <StaffType group="percussion">
-          <name>perc5Line</name>
+          <name>perc1Line</name>
+          <lines>1</lines>
           <keysig>0</keysig>
           </StaffType>
         <defaultClef>PERC</defaultClef>
         </Staff>
       <trackName>Cymbals</trackName>
-      <Instrument>
+      <Instrument id="marching-cymbals">
         <longName>Cymbals</longName>
         <shortName>Cym.</shortName>
         <trackName>Cymbals</trackName>
@@ -2246,7 +2567,7 @@
         <useDrumset>1</useDrumset>
         <Drum pitch="72">
           <head>normal</head>
-          <line>4</line>
+          <line>0</line>
           <voice>0</voice>
           <name>Full Crash</name>
           <stem>1</stem>
@@ -2254,7 +2575,7 @@
           </Drum>
         <Drum pitch="74">
           <head>normal</head>
-          <line>4</line>
+          <line>0</line>
           <voice>0</voice>
           <name>Half Crash</name>
           <stem>1</stem>
@@ -2262,15 +2583,15 @@
           </Drum>
         <Drum pitch="76">
           <head>cross</head>
-          <line>4</line>
+          <line>0</line>
           <voice>0</voice>
           <name>High Hat</name>
           <stem>1</stem>
           <shortcut>C</shortcut>
           </Drum>
         <Drum pitch="77">
-          <head>diamond</head>
-          <line>4</line>
+          <head>normal</head>
+          <line>0</line>
           <voice>0</voice>
           <name>Sizzle</name>
           <stem>1</stem>
@@ -2278,7 +2599,7 @@
           </Drum>
         <Drum pitch="79">
           <head>normal</head>
-          <line>4</line>
+          <line>0</line>
           <voice>0</voice>
           <name>Crash-Choke</name>
           <stem>1</stem>
@@ -2286,7 +2607,7 @@
           </Drum>
         <Drum pitch="81">
           <head>do</head>
-          <line>4</line>
+          <line>0</line>
           <voice>0</voice>
           <name>Normal Tap</name>
           <stem>1</stem>
@@ -2294,7 +2615,7 @@
           </Drum>
         <Drum pitch="83">
           <head>do</head>
-          <line>4</line>
+          <line>0</line>
           <voice>0</voice>
           <name>Normal Tap-Choke</name>
           <stem>1</stem>
@@ -2302,42 +2623,42 @@
           </Drum>
         <Drum pitch="84">
           <head>do</head>
-          <line>4</line>
+          <line>0</line>
           <voice>0</voice>
           <name>Bell Tap</name>
           <stem>1</stem>
           </Drum>
         <Drum pitch="86">
           <head>do</head>
-          <line>4</line>
+          <line>0</line>
           <voice>0</voice>
           <name>Bell Tap-Choke</name>
           <stem>1</stem>
           </Drum>
         <Drum pitch="88">
           <head>do</head>
-          <line>4</line>
+          <line>0</line>
           <voice>0</voice>
           <name>Muted Tap</name>
           <stem>1</stem>
           </Drum>
         <Drum pitch="89">
-          <head>diamond</head>
-          <line>4</line>
+          <head>cross</head>
+          <line>0</line>
           <voice>0</voice>
           <name>Smash</name>
           <stem>1</stem>
           </Drum>
         <Drum pitch="91">
-          <head>diamond</head>
-          <line>4</line>
+          <head>slashed1</head>
+          <line>0</line>
           <voice>0</voice>
           <name>Zing</name>
           <stem>1</stem>
           </Drum>
         <Drum pitch="93">
-          <head>diamond</head>
-          <line>4</line>
+          <head>normal</head>
+          <line>0</line>
           <voice>0</voice>
           <name>Roll</name>
           <stem>1</stem>
@@ -2368,6 +2689,18 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>130</velocity>
           <gateTime>100</gateTime>
           </Articulation>
@@ -2377,6 +2710,7 @@
           </Articulation>
         <Channel>
           <controller ctrl="0" value="1"/>
+          <controller ctrl="32" value="0"/>
           <program value="58"/>
           <synti>Fluid</synti>
           </Channel>
@@ -2397,7 +2731,7 @@
         <defaultClef>F</defaultClef>
         </Staff>
       <trackName>Effect Synthesizer</trackName>
-      <Instrument>
+      <Instrument id="effect-synth">
         <longName>Effect Synthesizer</longName>
         <shortName>Synth.</shortName>
         <trackName>Effect Synthesizer</trackName>
@@ -2432,6 +2766,18 @@
           <gateTime>67</gateTime>
           </Articulation>
         <Articulation name="sforzato">
+          <velocity>150</velocity>
+          <gateTime>100</gateTime>
+          </Articulation>
+        <Articulation name="sforzatoStaccato">
+          <velocity>150</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoStaccato">
+          <velocity>120</velocity>
+          <gateTime>50</gateTime>
+          </Articulation>
+        <Articulation name="marcatoTenuto">
           <velocity>120</velocity>
           <gateTime>100</gateTime>
           </Articulation>
@@ -2440,6 +2786,8 @@
           <synti>Fluid</synti>
           </Channel>
         <Channel name="soundtrack">
+          <controller ctrl="0" value="0"/>
+          <controller ctrl="32" value="17"/>
           <program value="97"/>
           <synti>Fluid</synti>
           </Channel>
@@ -2448,6 +2796,8 @@
           <synti>Fluid</synti>
           </Channel>
         <Channel name="atmosphere">
+          <controller ctrl="0" value="0"/>
+          <controller ctrl="32" value="17"/>
           <program value="99"/>
           <synti>Fluid</synti>
           </Channel>
@@ -2456,14 +2806,20 @@
           <synti>Fluid</synti>
           </Channel>
         <Channel name="goblins">
+          <controller ctrl="0" value="0"/>
+          <controller ctrl="32" value="17"/>
           <program value="101"/>
           <synti>Fluid</synti>
           </Channel>
         <Channel name="echoes">
+          <controller ctrl="0" value="0"/>
+          <controller ctrl="32" value="17"/>
           <program value="102"/>
           <synti>Fluid</synti>
           </Channel>
         <Channel name="scifi">
+          <controller ctrl="0" value="0"/>
+          <controller ctrl="32" value="17"/>
           <program value="103"/>
           <synti>Fluid</synti>
           </Channel>
@@ -4658,7 +5014,6 @@
       <Measure>
         <voice>
           <BarLine>
-            <span>1</span>
             </BarLine>
           <TimeSig>
             <sigN>4</sigN>
@@ -4669,7 +5024,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4680,7 +5034,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4691,7 +5044,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4702,7 +5054,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4713,7 +5064,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4724,7 +5074,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4735,7 +5084,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4746,7 +5094,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4757,7 +5104,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4768,7 +5114,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4779,7 +5124,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4790,7 +5134,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4801,7 +5144,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4812,7 +5154,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4823,7 +5164,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4834,7 +5174,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4845,7 +5184,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4856,7 +5194,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4867,7 +5204,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4878,7 +5214,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4889,7 +5224,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4901,7 +5235,6 @@
             </Rest>
           <BarLine>
             <subtype>end</subtype>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4910,7 +5243,6 @@
       <Measure>
         <voice>
           <BarLine>
-            <span>1</span>
             </BarLine>
           <TimeSig>
             <sigN>4</sigN>
@@ -4921,7 +5253,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4932,7 +5263,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4943,7 +5273,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4954,7 +5283,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4965,7 +5293,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4976,7 +5303,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4987,7 +5313,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -4998,7 +5323,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -5009,7 +5333,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -5020,7 +5343,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -5031,7 +5353,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -5042,7 +5363,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -5053,7 +5373,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -5064,7 +5383,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -5075,7 +5393,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -5086,7 +5403,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -5097,7 +5413,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -5108,7 +5423,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -5119,7 +5433,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -5130,7 +5443,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -5141,7 +5453,6 @@
             <duration>4/4</duration>
             </Rest>
           <BarLine>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>
@@ -5153,7 +5464,6 @@
             </Rest>
           <BarLine>
             <subtype>end</subtype>
-            <span>1</span>
             </BarLine>
           </voice>
         </Measure>

@@ -10,12 +10,16 @@
 //  the file LICENCE.GPL
 //=============================================================================
 
-#include "testscript.h"
-
 #include "musescore.h"
 #include "script.h"
+#include "testscript.h"
 
 #include "libmscore/scorediff.h"
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+#define endl Qt::endl
+#define dec Qt::dec
+#endif
 
 namespace Ms {
 
@@ -57,7 +61,7 @@ std::unique_ptr<ScriptEntry> ScoreTestScriptEntry::fromContext(const ScriptConte
             int scoreNum = 1;
             const QString templ("%1.mscx");
             fileName = templ.arg(QString::number(scoreNum));
-            while (QFileInfo(fileName).exists())
+            while (QFileInfo::exists(fileName))
                   fileName = templ.arg(QString::number(++scoreNum));
             }
 

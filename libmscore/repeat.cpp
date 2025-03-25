@@ -10,12 +10,11 @@
 //  the file LICENCE.GPL
 //=============================================================================
 
-#include "repeat.h"
-#include "sym.h"
-#include "score.h"
-#include "system.h"
 #include "measure.h"
-#include "mscore.h"
+#include "repeat.h"
+#include "score.h"
+#include "staff.h"
+#include "system.h"
 
 namespace Ms {
 
@@ -48,14 +47,17 @@ void RepeatMeasure::layout()
       for (Element* e : el())
             e->layout();
 
-      rxpos() = 0.0;
+      Staff* st = staff();
+      qreal ld = st ? st->lineDistance(tick()) : 1.0;
       qreal sp  = spatium();
 
-      qreal y   = sp;
-      qreal w   = sp * 2.4;
-      qreal h   = sp * 2.0;
-      qreal lw  = sp * .50;  // line width
-      qreal r   = sp * .20;  // dot radius
+      qreal y   = sp * 1.0 * ld;
+      qreal w   = sp * 2.4 * ld;
+      qreal h   = sp * 2.0 * ld;
+      qreal lw  = sp * .50 * ld;  // line width
+      qreal r   = sp * .20 * ld;  // dot radius
+
+      setPos(0.0, (st ? (st->height() - h) / 2.0 : y) - y);
 
       path      = QPainterPath();
 

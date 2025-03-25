@@ -10,23 +10,23 @@
 //  the file LICENCE.GPL
 //=============================================================================
 
+//#include "barline.h"
 #include "box.h"
-#include "textframe.h"
-#include "text.h"
-#include "score.h"
-#include "barline.h"
-#include "repeat.h"
-#include "symbol.h"
-#include "system.h"
+#include "fret.h"
+#include "icon.h"
 #include "image.h"
 #include "layoutbreak.h"
-#include "fret.h"
-#include "mscore.h"
-#include "stafftext.h"
-#include "icon.h"
-#include "xml.h"
 #include "measure.h"
+#include "mscore.h"
+#include "repeat.h"
+#include "score.h"
+#include "stafftext.h"
+#include "symbol.h"
+#include "system.h"
+#include "text.h"
+#include "textframe.h"
 #include "undo.h"
+#include "xml.h"
 
 namespace Ms {
 
@@ -104,8 +104,6 @@ void Box::draw(QPainter* painter) const
 void Box::startEdit(EditData& ed)
       {
       Element::startEdit(ed);
-      ed.grips   = 1;
-      ed.curGrip = Grip::START;
       editMode   = true;
       }
 
@@ -138,24 +136,24 @@ void Box::startEditDrag(EditData& ed)
 void Box::editDrag(EditData& ed)
       {
       if (isVBox()) {
-            _boxHeight = Spatium((ed.pos.y() - abbox().y()) / spatium());
+            _boxHeight += Spatium(ed.delta.y() / spatium());
             if (ed.vRaster) {
                   qreal vRaster = 1.0 / MScore::vRaster();
-                  int n = lrint(_boxHeight.val() / vRaster);
+                  int n = (int)lrint(_boxHeight.val() / vRaster);
                   _boxHeight = Spatium(vRaster * n);
                   }
             bbox().setRect(0.0, 0.0, system()->width(), point(boxHeight()));
             system()->setHeight(height());
-            score()->setLayout(tick());
+            triggerLayout();
             }
       else {
             _boxWidth += Spatium(ed.delta.x() / spatium());
             if (ed.hRaster) {
                   qreal hRaster = 1.0 / MScore::hRaster();
-                  int n = lrint(_boxWidth.val() / hRaster);
+                  int n = (int)lrint(_boxWidth.val() / hRaster);
                   _boxWidth = Spatium(hRaster * n);
                   }
-            score()->setLayout(tick());
+            triggerLayout();
             }
       layout();
       }
@@ -171,16 +169,19 @@ void Box::endEdit(EditData&)
       }
 
 //---------------------------------------------------------
-//   updateGrips
+//   gripsPositions
 //---------------------------------------------------------
 
-void Box::updateGrips(EditData& ed) const
+std::vector<QPointF> HBox::gripsPositions(const EditData&) const
       {
       QRectF r(abbox());
-      if (isHBox())
-            ed.grip[0].translate(QPointF(r.right(), r.top() + r.height() * .5));
-      else if (type() == ElementType::VBOX)
-            ed.grip[0].translate(QPointF(r.x() + r.width() * .5, r.bottom()));
+      return { QPointF(r.right(), r.top() + r.height() * .5) };
+      }
+
+std::vector<QPointF> VBox::gripsPositions(const EditData&) const
+      {
+      QRectF r(abbox());
+      return { QPointF(r.x() + r.width() * .5, r.bottom()) };
       }
 
 //---------------------------------------------------------
@@ -202,7 +203,7 @@ void Box::writeProperties(XmlWriter& xml) const
       {
       for (Pid id : {
          Pid::BOX_HEIGHT, Pid::BOX_WIDTH, Pid::TOP_GAP, Pid::BOTTOM_GAP,
-         Pid::LEFT_MARGIN, Pid::RIGHT_MARGIN, Pid::TOP_MARGIN, Pid::BOTTOM_MARGIN }) {
+         Pid::LEFT_MARGIN, Pid::RIGHT_MARGIN, Pid::TOP_MARGIN, Pid::BOTTOM_MARGIN, Pid::BOX_AUTOSIZE }) {
             writeProperty(xml, id);
             }
       Element::writeProperties(xml);
@@ -223,6 +224,8 @@ void Box::read(XmlReader& e)
       _boxHeight       = Spatium(0);     // override default set in constructor
       _boxWidth        = Spatium(0);
       MeasureBase::read(e);
+      if (score()->mscVersion() < 302)
+            _isAutoSizeEnabled = false; // disable auto-size for older scores by default.
       }
 
 //---------------------------------------------------------
@@ -256,6 +259,8 @@ bool Box::readProperties(XmlReader& e)
             _topMargin = e.readDouble();
       else if (tag == "bottomMargin")
             _bottomMargin = e.readDouble();
+      else if (tag == "boxAutoSize")
+            _isAutoSizeEnabled = e.readBool();
       else if (tag == "Text") {
             Text* t;
             if (isTBox()) {
@@ -320,6 +325,16 @@ void Box::add(Element* e)
       MeasureBase::add(e);
       }
 
+QRectF Box::contentRect() const
+      {
+      QRectF result;
+
+      for (const Element* element : el())
+            result = result.united(element->bbox());
+
+      return result;
+      }
+
 //---------------------------------------------------------
 //   getProperty
 //---------------------------------------------------------
@@ -343,6 +358,8 @@ QVariant Box::getProperty(Pid propertyId) const
                   return _topMargin;
             case Pid::BOTTOM_MARGIN:
                   return _bottomMargin;
+            case Pid::BOX_AUTOSIZE:
+                  return (score()->mscVersion() >= 302) ? _isAutoSizeEnabled : false;
             default:
                   return MeasureBase::getProperty(propertyId);
             }
@@ -380,10 +397,13 @@ bool Box::setProperty(Pid propertyId, const QVariant& v)
             case Pid::BOTTOM_MARGIN:
                   _bottomMargin = v.toDouble();
                   break;
+            case Pid::BOX_AUTOSIZE:
+                  _isAutoSizeEnabled = v.toBool();
+                  break;
             default:
                   return MeasureBase::setProperty(propertyId, v);
             }
-      score()->setLayout(tick());
+      triggerLayout();
       return true;
       }
 
@@ -408,6 +428,8 @@ QVariant Box::propertyDefault(Pid id) const
             case Pid::TOP_MARGIN:
             case Pid::BOTTOM_MARGIN:
                   return 0.0;
+            case Pid::BOX_AUTOSIZE:
+                  return true;
             default:
                   return MeasureBase::propertyDefault(id);
             }
@@ -457,8 +479,11 @@ void HBox::layout()
             setPos(x, y);
             bbox().setRect(0.0, 0.0, w, h);
             }
-      else {
+      else if (system()) {
             bbox().setRect(0.0, 0.0, point(boxWidth()), system()->height());
+            }
+      else {
+            bbox().setRect(0.0, 0.0, 50, 50);
             }
       Box::layout();
       }
@@ -490,12 +515,18 @@ bool Box::acceptDrop(EditData& data) const
             case ElementType::STAFF_TEXT:
             case ElementType::IMAGE:
             case ElementType::SYMBOL:
+            case ElementType::VBOX:
+            case ElementType::HBOX:
+            case ElementType::TBOX:
+            case ElementType::MEASURE_LIST:
+            case ElementType::MEASURE:
                   return true;
             case ElementType::ICON:
                   switch (toIcon(data.dropElement)->iconType()) {
                         case IconType::VFRAME:
                         case IconType::TFRAME:
                         case IconType::FFRAME:
+                        case IconType::HFRAME:
                         case IconType::MEASURE:
                               return true;
                         default:
@@ -545,7 +576,7 @@ Element* Box::drop(EditData& data)
                               }
                         break;
                         }
-                  lb->setTrack(-1);       // these are system elements
+                  lb->setTrack(0);       // these are system elements
                   lb->setParent(this);
                   score()->undoAddElement(lb);
                   return lb;
@@ -561,6 +592,19 @@ Element* Box::drop(EditData& data)
                   return text;
                   }
 
+            case ElementType::HBOX:
+            case ElementType::VBOX:
+            case ElementType::TBOX:
+                  {
+                  if (auto mbSource = e->findMeasureBase()) {
+                        auto mbDestination = this->findMeasureBase();
+                        auto boxClone = mbSource->clone();
+                        boxClone->setPrev(this->prevMM());
+                        boxClone->setNext(mbDestination);
+                        score()->undo(new InsertMeasures(boxClone, boxClone));
+                        }
+                  break;
+                  }
             case ElementType::ICON:
                   switch (toIcon(e)->iconType()) {
                         case IconType::VFRAME:
@@ -571,6 +615,9 @@ Element* Box::drop(EditData& data)
                               break;
                         case IconType::FFRAME:
                               score()->insertMeasure(ElementType::FBOX, this);
+                              break;
+                        case IconType::HFRAME:
+                              score()->insertMeasure(ElementType::HBOX, this);
                               break;
                         case IconType::MEASURE:
                               score()->insertMeasure(ElementType::MEASURE, this);
@@ -599,7 +646,7 @@ Element* Box::drop(EditData& data)
 QRectF HBox::drag(EditData& data)
       {
       QRectF r(canvasBoundingRect());
-      qreal diff = data.delta.x();
+      qreal diff = data.evtDelta.x();
       qreal x1   = offset().x() + diff;
       if (parent()->type() == ElementType::VBOX) {
             VBox* vb = toVBox(parent());
@@ -612,16 +659,6 @@ QRectF HBox::drag(EditData& data)
       setOffset(QPointF(x1, 0.0));
 //      setStartDragPosition(data.delta);
       return canvasBoundingRect() | r;
-      }
-
-//---------------------------------------------------------
-//   endEditDrag
-//---------------------------------------------------------
-
-void HBox::endEditDrag(EditData&)
-      {
-      score()->setLayout(tick());
-      score()->update();
       }
 
 //---------------------------------------------------------
@@ -682,7 +719,7 @@ bool HBox::setProperty(Pid propertyId, const QVariant& v)
       switch (propertyId) {
             case Pid::CREATE_SYSTEM_HEADER:
                   setCreateSystemHeader(v.toBool());
-                  score()->setLayout(tick());
+                  triggerLayout();
                   break;
             default:
                   return Box::setProperty(propertyId, v);
@@ -716,6 +753,26 @@ VBox::VBox(Score* score)
       setLineBreak(true);
       }
 
+qreal VBox::minHeight() const
+      {
+      return point(Spatium(10));
+      }
+
+qreal VBox::maxHeight() const
+      {
+      return point(Spatium(30));
+      }
+
+QVariant VBox::getProperty(Pid propertyId) const
+      {
+      switch (propertyId) {
+            case Pid::BOX_AUTOSIZE:
+                  return isAutoSizeEnabled();
+            default:
+                  return Box::getProperty(propertyId);
+      }
+      }
+
 //---------------------------------------------------------
 //   layout
 //---------------------------------------------------------
@@ -723,12 +780,42 @@ VBox::VBox(Score* score)
 void VBox::layout()
       {
       setPos(QPointF());
+
       if (system())
             bbox().setRect(0.0, 0.0, system()->width(), point(boxHeight()));
       else
             bbox().setRect(0.0, 0.0, 50, 50);
-      Box::layout();
+
+      for (Element* e : el()) {
+            if (!e->isLayoutBreak())
+                  e->layout();
+            }
+
+      if (getProperty(Pid::BOX_AUTOSIZE).toBool()) {
+            qreal contentHeight = contentRect().height();
+
+            if (contentHeight < minHeight())
+                  contentHeight = minHeight();
+
+            setHeight(contentHeight);
+            }
+
+      MeasureBase::layout();
       }
+
+//---------------------------------------------------------
+//   startEditDrag
+//---------------------------------------------------------
+
+void VBox::startEditDrag(EditData& ed)
+      {
+      if (isAutoSizeEnabled()) {
+            setAutoSizeEnabled(false);
+            setBoxHeight(Spatium(height() / spatium()));
+      }
+      Box::startEditDrag(ed);
+      }
+
 
 //---------------------------------------------------------
 //   layout
@@ -759,5 +846,28 @@ void FBox::add(Element* e)
             }
       el().push_back(e);
       }
+
+//---------------------------------------------------------
+//   accessibleExtraInfo
+//---------------------------------------------------------
+
+QString Box::accessibleExtraInfo() const
+      {
+      QString rez = "";
+      for (Element* e : el())
+            rez += " " + e->screenReaderInfo();
+      return rez;
+      }
+
+//---------------------------------------------------------
+//   accessibleExtraInfo
+//---------------------------------------------------------
+
+QString TBox::accessibleExtraInfo() const
+      {
+      QString rez = _text->screenReaderInfo();
+      return rez;
+      }
+
 }
 

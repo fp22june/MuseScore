@@ -24,7 +24,6 @@
 #include "libmscore/chord.h"
 #include "libmscore/score.h"
 #include "libmscore/note.h"
-#include "libmscore/slur.h"
 #include "libmscore/segment.h"
 
 namespace Ms {
@@ -112,9 +111,9 @@ void DrumView::drawBackground(QPainter* p, const QRectF& r)
       Score* _score = staff->score();
 
       QRectF r1;
-      r1.setCoords(-1000000.0, 0.0, 480.0, 1000000.0);
+      r1.setCoords(-DBL_MAX, 0.0, 480.0, DBL_MAX);
       QRectF r2;
-      r2.setCoords(ticks + 480, 0.0, 1000000.0, 1000000.0);
+      r2.setCoords(ticks + 480, 0.0, DBL_MAX, DBL_MAX);
       QColor bg(0x71, 0x8d, 0xbe);
 
       p->fillRect(r, bg);
@@ -337,7 +336,7 @@ void DrumView::moveLocator(int i)
 
 void DrumView::wheelEvent(QWheelEvent* event)
       {
-      int step = event->delta() / 120;
+      int step = event->angleDelta().y() / 120;
       double xmag = transform().m11();
       double ymag = transform().m22();
 
@@ -395,7 +394,12 @@ void DrumView::wheelEvent(QWheelEvent* event)
                   emit xposChanged(xpos);
             }
       else if (event->modifiers() == Qt::ShiftModifier) {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+            QWheelEvent we(event->position(), event->globalPosition(), event->pixelDelta().transposed(), event->angleDelta().transposed(),
+                           event->buttons(), Qt::NoModifier, Qt::ScrollPhase::NoScrollPhase, false);
+#else
             QWheelEvent we(event->pos(), event->delta(), event->buttons(), 0, Qt::Horizontal);
+#endif
             QGraphicsView::wheelEvent(&we);
             }
       else if (event->modifiers() == 0) {
