@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
-
-echo "Run MuseScore mtest"
-trap 'echo Run tests failed; exit 1' ERR
+echo "############################## Run MuseScore mtest (runmtests.sh) ##############################"
+trap 'echo run_mtests.sh failed; exit 1' ERR
 
 df -h .
 
-source ./../musescore_environment.sh
+# var bash and github
+eval "$(./build/ci/tools/read_artifact_env.sh)"
 
+# main
 cd build.debug/mtest
 
 # run the mtests in "minimal" platform for headless systems
@@ -22,3 +23,5 @@ df -h .
 ctest -j2 --output-on-failure
 
 df -h .
+
+echo "run_mtests.sh ended"
