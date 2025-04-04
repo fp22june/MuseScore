@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>236</width>
-    <height>380</height>
+    <width>0</width>
+    <height>0</height>
    </rect>
   </property>
   <property name="accessibleName">
@@ -32,10 +32,10 @@
    <item>
     <widget class="QFrame" name="frame">
      <property name="frameShape">
-      <enum>QFrame::HLine</enum>
+      <enum>QFrame::Shape::HLine</enum>
      </property>
      <property name="frameShadow">
-      <enum>QFrame::Sunken</enum>
+      <enum>QFrame::Shadow::Sunken</enum>
      </property>
     </widget>
    </item>
@@ -49,7 +49,6 @@
      </property>
      <property name="font">
       <font>
-       <weight>75</weight>
        <bold>true</bold>
       </font>
      </property>
@@ -79,17 +78,23 @@
       <item row="11" column="2">
        <spacer name="verticalSpacer">
         <property name="orientation">
-         <enum>Qt::Vertical</enum>
+         <enum>Qt::Orientation::Vertical</enum>
         </property>
         <property name="sizeType">
-         <enum>QSizePolicy::MinimumExpanding</enum>
+         <enum>QSizePolicy::Policy::MinimumExpanding</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>0</width>
+          <height>0</height>
+         </size>
         </property>
        </spacer>
       </item>
       <item row="0" column="0" colspan="3">
        <widget class="QCheckBox" name="isSmall">
         <property name="focusPolicy">
-         <enum>Qt::TabFocus</enum>
+         <enum>Qt::FocusPolicy::TabFocus</enum>
         </property>
         <property name="text">
          <string>Small</string>
@@ -215,7 +220,7 @@
          <string>Mirror head:</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+         <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
         </property>
         <property name="buddy">
          <cstring>mirrorHead</cstring>
@@ -239,7 +244,6 @@
        <widget class="QLabel" name="label_2">
         <property name="font">
          <font>
-          <weight>75</weight>
           <bold>true</bold>
          </font>
         </property>
@@ -247,7 +251,7 @@
          <string>Select</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignCenter</set>
+         <set>Qt::AlignmentFlag::AlignCenter</set>
         </property>
        </widget>
       </item>
@@ -313,7 +317,7 @@
          <string>Head type:</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+         <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
         </property>
         <property name="buddy">
          <cstring>noteHeadType</cstring>
@@ -336,7 +340,7 @@
       <item row="6" column="0" colspan="3">
        <widget class="QCheckBox" name="play">
         <property name="focusPolicy">
-         <enum>Qt::TabFocus</enum>
+         <enum>Qt::FocusPolicy::TabFocus</enum>
         </property>
         <property name="text">
          <string>Play</string>
@@ -349,7 +353,7 @@
          <string>Head scheme:</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+         <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
         </property>
         <property name="buddy">
          <cstring>noteHeadScheme</cstring>
@@ -430,189 +434,11 @@
          <string>Head group:</string>
         </property>
         <property name="alignment">
-         <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+         <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
         </property>
         <property name="buddy">
          <cstring>noteHeadGroup</cstring>
         </property>
-       </widget>
-      </item>
-      <item row="7" column="0" colspan="4">
-       <widget class="QWidget" name="playWidget" native="true">
-        <layout class="QGridLayout" name="gridLayout_2">
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>0</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <property name="spacing">
-          <number>3</number>
-         </property>
-         <item row="2" column="2">
-          <widget class="Ms::ResetButton" name="resetVelocityType" native="true">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>10</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="accessibleName">
-            <string>Reset 'Velocity type' value</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="1">
-          <widget class="QComboBox" name="velocityType">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="accessibleName">
-            <string>Velocity type</string>
-           </property>
-           <item>
-            <property name="text">
-             <string>Offset</string>
-            </property>
-           </item>
-           <item>
-            <property name="text">
-             <string>User</string>
-            </property>
-           </item>
-          </widget>
-         </item>
-         <item row="3" column="2">
-          <widget class="Ms::ResetButton" name="resetVelocity" native="true">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>10</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="accessibleName">
-            <string>Reset 'Velocity' value</string>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QDoubleSpinBox" name="tuning">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="accessibleName">
-            <string>Tuning</string>
-           </property>
-           <property name="minimum">
-            <double>-300.000000000000000</double>
-           </property>
-           <property name="maximum">
-            <double>300.000000000000000</double>
-           </property>
-           <property name="singleStep">
-            <double>10.000000000000000</double>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="2">
-          <widget class="Ms::ResetButton" name="resetTuning" native="true">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>10</width>
-             <height>0</height>
-            </size>
-           </property>
-           <property name="accessibleName">
-            <string>Reset 'Tuning' value</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QLabel" name="label_8">
-           <property name="text">
-            <string>Velocity type:</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="1">
-          <widget class="QSpinBox" name="velocity">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="accessibleName">
-            <string>Velocity</string>
-           </property>
-           <property name="minimum">
-            <number>-127</number>
-           </property>
-           <property name="maximum">
-            <number>127</number>
-           </property>
-          </widget>
-         </item>
-         <item row="3" column="0">
-          <widget class="QLabel" name="label_9">
-           <property name="text">
-            <string>Velocity:</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-           </property>
-           <property name="buddy">
-            <cstring>velocity</cstring>
-           </property>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QLabel" name="label_5">
-           <property name="text">
-            <string>Tuning:</string>
-           </property>
-           <property name="alignment">
-            <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
-           </property>
-           <property name="buddy">
-            <cstring>tuning</cstring>
-           </property>
-          </widget>
-         </item>
-        </layout>
        </widget>
       </item>
       <item row="5" column="0" colspan="3">
@@ -629,7 +455,7 @@
            </sizepolicy>
           </property>
           <property name="focusPolicy">
-           <enum>Qt::TabFocus</enum>
+           <enum>Qt::FocusPolicy::TabFocus</enum>
           </property>
           <property name="text">
            <string>Fix to line:</string>
@@ -683,6 +509,233 @@
         </property>
        </widget>
       </item>
+      <item row="7" column="0" rowspan="2" colspan="4">
+       <widget class="QWidget" name="playWidget" native="true">
+        <layout class="QGridLayout" name="gridLayout_2">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <property name="horizontalSpacing">
+          <number>0</number>
+         </property>
+         <property name="verticalSpacing">
+          <number>3</number>
+         </property>
+         <item row="5" column="0">
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>NoteOn Offset:</string>
+           </property>
+           <property name="buddy">
+            <cstring>noteOnOffset</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="0">
+          <widget class="QLabel" name="label_31">
+           <property name="text">
+            <string>NoteOff Offset:</string>
+           </property>
+           <property name="buddy">
+            <cstring>noteOffOffset</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="Ms::ResetButton" name="resetVelocityType" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>10</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="accessibleName">
+            <string>Reset 'Velocity type' value</string>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1">
+          <widget class="QSpinBox" name="noteOnOffset">
+           <property name="accessibleName">
+            <string>NoteOn Offset</string>
+           </property>
+           <property name="minimum">
+            <number>-1000</number>
+           </property>
+           <property name="maximum">
+            <number>1000</number>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="1">
+          <widget class="QSpinBox" name="noteOffOffset">
+           <property name="accessibleName">
+            <string>NoteOff Offset</string>
+           </property>
+           <property name="minimum">
+            <number>-1000</number>
+           </property>
+           <property name="maximum">
+            <number>1000</number>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_9">
+           <property name="text">
+            <string>Velocity:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
+           </property>
+           <property name="buddy">
+            <cstring>velocity</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QSpinBox" name="velocity">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="accessibleName">
+            <string>Velocity</string>
+           </property>
+           <property name="minimum">
+            <number>-127</number>
+           </property>
+           <property name="maximum">
+            <number>127</number>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="2">
+          <widget class="Ms::ResetButton" name="resetVelocity" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>10</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="accessibleName">
+            <string>Reset 'Velocity' value</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QDoubleSpinBox" name="tuning">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="accessibleName">
+            <string>Tuning</string>
+           </property>
+           <property name="minimum">
+            <double>-300.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>300.000000000000000</double>
+           </property>
+           <property name="singleStep">
+            <double>10.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_5">
+           <property name="text">
+            <string>Tuning:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
+           </property>
+           <property name="buddy">
+            <cstring>tuning</cstring>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="Ms::ResetButton" name="resetTuning" native="true">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>10</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="accessibleName">
+            <string>Reset 'Tuning' value</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QComboBox" name="velocityType">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="accessibleName">
+            <string>Velocity type</string>
+           </property>
+           <item>
+            <property name="text">
+             <string>Offset</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>User</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>Velocity type:</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
      </layout>
     </widget>
    </item>
@@ -709,9 +762,6 @@
   <tabstop>tuning</tabstop>
   <tabstop>velocityType</tabstop>
   <tabstop>velocity</tabstop>
-  <tabstop>dot1</tabstop>
-  <tabstop>dot2</tabstop>
-  <tabstop>dot3</tabstop>
   <tabstop>dot4</tabstop>
   <tabstop>stem</tabstop>
   <tabstop>hook</tabstop>

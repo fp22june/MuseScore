@@ -76,6 +76,8 @@ enum class Pid {
       LINE,
       FIXED,
       FIXED_LINE,
+      NOTEONOFFSET,
+      NOTEOFFOFFSET,
       HEAD_TYPE,
       HEAD_GROUP,
       VELO_TYPE,

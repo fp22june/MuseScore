@@ -107,6 +107,8 @@ InspectorNote::InspectorNote(QWidget* parent)
             { Pid::VELO_OFFSET,    0, n.velocity,      n.resetVelocity      },
             { Pid::FIXED,          0, n.fixed,         n.resetFixed         },
             { Pid::FIXED_LINE,     0, n.fixedLine,     n.resetFixedLine     },
+            { Pid::NOTEONOFFSET,   0, n.noteOnOffset                          },
+            { Pid::NOTEOFFOFFSET,  0, n.noteOffOffset                          },
 
             { Pid::OFFSET,         1, c.offset,        c.resetOffset        },
             { Pid::SMALL,          1, c.isSmall,       c.resetSmall         },

@@ -2892,6 +2892,10 @@ QVariant Note::getProperty(Pid propertyId) const
                   return fixedLine();
             case Pid::AUTOPLACE:
                   return chord() ? chord()->autoplace() : autoplace();
+            case Pid::NOTEONOFFSET:
+                  return !_playEvents.empty() ? _playEvents[0].ontime() : 0 ;
+            case Pid::NOTEOFFOFFSET:
+                  return !_playEvents.empty() ? _playEvents[0].offtime() : 0 ;
             default:
                   break;
             }
@@ -2981,6 +2985,10 @@ bool Note::setProperty(Pid propertyId, const QVariant& v)
                   else
                         setAutoplace(v.toBool());
                   break;
+            case Pid::NOTEONOFFSET:
+                  if (!_playEvents.empty()) { setOnTimeOffset(v.toInt()); };
+            case Pid::NOTEOFFOFFSET:
+                  if (!_playEvents.empty()) { setOffTimeOffset(v.toInt()); };
             default:
                   if (!Element::setProperty(propertyId, v))
                         return false;
