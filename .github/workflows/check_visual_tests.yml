@@ -3,7 +3,7 @@ name: 'Check: Visual Tests (vtests)'
 on:
   pull_request:
     branches:
-    - 3.x
+    - temp2
 
 jobs:
   run_vtests:

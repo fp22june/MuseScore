@@ -3,7 +3,7 @@ name: 'Build: Linux / Check: Unit tests (mtests)'
 on:
   push:
     branches:
-    - 3.x
+    - temp2
   pull_request:
   schedule:
     - cron: '0 4 */1 * *' # At 04:00 on every day-of-month
