@@ -1,10 +1,11 @@
 #!/usr/bin/env bash
 
-BUILDPATH=./../../../build.debug/mtest/libmscore/midi
+BUILDPATH=./../../../msvc.build_x64/mtest/libmscore/midi
 
 n=0;
 
 for f in $BUILDPATH/*; do
+    echo "$f"
     if [[ $f == *"-test"* ]]; then
         basename=$(basename $f)
         search=${basename//-test/-ref}
