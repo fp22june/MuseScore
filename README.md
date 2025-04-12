@@ -1,5 +1,5 @@
 
-\* [temp5](https://github.com/fp22june/MuseScore/tree/temp5) add palette action shortcutable, 8 dynamics 4 pedal symbols <br>
+\* [temp5](https://github.com/fp22june/MuseScore/tree/temp5) add palette action shortcutable, 8 dynamics 4 pedal symbols [image1](https://github.com/fp22june/MuseScore/blob/githubreadme/act1.png), [image2](https://github.com/fp22june/MuseScore/blob/githubreadme/act2.png) <br>
 \* 919eccc (April 4, 2025 [Jojo-Schmitz/3.x](https://github.com/Jojo-Schmitz/MuseScore/tree/3.x)) <br>
 | ... <br>
 
