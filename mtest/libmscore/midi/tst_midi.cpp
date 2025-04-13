@@ -396,7 +396,9 @@ void TestMidi::testTimeStretchFermata(MasterScore* score, const QString& file, c
       {
       const QString writeFile = QString("%1-%2-test-%3.mid").arg(file).arg(testName);
       const QString reference(DIR + file + "-ref.mid");
+      const QString refgen(DIR + file + "-test.mid"); //update only, not a test, see mtest/README.md and updateReference.sh
 
+      saveMidi(score, refgen);
       testMidiExport(score, writeFile.arg(1), reference);
 
       const Fraction frac1 = 2 * Fraction(4, 4) + Fraction(2, 4); // 3rd measure, 3rd beat
@@ -452,6 +454,7 @@ void TestMidi::testTimeStretchFermataTempoEdit(MasterScore* score, const QString
       {
       const QString writeFile = QString("%1-%2-test-%3.mid").arg(file).arg(testName);
       const QString reference(DIR + file + "-%1-ref.mid");
+      const QString refgen(DIR + file + "-%1-test.mid"); //update only, not a test, see mtest/README.md and updateReference.sh
 
       Element* tempo = score->firstSegment(SegmentType::ChordRest)->findAnnotation(ElementType::TEMPO_TEXT, -1, 3);
       Q_ASSERT(tempo && tempo->isTempoText());
@@ -461,12 +464,14 @@ void TestMidi::testTimeStretchFermataTempoEdit(MasterScore* score, const QString
       const qreal defaultTempoBps = defaultTempo / 60.0;
 
       testMidiExport(score, writeFile.arg("init"), reference.arg(scoreTempo));
+      saveMidi(score, refgen.arg(scoreTempo));
 
       score->startCmd();
       tempo->undoChangeProperty(Pid::TEMPO_FOLLOW_TEXT, false, PropertyFlags::UNSTYLED);
       tempo->undoChangeProperty(Pid::TEMPO, defaultTempoBps, PropertyFlags::UNSTYLED);
       score->endCmd();
       testMidiExport(score, writeFile.arg("change-tempo"), reference.arg(defaultTempo));
+      saveMidi(score, refgen.arg(defaultTempo));
 
       // undo the last changes
       score->startCmd();
@@ -484,6 +489,8 @@ void TestMidi::testTimeStretchFermataTempoEdit(MasterScore* score, const QString
       score->undoRedo(/* undo */ true, /* EditData */ nullptr);
       score->endCmd();
       testMidiExport(score, writeFile.arg("undo-remove-tempo"), reference.arg(scoreTempo));
+
+
       }
 
 //---------------------------------------------------------
