@@ -396,7 +396,7 @@ void TestMidi::testTimeStretchFermata(MasterScore* score, const QString& file, c
       {
       const QString writeFile = QString("%1-%2-test-%3.mid").arg(file).arg(testName);
       const QString reference(DIR + file + "-ref.mid");
-      const QString refgen(DIR + file + "-test.mid"); //update only, not a test, see mtest/README.md and updateReference.sh
+      const QString refgen(file + "-test.mid"); //update only, not a test, see mtest/README.md and updateReference.sh
 
       saveMidi(score, refgen);
       testMidiExport(score, writeFile.arg(1), reference);
@@ -454,7 +454,7 @@ void TestMidi::testTimeStretchFermataTempoEdit(MasterScore* score, const QString
       {
       const QString writeFile = QString("%1-%2-test-%3.mid").arg(file).arg(testName);
       const QString reference(DIR + file + "-%1-ref.mid");
-      const QString refgen(DIR + file + "-%1-test.mid"); //update only, not a test, see mtest/README.md and updateReference.sh
+      const QString refgen(file + "-%1-test.mid"); //update only, not a test, see mtest/README.md and updateReference.sh
 
       Element* tempo = score->firstSegment(SegmentType::ChordRest)->findAnnotation(ElementType::TEMPO_TEXT, -1, 3);
       Q_ASSERT(tempo && tempo->isTempoText());
