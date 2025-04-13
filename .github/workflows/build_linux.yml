@@ -59,4 +59,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: mtestref
-        path: ./build.debug/mtest/libscore
+        path: ./build.debug/mtest/libmscore
