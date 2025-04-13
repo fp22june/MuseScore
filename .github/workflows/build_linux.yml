@@ -117,3 +117,9 @@ jobs:
     - name: Run mtests
       run: |
         ./build/ci/linux/runmtests.sh
+    - name: Upload artifacts on GitHub
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: mtestref
+        path: build.artifacts\
