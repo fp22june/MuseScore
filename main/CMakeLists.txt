@@ -352,6 +352,9 @@ else (MINGW)
                   "${QT_INSTALL_BINS}/libEGL.dll" "${QT_INSTALL_BINS}/libGLESv2.dll" "${QT_INSTALL_BINS}/opengl32sw.dll"
                   "${QT_INSTALL_BINS}/d3dcompiler_47.dll"
                   )
+      #https://raw.githubusercontent.com/Jojo-Schmitz/MuseScore/d336c5ca4d72c6c7b15595b1761ec2aaa965e595/main/CMakeLists.txt
+        list(APPEND dlls_to_copy "${QT_INSTALL_BINS}/Qt5WebEngineWidgets.dll" "${QT_INSTALL_BINS}/Qt5WebEngineCore.dll")
+
       if (Qt5Widgets_VERSION VERSION_GREATER_EQUAL "5.14.1")
          list(APPEND dlls_to_copy "${QT_INSTALL_BINS}/Qt5QmlModels.dll")
          list(APPEND dlls_to_copy "${QT_INSTALL_BINS}/Qt5QmlWorkerScript.dll")
@@ -448,6 +451,19 @@ else (MINGW)
          DESTINATION bin/sqldrivers)
 
       install( TARGETS mscore RUNTIME DESTINATION bin ) # this duplicate due to the correctly package step
+      
+         install(FILES
+            ${QT_INSTALL_LIBEXECS}/QtWebEngineProcess.exe
+            DESTINATION bin
+            )
+         install(DIRECTORY
+            ${QT_INSTALL_DATA}/resources
+            DESTINATION bin/webengineresources
+            )
+         install(DIRECTORY
+            ${QT_INSTALL_TRANSLATIONS}/qtwebengine_locales
+            DESTINATION bin/webengineresources/translations
+            )
 
       install(DIRECTORY
          ${QT_INSTALL_QML}

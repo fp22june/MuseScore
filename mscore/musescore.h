@@ -794,6 +794,7 @@ class MuseScore : public QMainWindow, public MuseScoreCore {
       /////////////////////////////////////////////////
 
       void scoreUnrolled(MasterScore* original);
+      void cmdApplyPaletteCell(QString n, QString nn, bool firstmatchany = false);
       
       virtual void closeScore(Score* score);
 
