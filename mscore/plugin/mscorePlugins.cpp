@@ -386,8 +386,13 @@ QmlPlugin* pluginFromPath(QmlPluginEngine* engine, QString pluginPath)
                   qDebug("   line %d: %s", e.line(), qPrintable(e.description()));
             return nullptr;
             }
+      QmlPlugin* p = qobject_cast<QmlPlugin*>(obj);
 
-      return qobject_cast<QmlPlugin*>(obj);
+      QFileInfo f(pluginPath);
+      QString n = f.completeBaseName();
+      mscore->runningplugins.insert(n, p);
+
+      return p;
       }
 
 //---------------------------------------------------------
