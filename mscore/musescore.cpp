@@ -1702,6 +1702,14 @@ MuseScore::MuseScore()
       menuAddText->addAction(getAction("rehearsalmark-text"));
       menuAddText->addAction(getAction("instrument-change-text"));
       menuAddText->addAction(getAction("fingering-text"));
+      menuAddText->addAction(getAction("dynamics-symbol-ppp"));
+      menuAddText->addAction(getAction("dynamics-symbol-pp"));
+      menuAddText->addAction(getAction("dynamics-symbol-p"));
+      menuAddText->addAction(getAction("dynamics-symbol-mp"));
+      menuAddText->addAction(getAction("dynamics-symbol-mf"));
+      menuAddText->addAction(getAction("dynamics-symbol-f"));
+      menuAddText->addAction(getAction("dynamics-symbol-ff"));
+      menuAddText->addAction(getAction("dynamics-symbol-fff"));
       menuAddText->addSeparator();
       menuAddText->addAction(getAction("lyrics"));
       menuAddText->addAction(getAction("sticking-text"));
@@ -1718,6 +1726,10 @@ MuseScore::MuseScore()
       menuAddLines->addAction(getAction("add-8va"));
       menuAddLines->addAction(getAction("add-8vb"));
       menuAddLines->addAction(getAction("add-noteline"));
+      menuAddLines->addAction(getAction("pedal-straight-hooks"));
+      menuAddLines->addAction(getAction("pedal-angled-end-hook"));
+      menuAddLines->addAction(getAction("pedal-both-hooks-angled"));
+      menuAddLines->addAction(getAction("pedal-angled-start-hook"));
       menuAdd->addMenu(menuAddLines);
 
       //---------------------
@@ -8578,4 +8590,30 @@ void MuseScore::scoreUnrolled(MasterScore * original)
       MasterScore * score = original->unrollRepeats();
       setCurrentScoreView(appendScore(score));
       }
+
+//---------------------------------------------------------
+//   Add palette item
+//---------------------------------------------------------
+
+void MuseScore::cmdApplyPaletteCell(QString n, QString nn, bool firstmatchany)
+      {
+      auto &ps = mscore->getPaletteWorkspace()
+            ->getDefaultPaletteTree()  //paletteworkspace.h
+            ->palettes(); //palettemodel.h
+      auto p = std::find_if( ps.begin(), ps.end(),
+            [n](const std::unique_ptr<PalettePanel>& p) {
+                  return (n == p->name()); //palette.h
+            });
+      if (p != ps.end()){
+            auto &cs = (*p)->cells;  //palettetree.h
+            auto c = std::find_if( cs.begin(), cs.end(),
+                  [nn,firstmatchany](const std::shared_ptr<PaletteCell>& c) {
+                        return (firstmatchany? (c->name).contains(nn) : (c->name)==nn); //palettetree.h  //share\workspaces\Basic.xml name field
+                  });
+            if (c != cs.end()) {
+                  Palette::applyPaletteElement((*c)->element.get());  //palette.cpp
+            }
+      }
+      }
+
 } // namespace Ms

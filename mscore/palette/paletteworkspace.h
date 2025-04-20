@@ -232,6 +232,7 @@ class PaletteWorkspace : public QObject {
 
       void setUserPaletteTree(std::unique_ptr<PaletteTree> tree);
       void setDefaultPaletteTree(std::unique_ptr<PaletteTree> tree);
+      PaletteTreeModel* getDefaultPaletteTree(){return defaultPalette;};
       void write(XmlWriter&) const;
       bool read(XmlReader&);
 

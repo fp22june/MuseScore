@@ -2402,6 +2402,44 @@ void ScoreView::cmd(const char* s)
             {{"sticking-text"}, [](ScoreView* cv, const QByteArray&) {
                   cv->cmdAddText(Tid::STICKING);
                   }},
+
+            {{"pedal-straight-hooks"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Lines", "Pedal (straight hooks)"); //share\workspaces\Basic.xml name field
+                  }},
+            {{"pedal-angled-end-hook"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Lines", "Pedal (angled end hook)");
+                  }},
+            {{"pedal-both-hooks-angled"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Lines", "Pedal (both hooks angled)");
+                  }},
+            {{"pedal-angled-start-hook"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Lines", "Pedal (angled start hook)");
+                  }},
+            {{"dynamics-symbol-ppp"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Dynamics", "ppp");
+                  }},
+            {{"dynamics-symbol-pp"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Dynamics", "pp");
+                  }},
+            {{"dynamics-symbol-p"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Dynamics", "p");
+                  }},
+            {{"dynamics-symbol-mp"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Dynamics", "mp");
+                  }},
+            {{"dynamics-symbol-mf"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Dynamics", "mf");
+                  }},
+            {{"dynamics-symbol-f"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Dynamics", "f");
+                  }},
+            {{"dynamics-symbol-ff"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Dynamics", "ff");
+                  }},
+            {{"dynamics-symbol-fff"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Dynamics", "fff");
+                  }},
+
             {{"edit-element"}, [](ScoreView* cv, const QByteArray&) {
                   Element* e = cv->score()->selection().element();
                   if (e && e->isEditable() && !cv->popupActive) {
