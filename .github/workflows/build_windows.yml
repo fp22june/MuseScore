@@ -3,7 +3,7 @@ name: 'Build: Windows'
 on:
   push:
     branches:
-    - 3.x
+    - temp11
   pull_request:
   schedule:
     - cron: '0 4 */1 * *' # At 04:00 on every day-of-month
