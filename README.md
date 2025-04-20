@@ -1,4 +1,14 @@
 
+\* [temp11](https://github.com/fp22june/MuseScore/tree/temp11), [temp13](https://github.com/fp22june/MuseScore/tree/temp13) add cmd("run-plugin-[filename]")  and cmd("stop-plugin-[filename]"). [win webengine](https://github.com/fp22june/MuseScore/actions/runs/14558415851), [win no-webengine](https://github.com/fp22june/MuseScore/actions/runs/14558519712), [mac](https://github.com/fp22june/MuseScore/actions/runs/14558519696), [linux](https://github.com/fp22june/MuseScore/actions/runs/14558519695)<br>
+\* temp2, temp5 applied <br>
+\* 919eccc (April 4, 2025 [Jojo-Schmitz/3.x](https://github.com/Jojo-Schmitz/MuseScore/tree/3.x)) <br>
+| ... <br>
+
+
+
+<hr>
+
+
 \* [temp5](https://github.com/fp22june/MuseScore/tree/temp5) add palette action shortcutable, 8 dynamics 4 pedal symbols [image1](https://github.com/fp22june/MuseScore/blob/githubreadme/act1.png), [image2](https://github.com/fp22june/MuseScore/blob/githubreadme/act2.png) <br>
 \* 919eccc (April 4, 2025 [Jojo-Schmitz/3.x](https://github.com/Jojo-Schmitz/MuseScore/tree/3.x)) <br>
 | ... <br>
