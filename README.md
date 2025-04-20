@@ -9,7 +9,7 @@
 <hr>
 
 
-\* [temp5](https://github.com/fp22june/MuseScore/tree/temp5) add palette action shortcutable, 8 dynamics 4 pedal symbols [image1](https://github.com/fp22june/MuseScore/blob/githubreadme/act1.png), [image2](https://github.com/fp22june/MuseScore/blob/githubreadme/act2.png) <br>
+\* [temp5](https://github.com/fp22june/MuseScore/tree/temp5) add palette action shortcutable, 8 dynamics 4 pedal symbols [image1](https://github.com/fp22june/MuseScore/blob/githubreadme/act1.png), [image2](https://github.com/fp22june/MuseScore/blob/githubreadme/act2.png), [cmd("dynamics-symbol-[x]") cmd("pedal-[y]") etc](https://github.com/fp22june/MuseScore/commit/097ebb82697585ad814f5c76b116df79eb38a8c6) <br>
 \* 919eccc (April 4, 2025 [Jojo-Schmitz/3.x](https://github.com/Jojo-Schmitz/MuseScore/tree/3.x)) <br>
 | ... <br>
 
