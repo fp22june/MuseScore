@@ -1,5 +1,5 @@
 
-\* [temp11](https://github.com/fp22june/MuseScore/tree/temp11), [temp13](https://github.com/fp22june/MuseScore/tree/temp13) add cmd("run-plugin-[filename]")  and cmd("stop-plugin-[filename]"). [win webengine](https://github.com/fp22june/MuseScore/actions/runs/14558415851), [win no-webengine](https://github.com/fp22june/MuseScore/actions/runs/14558519712), [mac](https://github.com/fp22june/MuseScore/actions/runs/14558519696), [linux](https://github.com/fp22june/MuseScore/actions/runs/14558519695)<br>
+\* [temp11](https://github.com/fp22june/MuseScore/tree/temp11), [temp13](https://github.com/fp22june/MuseScore/tree/temp13) add cmd("run-plugin-[filename]")  cmd("stop-plugin-[filename]") cmd("key-signature-[x#b]-major-[y#b]-minor"). [win webengine](https://github.com/fp22june/MuseScore/actions/runs/14565943972), [win no-webengine](https://github.com/fp22june/MuseScore/actions/runs/14565803877), [mac](https://github.com/fp22june/MuseScore/actions/runs/14565803875), [linux](https://github.com/fp22june/MuseScore/actions/runs/14565803874)<br>
 \* temp2, temp5 applied <br>
 \* 919eccc (April 4, 2025 [Jojo-Schmitz/3.x](https://github.com/Jojo-Schmitz/MuseScore/tree/3.x)) <br>
 | ... <br>
@@ -9,7 +9,7 @@
 <hr>
 
 
-\* [temp5](https://github.com/fp22june/MuseScore/tree/temp5) add palette action shortcutable, 8 dynamics 4 pedal symbols [image1](https://github.com/fp22june/MuseScore/blob/githubreadme/act1.png), [image2](https://github.com/fp22june/MuseScore/blob/githubreadme/act2.png), [cmd("dynamics-symbol-[x]") cmd("pedal-[y]") etc](https://github.com/fp22june/MuseScore/commit/097ebb82697585ad814f5c76b116df79eb38a8c6) <br>
+\* [temp5](https://github.com/fp22june/MuseScore/tree/temp5) add palette action shortcutable, 8 dynamics 4 pedal symbols [image1](https://github.com/fp22june/MuseScore/blob/githubreadme/act1.png), [image2](https://github.com/fp22june/MuseScore/blob/githubreadme/act2.png), cmd("dynamics-symbol-[x]") cmd("pedal-[y]") [sourcecode](https://github.com/fp22june/MuseScore/commit/097ebb82697585ad814f5c76b116df79eb38a8c6) <br>
 \* 919eccc (April 4, 2025 [Jojo-Schmitz/3.x](https://github.com/Jojo-Schmitz/MuseScore/tree/3.x)) <br>
 | ... <br>
 
