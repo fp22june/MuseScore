@@ -2360,85 +2360,191 @@ Shortcut Shortcut::_sc[] = {
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "pedal-straight-hooks",
          QT_TRANSLATE_NOOP("action","Pedal (straight hooks)"),    // Appears in menu, so Title Case
-         QT_TRANSLATE_NOOP("action","Add Pedal (straight hooks)") // Appears in Edit > Preferences > Shortcuts, so Sentence case
+         QT_TRANSLATE_NOOP("action","Add pedal (straight hooks)") // Appears in Edit > Preferences > Shortcuts, so Sentence case
          },
       {
          MsWidget::SCORE_TAB,
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "pedal-angled-end-hook",
          QT_TRANSLATE_NOOP("action","Pedal (angled end hook)"),
-         QT_TRANSLATE_NOOP("action","Add Pedal (angled end hook)")
+         QT_TRANSLATE_NOOP("action","Add pedal (angled end hook)")
          },
       {
          MsWidget::SCORE_TAB,
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "pedal-both-hooks-angled",
          QT_TRANSLATE_NOOP("action","Pedal (both hooks angled)"),
-         QT_TRANSLATE_NOOP("action","Add Pedal (both hooks angled)")
+         QT_TRANSLATE_NOOP("action","Add pedal (both hooks angled)")
          },
       {
          MsWidget::SCORE_TAB,
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "pedal-angled-start-hook",
          QT_TRANSLATE_NOOP("action","Pedal (angled start hook)"),
-         QT_TRANSLATE_NOOP("action","Add Pedal (angled start hook)")
+         QT_TRANSLATE_NOOP("action","Add pedal (angled start hook)")
          },
       {
          MsWidget::SCORE_TAB,
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "dynamics-symbol-ppp",
          QT_TRANSLATE_NOOP("action","Dynamics symbol ppp"),
-         QT_TRANSLATE_NOOP("action","Add Dynamics symbol ppp")
+         QT_TRANSLATE_NOOP("action","Add dynamics symbol ppp")
          },
       {
          MsWidget::SCORE_TAB,
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "dynamics-symbol-pp",
          QT_TRANSLATE_NOOP("action","Dynamics symbol pp"),
-         QT_TRANSLATE_NOOP("action","Add Dynamics symbol pp")
+         QT_TRANSLATE_NOOP("action","Add dynamics symbol pp")
          },
       {
          MsWidget::SCORE_TAB,
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "dynamics-symbol-p",
          QT_TRANSLATE_NOOP("action","Dynamics symbol p"),
-         QT_TRANSLATE_NOOP("action","Add Dynamics symbol p")
+         QT_TRANSLATE_NOOP("action","Add dynamics symbol p")
          },
       {
          MsWidget::SCORE_TAB,
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "dynamics-symbol-mp",
          QT_TRANSLATE_NOOP("action","Dynamics symbol mp"),
-         QT_TRANSLATE_NOOP("action","Add Dynamics symbol mp")
+         QT_TRANSLATE_NOOP("action","Add dynamics symbol mp")
          },
       {
          MsWidget::SCORE_TAB,
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "dynamics-symbol-mf",
          QT_TRANSLATE_NOOP("action","Dynamics symbol mf"),
-         QT_TRANSLATE_NOOP("action","Add Dynamics symbol mf")
+         QT_TRANSLATE_NOOP("action","Add dynamics symbol mf")
          },
       {
          MsWidget::SCORE_TAB,
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "dynamics-symbol-f",
          QT_TRANSLATE_NOOP("action","Dynamics symbol f"),
-         QT_TRANSLATE_NOOP("action","Add Dynamics symbol f")
+         QT_TRANSLATE_NOOP("action","Add dynamics symbol f")
          },
       {
          MsWidget::SCORE_TAB,
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "dynamics-symbol-ff",
          QT_TRANSLATE_NOOP("action","Dynamics symbol ff"),
-         QT_TRANSLATE_NOOP("action","Add Dynamics symbol ff")
+         QT_TRANSLATE_NOOP("action","Add dynamics symbol ff")
          },
       {
          MsWidget::SCORE_TAB,
          STATE_NORMAL | STATE_NOTE_ENTRY,
          "dynamics-symbol-fff",
          QT_TRANSLATE_NOOP("action","Dynamics symbol fff"),
-         QT_TRANSLATE_NOOP("action","Add Dynamics symbol fff")
-         },
+         QT_TRANSLATE_NOOP("action","Add dynamics symbol fff")
+      },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "key-signature-g-major-e-minor",
+         QT_TRANSLATE_NOOP("action","Key signature g major, e minor"),
+         QT_TRANSLATE_NOOP("action","Add key signature g major, e minor")
+      },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "key-signature-d-major-b-minor",
+         QT_TRANSLATE_NOOP("action","Key signature d major, b minor"),
+         QT_TRANSLATE_NOOP("action","Add key signature d major, b minor")
+      },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "key-signature-a-major-f#-minor",
+         QT_TRANSLATE_NOOP("action","Key signature a major, f# minor"),
+         QT_TRANSLATE_NOOP("action","Add key signature a major, f# minor")
+      },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "key-signature-e-major-c#-minor",
+         QT_TRANSLATE_NOOP("action","Key signature e major, c# minor"),
+         QT_TRANSLATE_NOOP("action","Add key signature e major, c# minor")
+      },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "key-signature-b-major-g#-minor",
+         QT_TRANSLATE_NOOP("action","Key signature b major, g# minor"),
+         QT_TRANSLATE_NOOP("action","Add key signature b major, g# minor")
+      },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "key-signature-f#-major-d#-minor",
+         QT_TRANSLATE_NOOP("action","Key signature f# major, d# minor"),
+         QT_TRANSLATE_NOOP("action","Add key signature f# major, d# minor")
+      },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "key-signature-c#-major-a#-minor",
+         QT_TRANSLATE_NOOP("action","Key signature c# major, a# minor"),
+         QT_TRANSLATE_NOOP("action","Add key signature c# major, a# minor")
+      },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "key-signature-cb-major-ab-minor",
+         QT_TRANSLATE_NOOP("action","Key signature cb major, ab minor"),
+         QT_TRANSLATE_NOOP("action","Add key signature cb major, ab minor")
+      },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "key-signature-gb-major-eb-minor",
+         QT_TRANSLATE_NOOP("action","Key signature gb major, eb minor"),
+         QT_TRANSLATE_NOOP("action","Add key signature gb major, eb minor")
+      },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "key-signature-db-major-bb-minor",
+         QT_TRANSLATE_NOOP("action","Key signature db major, bb minor"),
+         QT_TRANSLATE_NOOP("action","Add key signature db major, bb minor")
+      },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "key-signature-ab-major-f-minor",
+         QT_TRANSLATE_NOOP("action","Key signature ab major, f minor"),
+         QT_TRANSLATE_NOOP("action","Add key signature ab major, f minor")
+      },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "key-signature-eb-major-c-minor",
+         QT_TRANSLATE_NOOP("action","Key signature eb major, c minor"),
+         QT_TRANSLATE_NOOP("action","Add key signature eb major, c minor")
+      },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "key-signature-bb-major-g-minor",
+         QT_TRANSLATE_NOOP("action","Key signature bb major, g minor"),
+         QT_TRANSLATE_NOOP("action","Add key signature bb major, g minor")
+      },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "key-signature-f-major-d-minor",
+         QT_TRANSLATE_NOOP("action","Key signature f major, d minor"),
+         QT_TRANSLATE_NOOP("action","Add key signature f major, d minor")
+      },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "key-signature-c-major-a-minor",
+         QT_TRANSLATE_NOOP("action","Key signature c major, a minor"),
+         QT_TRANSLATE_NOOP("action","Add key signature c major, a minor")
+      },
+
       {
          MsWidget::SCORE_TAB,
          STATE_NORMAL | STATE_NOTE_ENTRY,
