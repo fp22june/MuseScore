@@ -185,10 +185,9 @@ void PluginManager::updatePluginList(bool forceRefresh)
       QList<QString> pluginPathList;
       pluginPathList.append(dataPath + "/plugins");
       pluginPathList.append(mscoreGlobalShare + "plugins");
-      QStringList ps = preferences.getString(PREF_APP_PATHS_MYPLUGINS).split(";");
-      for(int i=0; i < ps.size(); i++)
-            if(!ps.at(i).isEmpty())
-                  pluginPathList.append(ps.at(i));
+      QString p = preferences.getString(PREF_APP_PATHS_MYPLUGINS);
+      if (!p.isEmpty())
+            pluginPathList.append(p);
       if (forceRefresh) {
             _pluginList.clear();
             QmlPluginEngine* engine = mscore->getPluginEngine();
@@ -245,7 +244,7 @@ void PluginManager::loadList(bool forceRefresh)
       connect(pluginListWidget, SIGNAL(itemChanged(QListWidgetItem*)), SLOT(pluginLoadToggled(QListWidgetItem*)));
       connect(pluginListWidget, SIGNAL(currentItemChanged(QListWidgetItem*, QListWidgetItem*)),
               SLOT(pluginListWidgetItemChanged(QListWidgetItem*, QListWidgetItem*)));
-      if (0 <= n) {
+      if (n) {
             pluginListWidget->setCurrentRow(0);
             pluginListWidgetItemChanged(pluginListWidget->item(0), 0);
             }

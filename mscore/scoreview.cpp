@@ -2440,6 +2440,52 @@ void ScoreView::cmd(const char* s)
                   mscore->cmdApplyPaletteCell("Dynamics", "fff");
                   }},
 
+            {{"key-signature-g-major-e-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "G major, E minor");
+                  }},
+            {{"key-signature-d-major-b-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "D major, B minor");
+                  }},
+            {{"key-signature-a-major-f#-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "A major, F♯ minor");
+                  }},
+            {{"key-signature-e-major-c#-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "E major, C♯ minor");
+                  }},
+            {{"key-signature-b-major-g#-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "B major, G♯ minor");
+                  }},
+            {{"key-signature-f#-major-d#-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "F♯ major, D♯ minor");
+                  }},
+            {{"key-signature-c#-major-a#-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "C♯ major, A♯ minor");
+                  }},
+            {{"key-signature-cb-major-ab-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "C♭ major, A♭ minor");
+                  }},
+            {{"key-signature-gb-major-eb-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "G♭ major, E♭ minor");
+                  }},
+            {{"key-signature-db-major-bb-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "D♭ major, B♭ minor");
+                  }},
+            {{"key-signature-ab-major-f-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "A♭ major, F minor");
+                  }},
+            {{"key-signature-eb-major-c-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "E♭ major, C minor");
+                  }},
+            {{"key-signature-bb-major-g-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "B♭ major, G minor");
+                  }},
+            {{"key-signature-f-major-d-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "F major, D minor");
+                  }},
+            {{"key-signature-c-major-a-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "C major, A minor");
+                  }},
+
             {{"edit-element"}, [](ScoreView* cv, const QByteArray&) {
                   Element* e = cv->score()->selection().element();
                   if (e && e->isEditable() && !cv->popupActive) {
