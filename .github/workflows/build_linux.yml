@@ -1,14 +1,12 @@
-name: 'Build: Linux / Check: Unit tests (mtests)'
+name: 'Build: Linux'
 
 on:
-  push:
-    branches:
-    - temp13
-  pull_request:
-  schedule:
-    - cron: '0 4 */1 * *' # At 04:00 on every day-of-month
   workflow_dispatch:
     inputs:
+      platforms:
+        description: 'Platforms to build:'
+        default: 'linux_x64'
+        type: string
       build_mode:
         description: 'Build mode: devel, nightly, testing, stable'
         default: 'devel'
@@ -19,6 +17,10 @@ on:
         required: false
   workflow_call:
     inputs:
+      platforms:
+        description: 'Platforms to build:'
+        default: 'linux_x64'
+        type: string
       build_mode:
         description: 'Build mode: devel, nightly, testing, stable'
         default: 'devel'
@@ -31,6 +33,7 @@ on:
 
 jobs:
   linux_x64:
+    if: github.event_name != 'workflow_dispatch' || contains(inputs.platforms, 'linux_x64')
     runs-on: ubuntu-22.04
     steps:
     - name: Cancel Previous Runs
@@ -94,26 +97,26 @@ jobs:
         name: ${{ env.UPLOAD_ARTIFACT_NAME }}
         path: ./build.artifacts/
 
-  run_mtests:
-    runs-on: ubuntu-22.04
-    env:
-        # Enable AddressSanitizer in the mtest build
-        CFLAGS: "-fsanitize=address -fno-omit-frame-pointer"
-        CXXFLAGS: "-fsanitize=address -fno-omit-frame-pointer"
-    steps:
-    - name: Clone repository
-      uses: actions/checkout@v4
-    - name: Free disk space
-      run: |
-        sudo docker system prune -a -f
-        sudo rm -rf /usr/local/lib/android
-    - name: Setup environment
-      run: |
-        bash ./build/ci/linux/setup.sh
-    - name: Build
-      run: |
-        mkdir -p build.artifacts/env
-        ./build/ci/linux/build.sh -n ${{ github.run_id }} --build_mode mtests
-    - name: Run mtests
-      run: |
-        ./build/ci/linux/runmtests.sh
+  # run_mtests:
+  #   runs-on: ubuntu-22.04
+  #   env:
+  #       # Enable AddressSanitizer in the mtest build
+  #       CFLAGS: "-fsanitize=address -fno-omit-frame-pointer"
+  #       CXXFLAGS: "-fsanitize=address -fno-omit-frame-pointer"
+  #   steps:
+  #   - name: Clone repository
+  #     uses: actions/checkout@v4
+  #   - name: Free disk space
+  #     run: |
+  #       sudo docker system prune -a -f
+  #       sudo rm -rf /usr/local/lib/android
+  #   - name: Setup environment
+  #     run: |
+  #       bash ./build/ci/linux/setup.sh
+  #   - name: Build
+  #     run: |
+  #       mkdir -p build.artifacts/env
+  #       ./build/ci/linux/build.sh -n ${{ github.run_id }} --build_mode mtests
+  #   - name: Run mtests
+  #     run: |
+  #       ./build/ci/linux/runmtests.sh

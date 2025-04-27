@@ -1,11 +1,14 @@
 name: 'Build: All'
 
 on:
+  push:
+    branches:
+    - temp15
   workflow_dispatch:
     inputs:
       platforms:
         description: 'Platforms to build:'
-        default: 'linux_x64 macos windows_x64 windows_x32 windows_portable'
+        default: 'linux_x64 macos_intel windows_x64 windows_x32 windows_portable'
         required: true
       build_mode:
         description: 'Build mode: devel, nightly, testing, stable'
@@ -19,7 +22,7 @@ on:
     inputs:
       platforms:
         description: 'Platforms to build:'
-        default: 'linux_x64 macos windows_x64 windows_x32 windows_portable'
+        default: 'linux_x64 macos_intel windows_x64 windows_x32 windows_portable'
         type: string
         required: true
       build_mode:
@@ -41,19 +44,19 @@ jobs:
 
   linux_x64:
     name: Linux x64
-    if: ${{ contains(inputs.platforms, 'linux_x64') }}
     uses: ./.github/workflows/build_linux.yml
     secrets: inherit
     with:
+      platforms: ${{ inputs.platforms }}
       build_mode: ${{ inputs.build_mode }}
       publish: ${{ inputs.publish }}
 
   macos:
     name: macOS
-    if: ${{ contains(inputs.platforms, 'macos') }}
     uses: ./.github/workflows/build_macos.yml
     secrets: inherit
     with:
+      platforms: ${{ inputs.platforms }}
       build_mode: ${{ inputs.build_mode }}
       publish: ${{ inputs.publish }}
 

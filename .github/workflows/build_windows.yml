@@ -1,18 +1,12 @@
 name: 'Build: Windows'
 
 on:
-  push:
-    branches:
-    - temp13
-  pull_request:
-  schedule:
-    - cron: '0 4 */1 * *' # At 04:00 on every day-of-month
   workflow_dispatch:
     inputs:
       platforms:
         description: 'Platforms to build:'
         default: 'windows_x64 windows_x32 windows_portable_x32 windows_portable_x64'
-        required: true
+        type: string
       build_mode:
         description: 'Build mode: devel, nightly, testing, stable'
         default: 'devel'
@@ -27,7 +21,6 @@ on:
         description: 'Platforms to build:'
         default: 'windows_x64 windows_x32 windows_portable_x32 windows_portable_x64'
         type: string
-        required: true
       build_mode:
         description: 'Build mode: devel, nightly, testing, stable'
         default: 'devel'

@@ -242,13 +242,8 @@ void PluginManager::loadList(bool forceRefresh)
             item->setData(Qt::UserRole, i);
             }
       connect(pluginListWidget, SIGNAL(itemChanged(QListWidgetItem*)), SLOT(pluginLoadToggled(QListWidgetItem*)));
-<<<<<<< HEAD
       connect(pluginListWidget, SIGNAL(currentItemChanged(QListWidgetItem*,QListWidgetItem*)),
               SLOT(pluginListWidgetItemChanged(QListWidgetItem*,QListWidgetItem*)));
-=======
-      connect(pluginListWidget, SIGNAL(currentItemChanged(QListWidgetItem*, QListWidgetItem*)),
-              SLOT(pluginListWidgetItemChanged(QListWidgetItem*, QListWidgetItem*)));
->>>>>>> 222c873fda (keysig)
       if (n) {
             pluginListWidget->setCurrentRow(0);
             pluginListWidgetItemChanged(pluginListWidget->item(0), 0);
