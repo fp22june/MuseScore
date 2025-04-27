@@ -1,10 +1,15 @@
 
+\* [temp14](https://github.com/fp22june/MuseScore/tree/temp14), [temp15](https://github.com/fp22june/MuseScore/tree/temp15) add plugin access: [system].spannerSegments and [frame].elements (veritcal frame children text title, composer etc at the top of the first page). [win (webengine)](https://github.com/fp22june/MuseScore/actions/runs/14693217348), and [win (no webengine), mac, linux](https://github.com/fp22june/MuseScore/actions/runs/14693513150)<br>
+\* temp2, temp5, temp11/13 applied <br>
+\* c562dfc (April 27, 2025 [Jojo-Schmitz/3.x](https://github.com/Jojo-Schmitz/MuseScore/tree/3.x)) <br>
+| ... <br>
+
+ <hr>
+
 \* [temp11](https://github.com/fp22june/MuseScore/tree/temp11), [temp13](https://github.com/fp22june/MuseScore/tree/temp13) add cmd("run-plugin-[filename]")  cmd("stop-plugin-[filename]") cmd("key-signature-[x#b]-major-[y#b]-minor"). [win webengine](https://github.com/fp22june/MuseScore/actions/runs/14565943972), [win no-webengine](https://github.com/fp22june/MuseScore/actions/runs/14565803877), [mac](https://github.com/fp22june/MuseScore/actions/runs/14565803875), [linux](https://github.com/fp22june/MuseScore/actions/runs/14565803874)<br>
 \* temp2, temp5 applied <br>
 \* 919eccc (April 4, 2025 [Jojo-Schmitz/3.x](https://github.com/Jojo-Schmitz/MuseScore/tree/3.x)) <br>
 | ... <br>
-
-
 
 <hr>
 
