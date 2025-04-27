@@ -4,37 +4,6 @@ on:
   push:
     branches:
     - temp21
-    inputs:
-      manual_name:
-        description: 'Release name:'
-        default: 'default'
-        type: string
-        required: true
-      manual_tag:
-        description: 'Release tag:'
-        default: 'default'
-        type: string
-        required: true
-      platforms:
-        description: 'Platforms to build:'
-        default: 'linux_x64 macos_intel macos_apple windows_x64 windows_x32 windows_x32_portable windows_x64_portable'
-        type: string
-        required: true
-      build_mode:
-        description: 'Build mode: devel, nightly, testing, stable'
-        default: 'devel'
-        type: string
-        required: true
-      runtest:
-        description: 'Check: Unit tests (mtests)'
-        default: 'off'
-        type: string
-        required: true
-      publish:
-        description: 'Publish to FTP: on - publish'
-        default: 'off'
-        type: string
-        required: true
   workflow_dispatch:
     inputs:
       manual_name:
@@ -89,12 +58,13 @@ jobs:
       uses: actions/checkout@v4
       # with:
       #   fetch-depth: 0 # entire history for all branches and tags
-    - id: gen1
-      name: github workflow on push inputs empty bug workaround # ${{ inputs.platforms }} empty on push bug
+    - name: debug_passing_publishdev  # ${{ inputs.platforms }} empty on push
       run: |
         echo "inputs.platforms=${{ inputs.platforms }}"
         echo "github.event_name=${{github.event_name}}"
-
+    - id: gen1
+      name: empty inputs on push workaround
+      run: |
         if [[ "${{ github.event_name }}" == "push" ]]; then
           echo "platforms='linux_x64 macos_intel macos_apple windows_x64 windows_x32 windows_x32_portable windows_x64_portable'" >> "$GITHUB_OUTPUT"
           echo "build_mode='devel'" >> "$GITHUB_OUTPUT"
@@ -119,7 +89,6 @@ jobs:
         else
           echo "release_tag=$(git log -1 --format=%cd --date=format:%Y%m%d)" >> "$GITHUB_OUTPUT"
         fi
-        
 
   build:
     name: Build

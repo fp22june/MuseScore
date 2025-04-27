@@ -1,12 +1,12 @@
 name: 'Build: Windows'
 
 on:
-  push:
-    branches:
-    - 3.x
-  pull_request:
   schedule:
     - cron: '0 4 */1 * *' # At 04:00 on every day-of-month
+  push: # no "inputs" field for push
+    branches:
+    - 3.x
+    - temp22
   workflow_dispatch:
     inputs:
       platforms:
@@ -24,7 +24,7 @@ on:
         default: 'off'
         type: string
         required: false
-  workflow_call:
+  workflow_call: # simple copy paste. "default" fields under non workflow_dispatch are ignored (unsure) 
     inputs:
       platforms:
         description: 'Platforms to build:'
@@ -43,8 +43,35 @@ on:
         required: false
 
 jobs:
+  plan:
+    name: Generate strings
+    runs-on: ubuntu-latest
+    outputs:
+      platforms: ${{ steps.gen1.outputs.platforms }}
+      build_mode: ${{ steps.gen1.outputs.build_mode }}
+      publish: ${{ steps.gen1.outputs.publish }}
+    steps:
+    - name: debug passing buildwinyml  # ${{ inputs.platforms }} empty on push
+      run: |
+        echo "inputs.platforms=${{ inputs.platforms }}"
+    - id: gen1
+      name: empty inputs on push workaround
+      run: |
+        if [[ "${{ github.event_name }}" == "push" ]]; then
+          echo "platforms='windows_x64 windows_x32 windows_x32_portable windows_x64_portable'" >> "$GITHUB_OUTPUT"
+          echo "build_mode='devel'" >> "$GITHUB_OUTPUT"
+          echo "runtest='off'" >> "$GITHUB_OUTPUT"
+          echo "publish='off'" >> "$GITHUB_OUTPUT"
+        else
+          echo "platforms=${{ inputs.platforms }}" >> "$GITHUB_OUTPUT"
+          echo "build_mode=${{ inputs.build_mode }}" >> "$GITHUB_OUTPUT"
+          echo "runtest=${{ inputs.runtest }}" >> "$GITHUB_OUTPUT"
+          echo "publish=${{ inputs.publish }}" >> "$GITHUB_OUTPUT"
+        fi
   windows_x64:
-    if: contains(inputs.platforms, 'windows_x64')
+    if: contains(needs.plan.outputs.platforms, 'windows_x64')
+    needs:
+      - plan
     runs-on: windows-2022
     steps:
     - name: Cancel Previous Runs
@@ -60,14 +87,14 @@ jobs:
       env:
         pull_request_title: ${{ github.event.pull_request.title }}
       run: |
-        bash ./build/ci/tools/make_build_mode_env.sh -e ${{ github.event_name }} -m ${{ inputs.build_mode }}
+        bash ./build/ci/tools/make_build_mode_env.sh -e ${{ github.event_name }} -m ${{ needs.plan.outputs.build_mode }}
         BUILD_MODE=$(cat ./build.artifacts/env/build_mode.env)
 
         bash ./build/ci/tools/make_build_number.sh
         BUILD_NUMBER=$(cat ./build.artifacts/env/build_number.env)
 
         DO_PUBLISH='false'
-        if [[ "${{ inputs.publish }}" == "on" || ("${{ github.event_name }}" == "schedule" && "$BUILD_MODE" == "nightly") ]]; then
+        if [[ "${{ needs.plan.outputs.publish }}" == "on" || ("${{ github.event_name }}" == "schedule" && "$BUILD_MODE" == "nightly") ]]; then
           DO_PUBLISH='true'
           if [ -z "${{ secrets.OSUOSL_SSH_ENCRYPT_SECRET }}" ]; then
             echo "::warning::OSUOSL_SSH_ENCRYPT_SECRET is empty; not publishing to OSUOSL"
@@ -124,7 +151,9 @@ jobs:
         path: build.artifacts\
 
   windows_x32:
-    if: contains(inputs.platforms, 'windows_x32')
+    if: contains(needs.plan.outputs.platforms, 'windows_x32')
+    needs:
+      - plan
     runs-on: windows-2022
     steps:
     - name: Cancel Previous Runs
@@ -140,14 +169,14 @@ jobs:
       env:
         pull_request_title: ${{ github.event.pull_request.title }}
       run: |
-        bash ./build/ci/tools/make_build_mode_env.sh -e ${{ github.event_name }} -m ${{ inputs.build_mode }}
+        bash ./build/ci/tools/make_build_mode_env.sh -e ${{ github.event_name }} -m ${{ needs.plan.outputs.build_mode }}
         BUILD_MODE=$(cat ./build.artifacts/env/build_mode.env)
 
         bash ./build/ci/tools/make_build_number.sh
         BUILD_NUMBER=$(cat ./build.artifacts/env/build_number.env)
 
         DO_PUBLISH='false'
-        if [[ "${{ inputs.publish }}" == "on" || ("${{ github.event_name }}" == "schedule" && "$BUILD_MODE" == "nightly") ]]; then
+        if [[ "${{ needs.plan.outputs.publish }}" == "on" || ("${{ github.event_name }}" == "schedule" && "$BUILD_MODE" == "nightly") ]]; then
           DO_PUBLISH='true'
           if [ -z "${{ secrets.OSUOSL_SSH_ENCRYPT_SECRET }}" ]; then
             echo "::warning::OSUOSL_SSH_ENCRYPT_SECRET is empty; not publishing to OSUOSL"
@@ -204,7 +233,9 @@ jobs:
         path: build.artifacts\
 
   windows_portable_x32:
-    if: contains(inputs.platforms, 'windows_portable_x32')
+    if: contains(needs.plan.outputs.platforms, 'windows_portable_x32')
+    needs:
+      - plan
     runs-on: windows-2022
     steps:
     - name: Cancel Previous Runs
@@ -220,14 +251,14 @@ jobs:
       env:
         pull_request_title: ${{ github.event.pull_request.title }}
       run: |
-        bash ./build/ci/tools/make_build_mode_env.sh -e ${{ github.event_name }} -m ${{ inputs.build_mode }}
+        bash ./build/ci/tools/make_build_mode_env.sh -e ${{ github.event_name }} -m ${{ needs.plan.outputs.build_mode }}
         BUILD_MODE=$(cat ./build.artifacts/env/build_mode.env)
 
         bash ./build/ci/tools/make_build_number.sh
         BUILD_NUMBER=$(cat ./build.artifacts/env/build_number.env)
 
         DO_PUBLISH='false'
-        if [[ "${{ inputs.publish }}" == "on" || ("${{ github.event_name }}" == "schedule" && "$BUILD_MODE" == "nightly") ]]; then
+        if [[ "${{ needs.plan.outputs.publish }}" == "on" || ("${{ github.event_name }}" == "schedule" && "$BUILD_MODE" == "nightly") ]]; then
           DO_PUBLISH='true'
           if [ -z "${{ secrets.OSUOSL_SSH_ENCRYPT_SECRET }}" ]; then
             echo "::warning::OSUOSL_SSH_ENCRYPT_SECRET is empty; not publishing to OSUOSL"
@@ -283,7 +314,9 @@ jobs:
         path: build.artifacts\
 
   windows_portable_x64:
-    if: contains(inputs.platforms, 'windows_portable_x64')
+    if: contains(needs.plan.outputs.platforms, 'windows_portable_x64')
+    needs:
+      - plan
     runs-on: windows-2022
     steps:
     - name: Cancel Previous Runs
@@ -299,14 +332,14 @@ jobs:
       env:
         pull_request_title: ${{ github.event.pull_request.title }}
       run: |
-        bash ./build/ci/tools/make_build_mode_env.sh -e ${{ github.event_name }} -m ${{ inputs.build_mode }}
+        bash ./build/ci/tools/make_build_mode_env.sh -e ${{ github.event_name }} -m ${{ needs.plan.outputs.build_mode }}
         BUILD_MODE=$(cat ./build.artifacts/env/build_mode.env)
 
         bash ./build/ci/tools/make_build_number.sh
         BUILD_NUMBER=$(cat ./build.artifacts/env/build_number.env)
 
         DO_PUBLISH='false'
-        if [[ "${{ inputs.publish }}" == "on" || ("${{ github.event_name }}" == "schedule" && "$BUILD_MODE" == "nightly") ]]; then
+        if [[ "${{ needs.plan.outputs.publish }}" == "on" || ("${{ github.event_name }}" == "schedule" && "$BUILD_MODE" == "nightly") ]]; then
           DO_PUBLISH='true'
           if [ -z "${{ secrets.OSUOSL_SSH_ENCRYPT_SECRET }}" ]; then
             echo "::warning::OSUOSL_SSH_ENCRYPT_SECRET is empty; not publishing to OSUOSL"
