@@ -9,28 +9,52 @@ on:
     - cron: '0 4 */1 * *' # At 04:00 on every day-of-month
   workflow_dispatch:
     inputs:
+      platforms:
+        description: 'Platforms to build:'
+        default: 'linux_x64'
+        type: string
+        required: true
       build_mode:
         description: 'Build mode: devel, nightly, testing, stable'
         default: 'devel'
+        type: string
         required: true
+      runtest:
+        description: 'Check: Unit tests (mtests)'
+        default: 'on'
+        type: string
+        required: false
       publish:
         description: 'Publish to FTP: on - publish'
         default: 'off'
+        type: string
         required: false
   workflow_call:
     inputs:
+      platforms:
+        description: 'Platforms to build:'
+        default: 'linux_x64'
+        type: string
+        required: true
       build_mode:
         description: 'Build mode: devel, nightly, testing, stable'
         default: 'devel'
         type: string
         required: true
+      runtest:
+        description: 'Check: Unit tests (mtests)'
+        default: 'on'
+        type: string
+        required: false
       publish:
         description: 'Publish to FTP: on - publish'
         default: 'off'
         type: string
+        required: false
 
 jobs:
   linux_x64:
+    if: ${{ contains(inputs.platforms, 'linux_x64') }}
     runs-on: ubuntu-22.04
     steps:
     - name: Cancel Previous Runs
@@ -95,6 +119,7 @@ jobs:
         path: ./build.artifacts/
 
   run_mtests:
+    if: inputs.runtest == 'on'
     runs-on: ubuntu-22.04
     env:
         # Enable AddressSanitizer in the mtest build

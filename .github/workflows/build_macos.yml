@@ -17,10 +17,12 @@ on:
       build_mode:
         description: 'Build mode: devel, nightly, testing, stable'
         default: 'devel'
+        type: string
         required: true
       publish:
         description: 'Publish to FTP: on - publish'
         default: 'off'
+        type: string
         required: false
   workflow_call:
     inputs:
@@ -45,6 +47,7 @@ env:
 
 jobs:
   macos_apple:
+    if: contains(inputs.platforms, 'macos_apple')
     runs-on: macos-13
     steps:
     - name: Cancel Previous Runs
@@ -143,6 +146,7 @@ jobs:
         path: ./build.artifacts/
 
   macos_intel:
+    if: contains(inputs.platforms, 'macos_intel')
     runs-on: macos-13
     steps:
     - name: Cancel Previous Runs
