@@ -63,6 +63,7 @@ jobs:
     steps:
     - name: debug passing buildlinuxyml  # ${{ inputs.platforms }} empty on push
       run: |
+        echo "github.event_name=${{github.event_name}}"
         echo "inputs.platforms=${{ inputs.platforms }}"
     - id: gen1
       name: empty inputs on push workaround
@@ -78,6 +79,10 @@ jobs:
           echo "runtest=${{ inputs.runtest }}" >> "$GITHUB_OUTPUT"
           echo "publish=${{ inputs.publish }}" >> "$GITHUB_OUTPUT"
         fi
+    - name: debug after
+      run: |
+        echo "needs.plan.outputs.platforms=${{ needs.plan.outputs.platforms }}"
+        
   linux_x64:
     if: ${{ contains(needs.plan.outputs.platforms, 'linux_x64') }}
     needs:

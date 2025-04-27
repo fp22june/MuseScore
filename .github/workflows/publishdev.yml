@@ -1,7 +1,7 @@
 name: Build and draft release
 
 on:
-  push:
+  push: # no "inputs" field for push
     branches:
     - temp21
   workflow_dispatch:
@@ -60,8 +60,8 @@ jobs:
       #   fetch-depth: 0 # entire history for all branches and tags
     - name: debug_passing_publishdev  # ${{ inputs.platforms }} empty on push
       run: |
-        echo "inputs.platforms=${{ inputs.platforms }}"
         echo "github.event_name=${{github.event_name}}"
+        echo "inputs.platforms=${{ inputs.platforms }}"
     - id: gen1
       name: empty inputs on push workaround
       run: |
@@ -89,6 +89,9 @@ jobs:
         else
           echo "release_tag=$(git log -1 --format=%cd --date=format:%Y%m%d)" >> "$GITHUB_OUTPUT"
         fi
+    - name: debug after
+      run: |
+        echo "needs.plan.outputs.platforms=${{ needs.plan.outputs.platforms }}"
 
   build:
     name: Build

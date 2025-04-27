@@ -79,6 +79,7 @@ jobs:
     steps:
     - name: debug passing buildallyml  # ${{ inputs.platforms }} empty on push
       run: |
+        echo "github.event_name=${{github.event_name}}"
         echo "inputs.platforms=${{ inputs.platforms }}"
     - id: gen1
       name: empty inputs on push workaround
@@ -96,6 +97,9 @@ jobs:
           echo "publish=${{ inputs.publish }}" >> "$GITHUB_OUTPUT"
           echo "runtestjob=${{ inputs.runtestjob }}" >> "$GITHUB_OUTPUT"
         fi
+    - name: debug after
+      run: |
+        echo "needs.plan.outputs.platforms=${{ needs.plan.outputs.platforms }}"
 
   linux:
     name: Linux
@@ -154,7 +158,7 @@ jobs:
         ARTIFACTS_DIR="build.artifacts"
         echo "ARTIFACTS_DIR=${ARTIFACTS_DIR}" | tee -a "${GITHUB_ENV}"
 
-        build/ci/tools/make_build_mode_env.sh -e "${{ github.event_name }}" -m "${{ inputs.build_mode }}"
+        build/ci/tools/make_build_mode_env.sh -e "${{ github.event_name }}" -m "${{ needs.plan.outputs.build_mode }}"
         BUILD_MODE="$(<"${ARTIFACTS_DIR}/env/build_mode.env")"
 
         case "${BUILD_MODE}" in
