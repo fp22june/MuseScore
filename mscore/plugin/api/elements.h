@@ -30,6 +30,8 @@
 #include "libmscore/accidental.h"
 #include "libmscore/musescoreCore.h"
 #include "libmscore/score.h"
+#include "libmscore/spanner.h"
+#include "libmscore/system.h"
 #include "libmscore/undo.h"
 #include "playevent.h"
 #include "libmscore/types.h"
@@ -916,6 +918,56 @@ class Staff : public ScoreElement {
 
       Part* part();
       /// \endcond
+      };
+
+//---------------------------------------------------------
+//   SpannerSegment
+//---------------------------------------------------------
+
+class SpannerSegment : public Element {
+      Q_OBJECT
+      Q_PROPERTY(int x READ x)
+
+   public:
+      /// \cond MS_INTERNAL
+      SpannerSegment(Ms::SpannerSegment* e = nullptr, Ownership own = Ownership::PLUGIN)
+         : Element(e, own) {}
+
+      /// \brief Returns the underlying Ms::Element
+      /// \{
+      Ms::SpannerSegment* spannerSegment() { return toSpannerSegment(e); }
+      const Ms::SpannerSegment* spannerSegment() const { return toSpannerSegment(e); }
+      /// \}
+      /// \endcond
+
+      int x(){return 1;}
+
+      };
+
+//---------------------------------------------------------
+//   System
+//---------------------------------------------------------
+
+class System : public Element {
+      Q_OBJECT
+      Q_PROPERTY(QQmlListProperty<Ms::PluginAPI::SpannerSegment> spannerSegments READ spannerSegments)
+      Q_PROPERTY(int y READ y)
+
+   public:
+      /// \cond MS_INTERNAL
+      System(Ms::System* e = nullptr, Ownership own = Ownership::PLUGIN)
+         : Element(e, own) {}
+
+      /// \brief Returns the underlying Ms::Element
+      /// \{
+      Ms::System* system() { return toSystem(e); }
+      const Ms::System* system() const { return toSystem(e); }
+      /// \}
+      /// \endcond
+
+      QQmlListProperty<SpannerSegment> spannerSegments() { return wrapContainerProperty<SpannerSegment>(this, system()->spannerSegments()); }
+      int y(){return 1;}
+
       };
 
 #undef API_PROPERTY

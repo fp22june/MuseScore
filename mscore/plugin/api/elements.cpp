@@ -305,10 +305,13 @@ Element* wrap(Ms::Element* e, Ownership own)
                   return wrap<Tuplet>(toTuplet(e), own);
             case ElementType::SEGMENT:
                   return wrap<Segment>(toSegment(e), own);
+            case ElementType::VBOX:
             case ElementType::MEASURE:
                   return wrap<Measure>(toMeasure(e), own);
             case ElementType::PAGE:
                   return wrap<Page>(toPage(e), own);
+            case ElementType::SYSTEM:
+                  return wrap<System>(toSystem(e), own);
             default:
                   if (e->isDurationElement()) {
                         if (e->isChordRest())
