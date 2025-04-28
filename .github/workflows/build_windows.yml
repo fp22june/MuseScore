@@ -69,6 +69,13 @@ jobs:
           echo "runtest=${{ inputs.runtest }}" >> "$GITHUB_OUTPUT"
           echo "publish=${{ inputs.publish }}" >> "$GITHUB_OUTPUT"
         fi
+
+  debugafter:
+    name: debug after
+    needs:
+      - plan
+    runs-on: ubuntu-latest
+    steps:
     - name: debug after
       run: |
         echo "needs.plan.outputs.platforms=${{ needs.plan.outputs.platforms }}"

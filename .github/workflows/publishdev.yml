@@ -3,7 +3,7 @@ name: Build and draft release
 on:
   push: # no "inputs" field for push
     branches:
-    - temp21
+    - temp23
   workflow_dispatch:
     inputs:
       manual_name:
@@ -89,6 +89,13 @@ jobs:
         else
           echo "release_tag=$(git log -1 --format=%cd --date=format:%Y%m%d)" >> "$GITHUB_OUTPUT"
         fi
+
+  debugafter:
+    name: debug after
+    needs:
+      - plan
+    runs-on: ubuntu-latest
+    steps:
     - name: debug after
       run: |
         echo "needs.plan.outputs.platforms=${{ needs.plan.outputs.platforms }}"
