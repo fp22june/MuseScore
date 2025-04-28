@@ -18,7 +18,7 @@ on:
         required: true
       platforms:
         description: 'Platforms to build:'
-        default: 'linux_x64 macos_intel macos_apple windows_x64 windows_x32 windows_x32_portable windows_x64_portable'
+        default: 'linux_x64 macos_intel macos_apple windows_x64 windows_x32 windows_portable_x64 windows_portable_x32'
         type: string
         required: true
       build_mode:
@@ -66,7 +66,7 @@ jobs:
       name: empty inputs on push workaround
       run: |
         if [[ "${{ github.event_name }}" == "push" ]]; then
-          echo "platforms='linux_x64 macos_intel macos_apple windows_x64 windows_x32 windows_x32_portable windows_x64_portable'" >> "$GITHUB_OUTPUT"
+          echo "platforms='linux_x64 macos_intel macos_apple windows_x64 windows_x32 windows_portable_x64 windows_portable_x32'" >> "$GITHUB_OUTPUT"
           echo "build_mode='devel'" >> "$GITHUB_OUTPUT"
           echo "runtest='off'" >> "$GITHUB_OUTPUT"
           echo "publish='off'" >> "$GITHUB_OUTPUT"
