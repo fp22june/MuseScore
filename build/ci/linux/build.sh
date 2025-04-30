@@ -106,9 +106,9 @@ MUSESCORE_BUILD_WEBSOCKET="ON" \
   SHOW_HELP=0
   while [[ "$#" -gt 0 ]]; do
       case $1 in
-                                          -t|--target) TARGET="$2"; shift;;
+          -t|--target) TARGET="$2"; shift;;
           -j|--jobs) JOBS="$2"; shift;;
-                                          -h|--help) SHOW_HELP=1; shift;;
+          -h|--help) SHOW_HELP=1; shift;;
           *) echo "Unknown parameter passed: $1"; exit 1 ;;
       esac
       shift

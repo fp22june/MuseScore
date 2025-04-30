@@ -302,6 +302,7 @@ case "$PACKARCH" in
     ;;
   armv7l | aarch64)
     $SUDO apt-get install -y --no-install-recommends cmake
+    $SUDO apt-get install generate-ninja
     ;;
 esac
 cmake --version
