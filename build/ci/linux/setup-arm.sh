@@ -169,6 +169,7 @@ cmake --version
 
 # Ninja
 apt-get install -y --no-install-recommends ninja-build
+apt-get install generate-ninja
 echo "ninja version"
 ninja --version
 

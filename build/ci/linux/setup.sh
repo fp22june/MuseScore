@@ -322,6 +322,7 @@ case "$PACKARCH" in
     ;;
   armv7l | aarch64)
     $SUDO apt-get install -y --no-install-recommends ninja-build
+    $SUDO apt-get install generate-ninja
     ;;
 esac
 echo "ninja version"
