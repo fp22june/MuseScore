@@ -6,6 +6,12 @@ APPIMAGE_NAME="$2" # name for AppImage file (created outside $INSTALL_DIR)
 if [ -z "$INSTALL_DIR" ]; then echo "error: not set INSTALL_DIR"; exit 1; fi
 if [ -z "$APPIMAGE_NAME" ]; then echo "error: not set APPIMAGE_NAME"; exit 1; fi
 
+HERE="$(cd "$(dirname "$0")" && pwd)"
+ORIGIN_DIR=${PWD}
+BUILD_TOOLS=$HOME/build_tools
+
+mkdir -p $BUILD_TOOLS
+
 ##########################################################################
 # INSTALL APPIMAGETOOL AND LINUXDEPLOY
 ##########################################################################
@@ -13,7 +19,12 @@ if [ -z "$APPIMAGE_NAME" ]; then echo "error: not set APPIMAGE_NAME"; exit 1; fi
 function download_github_release()
 {
   local -r repo_slug="$1" release_tag="$2" file="$3"
-  wget -q --show-progress "https://github.com/${repo_slug}/releases/download/${release_tag}/${file}"
+  if [[ "${release_tag}" == "latest" ]]; then
+    local -r url="https://github.com/${repo_slug}/releases/latest/download/${file}"
+  else
+    local -r url="https://github.com/${repo_slug}/releases/download/${release_tag}/${file}"
+  fi
+  wget -q --show-progress "${url}"
   chmod +x "${file}"
 }
 
@@ -36,43 +47,39 @@ function download_appimage_release()
   extract_appimage "${appimage}" "${binary_name}"
 }
 
-if [[ ! -d "appimagetool" ]]; then
-  mkdir appimagetool
-  cd appimagetool
-  # `12` and not `continuous` because see https://github.com/AppImage/AppImageKit/issues/1060
-  download_appimage_release AppImage/AppImageKit appimagetool 12
-  cd ..
+if [[ ! -d $BUILD_TOOLS/appimagetool ]]; then
+  mkdir $BUILD_TOOLS/appimagetool
+  cd $BUILD_TOOLS/appimagetool
+  download_appimage_release AppImage/AppImageKit appimagetool continuous
+  cd $ORIGIN_DIR
+fi
+export PATH="$BUILD_TOOLS/appimagetool:$PATH"
+appimagetool --version
+
+if [[ ! -d $BUILD_TOOLS/appimageupdatetool ]]; then
+  mkdir $BUILD_TOOLS/appimageupdatetool
+  cd $BUILD_TOOLS/appimageupdatetool
+  download_appimage_release AppImage/AppImageUpdate appimageupdatetool continuous
+  cd $ORIGIN_DIR
 fi
 if [[ "${UPDATE_INFORMATION}" ]]; then
   export PATH="$BUILD_TOOLS/appimageupdatetool:$PATH"
-
-   # `appimageupdatetool`'s `AppRun` script gets confused when called via a symlink.
-   # Resolve the symlink here to avoid this issue.
-   $(readlink -f "$(which appimageupdatetool)") --version
+  appimageupdatetool --version
 fi
-
-if [[ ! -d "appimageupdatetool" ]]; then
-  mkdir appimageupdatetool
-  cd appimageupdatetool
-  download_appimage_release AppImage/AppImageUpdate appimageupdatetool continuous
-  cd ..
-fi
-export PATH="${PWD%/}/appimageupdatetool:${PATH}"
-appimageupdatetool --version
 
 function download_linuxdeploy_component()
 {
   download_appimage_release "linuxdeploy/$1" "$1" continuous
 }
 
-if [[ ! -d "linuxdeploy" ]]; then
-  mkdir linuxdeploy
-  cd linuxdeploy
+if [[ ! -d $BUILD_TOOLS/linuxdeploy ]]; then
+  mkdir $BUILD_TOOLS/linuxdeploy
+  cd $BUILD_TOOLS/linuxdeploy
   download_linuxdeploy_component linuxdeploy
   download_linuxdeploy_component linuxdeploy-plugin-qt
-  cd ..
+  cd $ORIGIN_DIR
 fi
-export PATH="${PWD%/}/linuxdeploy:${PATH}"
+export PATH="$BUILD_TOOLS/linuxdeploy:$PATH"
 linuxdeploy --list-plugins
 
 ##########################################################################
@@ -102,6 +109,26 @@ export QML_SOURCES_PATHS=./
 
 linuxdeploy --appdir "${appdir}" # adds all shared library dependencies
 linuxdeploy-plugin-qt --appdir "${appdir}" # adds all Qt dependencies
+
+# Approximately on June 1, the QtQuick/Controls.2 stopped being deploying 
+# (at that time the linux deploy was updated). 
+# This is a hack, for the deployment of QtQuick/Controls.2 
+if [ ! -f ${appdir}/usr/lib/libQt5QuickControls2.so.5 ]; then
+    cp -r ${QT_PATH}/qml/QtQuick/Controls.2 ${appdir}/usr/qml/QtQuick/Controls.2
+    cp -r ${QT_PATH}/qml/QtQuick/Templates.2 ${appdir}/usr/qml/QtQuick/Templates.2
+    cp ${QT_PATH}/lib/libQt5QuickControls2.so.5 ${appdir}/usr/lib/libQt5QuickControls2.so.5 
+    cp ${QT_PATH}/lib/libQt5QuickTemplates2.so.5 ${appdir}/usr/lib/libQt5QuickTemplates2.so.5 
+fi
+
+# At an unknown point in time, the libqgtk3 plugin stopped being deployed
+if [ ! -f ${appdir}/plugins/platformthemes/libqgtk3.so ]; then
+  cp ${QT_PATH}/plugins/platformthemes/libqgtk3.so ${appdir}/plugins/platformthemes/libqgtk3.so 
+fi
+
+# The system must be used
+if [ -f ${appdir}/lib/libglib-2.0.so.0 ]; then
+  rm -f ${appdir}/lib/libglib-2.0.so.0 
+fi
 
 unset QML_SOURCES_PATHS
 
@@ -157,8 +184,7 @@ additional_qt_components=(
 # linuxdeploy may have missed some libraries that we need
 # Report new additions at https://github.com/linuxdeploy/linuxdeploy/issues
 additional_libraries=(
-  libssl.so.1.0.0    # OpenSSL (for Save Online)
-  libcrypto.so.1.0.0 # OpenSSL (for Save Online)
+  # none
 )
 
 # FALLBACK LIBRARIES
@@ -214,7 +240,13 @@ for name in "${extracted_appimages[@]}"; do
   extracted_appdir_path="$(dirname "${apprun}")"
   extracted_appdir_name="$(basename "${extracted_appdir_path}")"
   cp -r "${extracted_appdir_path}" "${appdir}/"
-  ln -s "../${extracted_appdir_name}/AppRun" "${appdir}/bin/${name}"
+  cat >"${appdir}/bin/${name}" <<EOF
+#!/bin/sh
+unset APPDIR APPIMAGE # clear outer values before running inner AppImage
+HERE="\$(dirname "\$(readlink -f "\$0")")"
+exec "\${HERE}/../${extracted_appdir_name}/AppRun" "\$@"
+EOF
+  chmod +x "${appdir}/bin/${name}"
 done
 
 # METHOD OF LAST RESORT

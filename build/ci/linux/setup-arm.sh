@@ -52,12 +52,40 @@ echo "echo 'Setup MuseScore build environment'" >> $ENV_FILE
 # DISTRIBUTION PACKAGES
 
 apt_packages=(
-  cimg-dev
-  curl
-  desktop-file-utils
+# musescore 3 working linux x64 https://github.com/Jojo-Schmitz/MuseScore/blob/919eccce/build/ci/linux/setup.sh
+  # apt_packages_basic=(
   file
-  fuse
   git
+  # pkg-config # removed in musescore 4 # https://github.com/musescore/MuseScore/pull/25609
+  software-properties-common # installs `add-apt-repository`
+  unzip
+  p7zip-full
+  # apt_packages_standard=(
+  curl
+  libasound2-dev 
+  libfontconfig1-dev
+  libfreetype6-dev
+  libfreetype6
+  libgl1-mesa-dev
+  libjack-dev
+  libmp3lame-dev # removed in musescore 4
+  libnss3-dev
+  libportmidi-dev
+  libpulse-dev
+  libsndfile1-dev
+  make
+  portaudio19-dev # removed in musescore 4
+  wget # removed in musescore 4
+# adapt musescore 4
+# https://github.com/musescore/MuseScore/pull/15923
+# https://github.com/theofficialgman/MuseScore/blob/e37447ffa69a5047569f56c59e694c4c3601b308/build/ci/linux/setup-arm.sh
+# comment out duplicates from musescore 3
+  cimg-dev
+  # curl
+  desktop-file-utils
+  # file
+  fuse
+  # git
   gpg
   libboost-dev
   libboost-filesystem-dev
@@ -68,23 +96,23 @@ apt_packages=(
   libssl-dev
   patchelf
   pkg-config
-  software-properties-common # installs `add-apt-repository`
-  unzip
-  wget
+  # software-properties-common # installs `add-apt-repository`
+  # unzip
+  # wget
   xxd
-  p7zip-full
-  libasound2-dev 
-  libfontconfig1-dev
-  libfreetype6-dev
-  libfreetype6
-  libgl1-mesa-dev
-  libjack-dev
-  libnss3-dev
-  libportmidi-dev
-  libpulse-dev
-  libsndfile1-dev
-  zlib1g-dev
-  make
+  # p7zip-full
+  # libasound2-dev 
+  # libfontconfig1-dev
+  # libfreetype6-dev
+  # libfreetype6
+  # libgl1-mesa-dev
+  # libjack-dev
+  # libnss3-dev
+  # libportmidi-dev
+  # libpulse-dev
+  # libsndfile1-dev
+  # zlib1g-dev
+  # make
   patch
   coreutils
   gawk
@@ -102,10 +130,10 @@ apt_packages=(
 
 # MuseScore compiles without these but won't run without them
 apt_packages_runtime=(
+# musescore 3 working linux x64 https://github.com/Jojo-Schmitz/MuseScore/blob/919eccce/build/ci/linux/setup.sh
   libcups2
   libdbus-1-3
   libegl1-mesa-dev
-  libgles2-mesa-dev
   libodbc1
   libpq-dev
   libxcomposite-dev
@@ -115,6 +143,23 @@ apt_packages_runtime=(
   libxrandr2
   libxtst-dev
   libdrm-dev
+# adapt musescore 4
+# https://github.com/musescore/MuseScore/pull/15923
+# https://github.com/theofficialgman/MuseScore/blob/e37447ffa69a5047569f56c59e694c4c3601b308/build/ci/linux/setup-arm.sh
+# comment out duplicates from musescore 3
+  # libcups2
+  # libdbus-1-3
+  # libegl1-mesa-dev
+  libgles2-mesa-dev
+  # libodbc1
+  # libpq-dev
+  # libxcomposite-dev
+  # libxcursor-dev
+  # libxi-dev
+  # libxkbcommon-x11-0
+  # libxrandr2
+  # libxtst-dev
+  # libdrm-dev
   libxcb-icccm4
   libxcb-image0
   libxcb-keysyms1
@@ -136,14 +181,17 @@ DEBIAN_FRONTEND="noninteractive" TZ="Europe/London" apt-get install -y --no-inst
   "${apt_packages_runtime[@]}" \
   "${apt_packages_ffmpeg[@]}"
 
-# Add additional ppas (Qt 5.15.2, Cmake, and patchelf)
-# Poor naming of the cmake ppa, this ppa has bionic/focal/jammy dists
-add-apt-repository --yes ppa:theofficialgman/cmake-bionic
+# Add additional ppa (Qt 5.15.2 and CMake)
+
+# kitware is cmake
+wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null
+echo 'deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ bionic main' | tee /etc/apt/sources.list.d/kitware.list >/dev/null
+
 add-apt-repository --yes ppa:theofficialgman/opt-qt-5.15.2-focal-arm
-# minimum patchelf 0.12 needed for proper elf load memory alignment
-add-apt-repository --yes ppa:theofficialgman/patchelf
+# todo   add-apt-repository --yes ppa:theofficialgman/opt-qt-5.15.4-bionic-arm
+echo "using ppa:theofficialgman"
+
 apt-get update
-apt-get upgrade -y
 
 # add an exception for the "detected dubious ownership in repository" (only seen inside a Docker image)
 git config --global --add safe.directory /MuseScore
@@ -162,11 +210,19 @@ apt_packages_compiler=(
 apt-get install -y --no-install-recommends \
   "${apt_packages_compiler[@]}"
 
+update-alternatives \
+  --install /usr/bin/gcc gcc "$(readlink -f "$(which gcc)")" 40 \
+  --slave /usr/bin/g++ g++ "$(readlink -f "$(which g++)")"
+
+echo export CC="$(readlink -f "$(which gcc)")" >> ${ENV_FILE}
+echo export CXX="$(readlink -f "$(which g++)")" >> ${ENV_FILE}
+
 # CMAKE
 # Get newer CMake (only used cached version if it is the same)
 apt-get install -y --no-install-recommends cmake
 cmake --version
 
+# not backported, using cmake build.sh L73
 # Ninja
 apt-get install -y --no-install-recommends ninja-build
 echo "ninja version"
@@ -193,6 +249,7 @@ apt_packages_qt=(
   qt515wayland
   qt515x11extras
   qt515xmlpatterns
+  qt515webengine # main/cmakelists.txt L232 QtWebEngineProcess
   )
 
 apt-get install -y \
@@ -226,12 +283,8 @@ cd /
 
 git clone https://github.com/linuxdeploy/linuxdeploy
 cd /linuxdeploy/
-git checkout --recurse-submodules 1-alpha-20231206-1
+git checkout --recurse-submodules 49f4f237762395c6a37
 git submodule update --init --recursive
-
-# patch src/core/generate-excludelist.sh to use curl instead of wget which fails on armhf
-sed -i 's/wget --quiet "$url" -O -/curl "$url"/g' src/core/generate-excludelist.sh
-
 mkdir -p build
 cd build
 cmake -DBUILD_TESTING=OFF -DUSE_SYSTEM_BOOST=ON ..
@@ -247,17 +300,12 @@ cd /
 
 git clone https://github.com/linuxdeploy/linuxdeploy-plugin-qt
 cd /linuxdeploy-plugin-qt/
-git checkout --recurse-submodules 9a388d32b1e95d8b69e201356f050137eb6c0aa3
+git checkout --recurse-submodules 59b6c1f90e21ba14
 git submodule update --init --recursive
-
-# patch src/core/generate-excludelist.sh to use curl instead of wget which fails on armhf
-sed -i 's/wget --quiet "$url" -O -/curl "$url"/g' lib/linuxdeploy/src/core/generate-excludelist.sh
-
 mkdir -p build
 cd build
 cmake -DBUILD_TESTING=OFF -DUSE_SYSTEM_BOOST=ON ..
 cmake --build . -j $(nproc)
-mkdir -p $BUILD_TOOLS/linuxdeploy
 mv /linuxdeploy-plugin-qt/build/bin/linuxdeploy-plugin-qt $BUILD_TOOLS/linuxdeploy/linuxdeploy-plugin-qt
 $BUILD_TOOLS/linuxdeploy/linuxdeploy --list-plugins
 cd /
@@ -268,7 +316,7 @@ cd /
 
 git clone https://github.com/linuxdeploy/linuxdeploy-plugin-appimage
 cd /linuxdeploy-plugin-appimage/
-git checkout --recurse-submodules 1-alpha-20230713-1
+git checkout --recurse-submodules 779bd58443e8cc
 git submodule update --init --recursive
 mkdir -p build
 cd build
@@ -305,8 +353,23 @@ git checkout --recurse-submodules 2.0.0-alpha-1-20220512
 git submodule update --init --recursive
 mkdir -p build
 cd build
+# switch to using pkgconf
+# the following is a super ugly hack that exists upstream
+apt-get install -y --no-install-recommends pkgconf
 
-cmake -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_SYSTEM_NAME=Linux ..
+if [ "$PACKARCH" == "armv7l" ]; then
+  cp ../ci/libgcrypt.pc /usr/lib/arm-linux-gnueabihf/pkgconfig/libgcrypt.pc
+  sed -i 's|x86_64-linux-gnu|arm-linux-gnueabihf|g' /usr/lib/arm-linux-gnueabihf/pkgconfig/libgcrypt.pc
+  sed -i 's|x86_64-pc-linux-gnu|arm-pc-linux-gnueabihf|g' /usr/lib/arm-linux-gnueabihf/pkgconfig/libgcrypt.pc
+else
+  cp ../ci/libgcrypt.pc /usr/lib/aarch64-linux-gnu/pkgconfig/libgcrypt.pc
+  sed -i 's|x86_64|aarch64|g' /usr/lib/aarch64-linux-gnu/pkgconfig/libgcrypt.pc
+fi
+
+# the hack uses pkgconf to produce a partial makefile and then installs back pkg-config to finish producing the makefile
+cmake -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RelWithDebInfo .. || true
+apt-get install -y --no-install-recommends pkg-config
+cmake -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
 make -j"$(nproc)"
 # create the extracted appimage directory
 mkdir -p $BUILD_TOOLS/appimageupdatetool
@@ -316,6 +379,7 @@ cp -v ../resources/*.xpm $BUILD_TOOLS/appimageupdatetool/appimageupdatetool-${PA
 $BUILD_TOOLS/linuxdeploy/linuxdeploy -v0 --appdir $BUILD_TOOLS/appimageupdatetool/appimageupdatetool-${PACKARCH}.AppDir  --output appimage -d ../resources/appimageupdatetool.desktop -i ../resources/appimage.png
 cd $BUILD_TOOLS/appimageupdatetool
 ln -s "appimageupdatetool-${PACKARCH}.AppDir/AppRun" appimageupdatetool # symlink for convenience
+rm -rf /usr/lib/arm-linux-gnueabihf/pkgconfig/libgcrypt.pc /usr/lib/aarch64-linux-gnu/pkgconfig/libgcrypt.pc
 cd /
 $BUILD_TOOLS/appimageupdatetool/appimageupdatetool --version
 
@@ -326,24 +390,24 @@ rm -rf /linuxdeploy*
 rm -rf /AppImageKit
 rm -rf /AppImageUpdate
 
-# Dump syms
-if [ "$PACKARCH" == "armv7l" ]; then
-  echo "Get Breakpad"
-  breakpad_dir=$BUILD_TOOLS/breakpad
-  if [[ ! -d "$breakpad_dir" ]]; then
-    curl -o $BUILD_TOOLS/dump_syms.7z "https://s3.amazonaws.com/utils.musescore.org/breakpad/linux/armv7l/dump_syms.zip"
-    7z x -y $BUILD_TOOLS/dump_syms.7z -o"$breakpad_dir"
-  fi
-  echo export DUMPSYMS_BIN="$breakpad_dir/dump_syms" >> $ENV_FILE
-else
-  echo "Get Breakpad"
-  breakpad_dir=$BUILD_TOOLS/breakpad
-  if [[ ! -d "$breakpad_dir" ]]; then
-    curl -o $BUILD_TOOLS/dump_syms.7z "https://s3.amazonaws.com/utils.musescore.org/breakpad/linux/aarch64/dump_syms.zip"
-    7z x -y $BUILD_TOOLS/dump_syms.7z -o"$breakpad_dir"
-  fi
-  echo export DUMPSYMS_BIN="$breakpad_dir/dump_syms" >> $ENV_FILE
-fi
+# Dump syms                                  # Dump syms not backported yet
+# if [ "$PACKARCH" == "armv7l" ]; then
+#   echo "Get Breakpad"
+#   breakpad_dir=$BUILD_TOOLS/breakpad
+#   if [[ ! -d "$breakpad_dir" ]]; then
+#     wget -q --show-progress -O $BUILD_TOOLS/dump_syms.7z "https://s3.amazonaws.com/utils.musescore.org/breakpad/linux/armv7l/dump_syms.zip"
+#     7z x -y $BUILD_TOOLS/dump_syms.7z -o"$breakpad_dir"
+#   fi
+#   echo export DUMPSYMS_BIN="$breakpad_dir/dump_syms" >> $ENV_FILE
+# else
+#   echo "Get Breakpad"
+#   breakpad_dir=$BUILD_TOOLS/breakpad
+#   if [[ ! -d "$breakpad_dir" ]]; then
+#     wget -q --show-progress -O $BUILD_TOOLS/dump_syms.7z "https://s3.amazonaws.com/utils.musescore.org/breakpad/linux/aarch64/dump_syms.zip"
+#     7z x -y $BUILD_TOOLS/dump_syms.7z -o"$breakpad_dir"
+#   fi
+#   echo export DUMPSYMS_BIN="$breakpad_dir/dump_syms" >> $ENV_FILE
+# fi
 
 echo export PATH="${qt_dir}/bin:\${PATH}" >> ${ENV_FILE}
 echo export LD_LIBRARY_PATH="${qt_dir}/lib:\${LD_LIBRARY_PATH}" >> ${ENV_FILE}

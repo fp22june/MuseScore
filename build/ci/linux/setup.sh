@@ -173,6 +173,7 @@ if [[ ! -d "$cmake_dir" ]]; then
   wget -q --show-progress --no-check-certificate -O - "${cmake_url}" | tar --strip-components=1 -xz -C "${cmake_dir}"
 fi
 echo export PATH="$cmake_dir/bin:\${PATH}" >> ${ENV_FILE}
+export PATH="${PWD%/}/${cmake_dir}/bin:${PATH}"
 $cmake_dir/bin/cmake --version
 
 # Ninja
