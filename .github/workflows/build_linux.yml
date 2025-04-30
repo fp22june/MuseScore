@@ -72,7 +72,7 @@ jobs:
 
     - name: Setup environment
       run: |
-        bash ./build/ci/linux/setup.sh --arch armv7l
+        bash ./build/ci/linux/setup.sh
     - name: Build
       run: |
         T_ID=${{ secrets.TELEMETRY_TRACK_ID }}; if [ -z "$T_ID" ]; then T_ID="''"; fi

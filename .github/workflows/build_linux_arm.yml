@@ -226,7 +226,7 @@ jobs:
         ADD_INFO="_${GITHUB_REF#refs/heads/}"
         if [ "${{ github.event_name }}" == "schedule" ] && [ "${{ github.event.schedule }}" == "0 5 */1 */1 *" ]; then ADD_INFO="_${CURRENT_RELEASE_BRANCH}"; fi
         if [ "${{ github.event_name }}" == "pull_request" ]; then ADD_INFO="_${{ github.event.pull_request.number }}_${pull_request_title}"; fi
-        UPLOAD_ARTIFACT_NAME="$(tr '":<>|*?/\\' '_' <<<"MU37_${BUILD_NUMBER}_Lin_aarch64${ADD_INFO}")"
+        UPLOAD_ARTIFACT_NAME="$(tr '":<>|*?/\\' '_' <<<"MU37_${BUILD_NUMBER}_Lin_armv7l${ADD_INFO}")"
 
         echo "github.repository: ${{ github.repository }}"
         echo "BUILD_MODE=$BUILD_MODE" >> $GITHUB_ENV
@@ -254,10 +254,10 @@ jobs:
         # YT_API_KEY=${{ secrets.YOUTUBE_API_KEY }}; if [ -z "$YT_API_KEY" ]; then YT_API_KEY="''"; fi
         # C_URL=${SENTRY_URL}; if [ -z "$C_URL" ]; then C_URL="''"; fi
         sudo docker run -i -v "${PWD}:/MuseScore" "arm64v8/ubuntu:focal" /bin/bash -c "cd /MuseScore && \
-        bash /MuseScore/build/ci/linux/setup.sh --arch aarch64 && \
-        bash /MuseScore/build/ci/linux/build.sh -n ${{ env.BUILD_NUMBER }} --arch aarch64  && \
+        bash /MuseScore/build/ci/linux/setup.sh --arch armv7l && \
+        bash /MuseScore/build/ci/linux/build.sh -n ${{ env.BUILD_NUMBER }} - -arch armv7l  && \
         bash ./build/ci/linux/dumpsyms.sh && \
-        bash /MuseScore/build/ci/linux/package.sh --arch aarch64 && \
+        bash /MuseScore/build/ci/linux/package.sh  --arch armv7l && \
         bash /MuseScore/build/ci/tools/checksum.sh"
     # - name: Upload dump symbols
     #   if: env.DO_UPLOAD_SYMBOLS == 'true'
@@ -266,7 +266,7 @@ jobs:
     # - name: Publish package
     #   if: env.DO_PUBLISH == 'true'
     #   run: |
-    #     sudo bash ./build/ci/tools/osuosl/publish.sh -s ${{ secrets.OSUOSL_SSH_ENCRYPT_SECRET }} --os linux --arch aarch64 -v 4
+    #     sudo bash ./build/ci/tools/osuosl/publish.sh -s ${{ secrets.OSUOSL_SSH_ENCRYPT_SECRET }} --os linux --arch armv7l -v 4
     - name: Upload artifacts on GitHub
       if: env.DO_BUILD == 'true'
       uses: actions/upload-artifact@v4
