@@ -131,22 +131,23 @@ jobs:
     - name: Setup, Generate, Update, Build the AppImage
       if: env.DO_BUILD == 'true'
       run: |
-        YT_API_KEY=${{ secrets.YOUTUBE_API_KEY }}; if [ -z "$YT_API_KEY" ]; then YT_API_KEY="''"; fi
-        C_URL=${SENTRY_URL}; if [ -z "$C_URL" ]; then C_URL="''"; fi
+        # YT_API_KEY=${{ secrets.YOUTUBE_API_KEY }}; if [ -z "$YT_API_KEY" ]; then YT_API_KEY="''"; fi
+        # C_URL=${SENTRY_URL}; if [ -z "$C_URL" ]; then C_URL="''"; fi
         sudo docker run -i -v "${PWD}:/MuseScore" "arm32v7/ubuntu:focal" /bin/bash -c "cd /MuseScore && \
-        bash /MuseScore/build/ci/linux/setup-arm.sh --arch armv7l && \
-        bash /MuseScore/build/ci/linux/build.sh -n ${{ env.BUILD_NUMBER }} --youtube_api_key $YT_API_KEY --crash_log_url $C_URL --arch armv7l && \
-        bash ./build/ci/linux/dumpsyms.sh && \
+        bash /MuseScore/build/ci/linux/setup.sh --arch armv7l && \
+        bash /MuseScore/build/ci/linux/build.sh -n ${{ env.BUILD_NUMBER }} --arch aarch64  && \
+        # --youtube_api_key $YT_API_KEY --crash_log_url $C_URL  && \
+        # bash ./build/ci/linux/dumpsyms.sh && \
         bash /MuseScore/build/ci/linux/package.sh --arch armv7l && \
         bash /MuseScore/build/ci/tools/checksum.sh"
-    - name: Upload dump symbols
-      if: env.DO_UPLOAD_SYMBOLS == 'true'
-      run: |
-        sudo bash ./build/ci/tools/sentry_syms_upload.sh -t ${{ secrets.SENTRY_AUTH_TOKEN }} -p ${SENTRY_PROJECT}
-    - name: Publish package
-      if: env.DO_PUBLISH == 'true'
-      run: |
-        sudo bash ./build/ci/tools/osuosl/publish.sh -s ${{ secrets.OSUOSL_SSH_ENCRYPT_SECRET }} --os linux --arch armv7l -v 4
+    # - name: Upload dump symbols
+    #   if: env.DO_UPLOAD_SYMBOLS == 'true'
+    #   run: |
+    #     sudo bash ./build/ci/tools/sentry_syms_upload.sh -t ${{ secrets.SENTRY_AUTH_TOKEN }} -p ${SENTRY_PROJECT}
+    # - name: Publish package
+    #   if: env.DO_PUBLISH == 'true'
+    #   run: |
+    #     sudo bash ./build/ci/tools/osuosl/publish.sh -s ${{ secrets.OSUOSL_SSH_ENCRYPT_SECRET }} --os linux --arch armv7l -v 4
     - name: Upload artifacts on GitHub
       if: env.DO_BUILD == 'true'
       uses: actions/upload-artifact@v4
@@ -250,22 +251,23 @@ jobs:
     - name: Setup, Generate, Update, Build the AppImage
       if: env.DO_BUILD == 'true'
       run: |
-        YT_API_KEY=${{ secrets.YOUTUBE_API_KEY }}; if [ -z "$YT_API_KEY" ]; then YT_API_KEY="''"; fi
-        C_URL=${SENTRY_URL}; if [ -z "$C_URL" ]; then C_URL="''"; fi
+        # YT_API_KEY=${{ secrets.YOUTUBE_API_KEY }}; if [ -z "$YT_API_KEY" ]; then YT_API_KEY="''"; fi
+        # C_URL=${SENTRY_URL}; if [ -z "$C_URL" ]; then C_URL="''"; fi
         sudo docker run -i -v "${PWD}:/MuseScore" "arm64v8/ubuntu:focal" /bin/bash -c "cd /MuseScore && \
         bash /MuseScore/build/ci/linux/setup-arm.sh --arch aarch64 && \
-        bash /MuseScore/build/ci/linux/build.sh -n ${{ env.BUILD_NUMBER }} --youtube_api_key $YT_API_KEY --crash_log_url $C_URL --arch aarch64 && \
+        bash /MuseScore/build/ci/linux/build.sh -n ${{ env.BUILD_NUMBER }} --arch aarch64  && \
+        # --youtube_api_key $YT_API_KEY --crash_log_url $C_URL  && \
         bash ./build/ci/linux/dumpsyms.sh && \
         bash /MuseScore/build/ci/linux/package.sh --arch aarch64 && \
         bash /MuseScore/build/ci/tools/checksum.sh"
-    - name: Upload dump symbols
-      if: env.DO_UPLOAD_SYMBOLS == 'true'
-      run: |
-        sudo bash ./build/ci/tools/sentry_syms_upload.sh -t ${{ secrets.SENTRY_AUTH_TOKEN }} -p ${SENTRY_PROJECT}
-    - name: Publish package
-      if: env.DO_PUBLISH == 'true'
-      run: |
-        sudo bash ./build/ci/tools/osuosl/publish.sh -s ${{ secrets.OSUOSL_SSH_ENCRYPT_SECRET }} --os linux --arch aarch64 -v 4
+    # - name: Upload dump symbols
+    #   if: env.DO_UPLOAD_SYMBOLS == 'true'
+    #   run: |
+    #     sudo bash ./build/ci/tools/sentry_syms_upload.sh -t ${{ secrets.SENTRY_AUTH_TOKEN }} -p ${SENTRY_PROJECT}
+    # - name: Publish package
+    #   if: env.DO_PUBLISH == 'true'
+    #   run: |
+    #     sudo bash ./build/ci/tools/osuosl/publish.sh -s ${{ secrets.OSUOSL_SSH_ENCRYPT_SECRET }} --os linux --arch aarch64 -v 4
     - name: Upload artifacts on GitHub
       if: env.DO_BUILD == 'true'
       uses: actions/upload-artifact@v4
