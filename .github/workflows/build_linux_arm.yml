@@ -3,7 +3,10 @@ name: 'Build: Linux ARM'
 on:
   schedule:
     - cron: '0 3 */1 */1 *' # At 03:00 on every day-of-month for master
-    # - cron: '0 3 */1 */1 *' # At 05:00 on every day-of-month for current release branch
+  push:
+    branches:
+    - temp28
+  pull_request:
   workflow_dispatch:
     inputs:
       build_mode:
@@ -11,11 +14,11 @@ on:
         required: true
         default: 'devel_build'
       publish:
-        description: 'Publish to FTP: on - publish'
+        description: 'Publish to FTP: on - publish (obselete)'
         required: false
         default: 'off'
       sentry_project:
-        description: 'Upload symbols and dumps to Sentry (choose a project): mu37(default for stable build), sandbox'
+        description: 'Crash dumping (bash and files not backported yet, need api access sentry_key sentry.musescore.org)' # 'Upload symbols and dumps to Sentry (choose a project): mu37(default for stable build), sandbox'
         required: false
         default: ''
 
@@ -24,7 +27,7 @@ on:
 
 jobs:
   build_armhf:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-arm
     steps:
     - name: Cancel Previous Runs
       uses: styfle/cancel-workflow-action@0.12.1
@@ -54,7 +57,7 @@ jobs:
         BUILD_NUMBER=$(cat ./build.artifacts/env/build_number.env)
 
         DO_PUBLISH='false'
-        if [[ "${{ github.event.inputs.publish }}" == "on" || "$BUILD_MODE" == "nightly_build" ]]; then 
+        if [[ "${{ github.event.inputs.publish }}" == "on" ]]; then 
           DO_PUBLISH='true'
           if [ -z "${{ secrets.OSUOSL_SSH_ENCRYPT_SECRET }}" ]; then 
             echo "warning: not set OSUOSL_SSH_ENCRYPT_SECRET, publish disabled" 
@@ -128,12 +131,11 @@ jobs:
     - name: Setup, Generate, Update, Build the AppImage
       if: env.DO_BUILD == 'true'
       run: |
-        YT_API_KEY=${{ secrets.YOUTUBE_API_KEY }}; if [ -z "$YT_API_KEY" ]; then YT_API_KEY="''"; fi
+        T_ID=${{ secrets.TELEMETRY_TRACK_ID }}; if [ -z "$T_ID" ]; then T_ID="''"; fi
         C_URL=${SENTRY_URL}; if [ -z "$C_URL" ]; then C_URL="''"; fi
         sudo docker run -i -v "${PWD}:/MuseScore" "arm32v7/ubuntu:focal" /bin/bash -c "cd /MuseScore && \
         bash /MuseScore/build/ci/linux/setup-arm.sh --arch armv7l && \
-        bash /MuseScore/build/ci/linux/build.sh -n ${{ env.BUILD_NUMBER }} --youtube_api_key $YT_API_KEY --crash_log_url $C_URL --arch armv7l && \
-        bash ./build/ci/linux/dumpsyms.sh && \
+        bash /MuseScore/build/ci/linux/build.sh -n ${{ env.BUILD_NUMBER }} --crash_log_url $C_URL -n ${{ github.run_id }} --telemetry $T_ID  && \
         bash /MuseScore/build/ci/linux/package.sh --arch armv7l && \
         bash /MuseScore/build/ci/tools/checksum.sh"
     - name: Upload dump symbols
@@ -152,7 +154,7 @@ jobs:
         path: ./build.artifacts/
 
   build_arm64:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-22.04-arm
     steps:
     - name: Cancel Previous Runs
       uses: styfle/cancel-workflow-action@0.12.1
@@ -179,7 +181,7 @@ jobs:
         BUILD_NUMBER=$(cat ./build.artifacts/env/build_number.env)
 
         DO_PUBLISH='false'
-        if [[ "${{ github.event.inputs.publish }}" == "on" || "$BUILD_MODE" == "nightly_build" ]]; then 
+        if [[ "${{ github.event.inputs.publish }}" == "on" ]]; then 
           DO_PUBLISH='true'
           if [ -z "${{ secrets.OSUOSL_SSH_ENCRYPT_SECRET }}" ]; then 
             echo "warning: not set OSUOSL_SSH_ENCRYPT_SECRET, publish disabled" 
@@ -247,12 +249,11 @@ jobs:
     - name: Setup, Generate, Update, Build the AppImage
       if: env.DO_BUILD == 'true'
       run: |
-        YT_API_KEY=${{ secrets.YOUTUBE_API_KEY }}; if [ -z "$YT_API_KEY" ]; then YT_API_KEY="''"; fi
+        T_ID=${{ secrets.TELEMETRY_TRACK_ID }}; if [ -z "$T_ID" ]; then T_ID="''"; fi
         C_URL=${SENTRY_URL}; if [ -z "$C_URL" ]; then C_URL="''"; fi
         sudo docker run -i -v "${PWD}:/MuseScore" "arm64v8/ubuntu:focal" /bin/bash -c "cd /MuseScore && \
         bash /MuseScore/build/ci/linux/setup-arm.sh --arch aarch64 && \
-        bash /MuseScore/build/ci/linux/build.sh -n ${{ env.BUILD_NUMBER }} --youtube_api_key $YT_API_KEY --crash_log_url $C_URL --arch aarch64 && \
-        bash ./build/ci/linux/dumpsyms.sh && \
+        bash /MuseScore/build/ci/linux/build.sh -n ${{ env.BUILD_NUMBER }} --crash_log_url $C_URL -n ${{ github.run_id }} --telemetry $T_ID  && \
         bash /MuseScore/build/ci/linux/package.sh --arch aarch64 && \
         bash /MuseScore/build/ci/tools/checksum.sh"
     - name: Upload dump symbols
