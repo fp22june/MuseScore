@@ -1,7 +1,13 @@
 name: 'Check: Visual Tests (vtest)'
 
 on:
-  pull_request:
+  # schedule: # Does not make sense scheduling vtest without code change
+  push: # push.inputs field does not exist, use gen1 below
+    branches:
+    - 3.x
+  pull_request: # all branches.
+  # workflow_dispatch: # triggered by github web ui run "Check: Visual Tests (vtest)" workflow button. Does not make sense manually running vtest without code change
+  workflow_call: # triggered by "uses" from other yml files.
 
 jobs:
   setup:
@@ -60,34 +66,22 @@ jobs:
     needs: setup
     if: needs.setup.outputs.do_run == 'true'
     steps:
-    - name: Clone repository and checkout reference commit
+    - name: Clone repository
       uses: actions/checkout@v4
       with:
-        ref: ${{ needs.setup.outputs.reference_sha }}
-    - name: Get ccache timestamp
-      run: echo "CCACHE_TIMESTAMP=$(date -u +"%F-%T")" | tee -a $GITHUB_ENV
-    - name: Restore ccache files
-      uses: actions/cache@v4
-      with:
-        path: ${{ github.workspace }}/.ccache
-        key: ${{github.workflow}}-ccache-${{ env.CCACHE_TIMESTAMP }}
-        restore-keys: ${{github.workflow}}-ccache-
-    - name: Setup ccache
-      run: |
-        sudo apt-get update && sudo apt-get install -y ccache
-        bash ./build/ci/tools/setup_ccache_config.sh
+        fetch-depth: 0
     - name: Setup environment
       run: |
-        bash ./build/ci/linux/setup.sh
+        sudo bash ./build/ci/linux/setup.sh
     - name: Build current
       run: |
-        make installdebug CPUS=2 PREFIX="$HOME/software" COVERAGE=ON
+        make installdebug CPUS=4 PREFIX="$HOME/software" COVERAGE=ON
     - name: Build reference branch
       run: |
         mkdir -p "$HOME/softwarebase"
-        git checkout $BASEREF
+        git checkout ${{ needs.setup.outputs.reference_sha }}
         make clean
-        make installdebug CPUS=2 PREFIX="$HOME/softwarebase" COVERAGE=ON 2>/dev/null
+        make installdebug CPUS=4 PREFIX="$HOME/softwarebase" COVERAGE=ON 2>/dev/null
     - name: Run reference vtests
       run: |
         cd vtest
@@ -108,7 +102,6 @@ jobs:
         xvfb-run ./gen
     - name: Compare vtests
       run: |
-        source ./../musescore_environment.sh  
         cd vtest
         export VTEST_DIR=$(pwd)
         ./gen_compare

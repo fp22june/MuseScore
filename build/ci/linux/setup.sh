@@ -50,6 +50,8 @@ fi
 
 echo "echo 'Setup MuseScore build environment'" >> $ENV_FILE
 
+# sudo verbal(x86) docker(arm) see build_linux.yml
+
 echo "=== GET DEPENDENCIES === "
 
 apt_packages=(
