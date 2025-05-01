@@ -10,7 +10,6 @@ df -h .
 BUILD_TOOLS=$HOME/build_tools
 TELEMETRY_TRACK_ID=""
 ARTIFACTS_DIR=build.artifacts
-CRASH_REPORT_URL=""
 BUILD_MODE=""
 BUILDTYPE=portable # portable build is the default build
 SUFFIX="" # appended to `mscore` command name to avoid conflicts (e.g. `mscore-dev`)
@@ -22,7 +21,6 @@ while [[ "$#" -gt 0 ]]; do
         --telemetry) TELEMETRY_TRACK_ID="$2"; shift ;;
         --build_mode) BUILD_MODE="$2"; shift ;;
         --arch) PACKARCH="$2"; shift ;;
-        --crash_log_url) CRASH_REPORT_URL="$2"; shift ;;
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
     esac
     shift
@@ -48,7 +46,6 @@ fi
 
 echo "MUSESCORE_BUILD_CONFIG: $MUSESCORE_BUILD_CONFIG"
 echo "BUILD_NUMBER: $BUILD_NUMBER"
-echo "CRASH_REPORT_URL: $CRASH_REPORT_URL"
 echo "TELEMETRY_TRACK_ID: $TELEMETRY_TRACK_ID"
 echo "BUILD_MODE: $BUILD_MODE"
 echo "BUILDTYPE: $BUILDTYPE"
@@ -70,11 +67,9 @@ echo "=== BUILD ==="
 
 MUSESCORE_REVISION=$(git rev-parse --short=7 HEAD)
 
-# CRASH_REPORT_URL (sentry) usage in cmake not backported yet  
 make CPUS=2 $OPTIONS \
      MUSESCORE_BUILD_CONFIG=$MUSESCORE_BUILD_CONFIG \
      MUSESCORE_REVISION=$MUSESCORE_REVISION \
-     MUSESCORE_CRASHREPORT_URL=$CRASH_REPORT_URL \
      BUILD_NUMBER=$BUILD_NUMBER \
      TELEMETRY_TRACK_ID=$TELEMETRY_TRACK_ID \
      SUFFIX=$SUFFIX \
