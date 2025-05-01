@@ -357,14 +357,9 @@ cd build
 # the following is a super ugly hack that exists upstream
 apt-get install -y --no-install-recommends pkgconf
 
-if [ "$PACKARCH" == "armv7l" ]; then
-  cp ../ci/libgcrypt.pc /usr/lib/arm-linux-gnueabihf/pkgconfig/libgcrypt.pc
-  sed -i 's|x86_64-linux-gnu|arm-linux-gnueabihf|g' /usr/lib/arm-linux-gnueabihf/pkgconfig/libgcrypt.pc
-  sed -i 's|x86_64-pc-linux-gnu|arm-pc-linux-gnueabihf|g' /usr/lib/arm-linux-gnueabihf/pkgconfig/libgcrypt.pc
-else
   cp ../ci/libgcrypt.pc /usr/lib/aarch64-linux-gnu/pkgconfig/libgcrypt.pc
   sed -i 's|x86_64|aarch64|g' /usr/lib/aarch64-linux-gnu/pkgconfig/libgcrypt.pc
-fi
+
 
 # the hack uses pkgconf to produce a partial makefile and then installs back pkg-config to finish producing the makefile
 cmake -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RelWithDebInfo .. || true
