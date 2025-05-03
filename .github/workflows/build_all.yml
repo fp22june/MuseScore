@@ -4,6 +4,8 @@ on:
   # schedule: # scheduled workflows will only run on the default branch. edit default values under gen1 below
   #   - cron: '0 4 */1 * *' # At 04:00 on every day-of-month
   # push: # push.inputs field does not exist, use gen1 below
+  #   branches:
+  #   - 3.x
   # pull_request: # pull_request.inputs field does not exist, edit gen1 below
   workflow_dispatch: # triggered by github web ui run "build all" workflow button
     inputs:
@@ -23,7 +25,7 @@ on:
         type: string
         required: false
       mtestuploadpath:
-        description: 'Upload mtest generated eg ./build.debug/mtest/libmscore/midi (empty to disable) (in linux yml)'
+        description: 'Create mtest artifact eg ./build.debug/mtest/libmscore/midi (empty to disable) (in linux yml)'
         default: ''
         type: string
         required: false
@@ -33,7 +35,7 @@ on:
         type: string
         required: false
       publish:
-        description: 'Publish to FTP when nightly generated (obsolete): on, off'
+        description: 'Publish to FTP when nightly generated (obsolete)'
         default: 'off'
         type: string
         required: false
@@ -70,7 +72,7 @@ on:
         type: string
         required: false
       mtestuploadpath:
-        description: 'Upload mtest generated eg ./build.debug/mtest/libmscore/midi (empty to disable) (in linux yml)'
+        description: 'Create mtest artifact eg ./build.debug/mtest/libmscore/midi (empty to disable) (in linux yml)'
         default: ''
         type: string
         required: false
@@ -80,7 +82,7 @@ on:
         type: string
         required: false
       publish:
-        description: 'Publish to FTP when nightly generated (obsolete): on, off'
+        description: 'Publish to FTP when nightly generated (obsolete)'
         default: 'off'
         type: string
         required: false
@@ -116,7 +118,7 @@ jobs:
   #       echo "inputs.execfrompubdev=${{ inputs.execfrompubdev }}"
 
   plan:
-    name: Generate default values (build all yml)
+    name: generate default values (build all yml)
     runs-on: ubuntu-latest
     outputs:
       platforms: ${{ steps.gen1.outputs.platforms }}
@@ -151,10 +153,10 @@ jobs:
           echo "triggered by 1. on.pull_request of build all or 2. on.pull_request of workflows other than publishdev that triggers on.workflow_call of build all"
 
           echo "platforms=linux_x64 linux_armhf linux_arm64 macos_intel macos_apple windows_x64 windows_x32 windows_x32_portable windows_x64_portable" | tee -a "$GITHUB_OUTPUT"
-          echo "build_mode=devel" | tee -a "$GITHUB_OUTPUT"   # copy from make_build_mode_env.sh
-          echo "runtest=off" | tee -a "$GITHUB_OUTPUT"
+          echo "build_mode=devel" | tee -a "$GITHUB_OUTPUT"   # copied from make_build_mode_env.sh
+          echo "runtest=on" | tee -a "$GITHUB_OUTPUT"
           echo "mtestuploadpath=''" | tee -a "$GITHUB_OUTPUT"
-          echo "runvisualtest=off" | tee -a "$GITHUB_OUTPUT"
+          echo "runvisualtest=on" | tee -a "$GITHUB_OUTPUT"
           echo "publish=off" | tee -a "$GITHUB_OUTPUT"
           echo "notarize=off" | tee -a "$GITHUB_OUTPUT"                # pull_request notarize off
           echo "runtestjob=on" | tee -a "$GITHUB_OUTPUT"
@@ -165,10 +167,10 @@ jobs:
           echo "triggered by 1. on.schedule of build all or 2. on.schedule of workflows other than publishdev that triggers on.workflow_call of build all"
 
           echo "platforms=linux_x64 linux_armhf linux_arm64 macos_intel macos_apple windows_x64 windows_x32 windows_x32_portable windows_x64_portable" | tee -a "$GITHUB_OUTPUT"
-          echo "build_mode=nightly" | tee -a "$GITHUB_OUTPUT"  # copy from make_build_mode_env.sh
-          echo "runtest=off" | tee -a "$GITHUB_OUTPUT"
+          echo "build_mode=nightly" | tee -a "$GITHUB_OUTPUT"  # copied from make_build_mode_env.sh
+          echo "runtest=on" | tee -a "$GITHUB_OUTPUT"
           echo "mtestuploadpath=''" | tee -a "$GITHUB_OUTPUT"
-          echo "runvisualtest=off" | tee -a "$GITHUB_OUTPUT"
+          echo "runvisualtest=on" | tee -a "$GITHUB_OUTPUT"
           echo "publish=off" | tee -a "$GITHUB_OUTPUT"
           echo "notarize=on" | tee -a "$GITHUB_OUTPUT"
           echo "runtestjob=on" | tee -a "$GITHUB_OUTPUT"
@@ -179,10 +181,10 @@ jobs:
           echo "triggered by 1. on.push of build all or 2. on.push of workflows other than publishdev that triggers on.workflow_call of build all"
 
           echo "platforms=linux_x64 linux_armhf linux_arm64 macos_intel macos_apple windows_x64 windows_x32 windows_x32_portable windows_x64_portable" | tee -a "$GITHUB_OUTPUT"
-          echo "build_mode=devel" | tee -a "$GITHUB_OUTPUT"   # copy from make_build_mode_env.sh
-          echo "runtest=off" | tee -a "$GITHUB_OUTPUT"
+          echo "build_mode=devel" | tee -a "$GITHUB_OUTPUT"   # copied from make_build_mode_env.sh
+          echo "runtest=on" | tee -a "$GITHUB_OUTPUT"
           echo "mtestuploadpath=''" | tee -a "$GITHUB_OUTPUT"
-          echo "runvisualtest=off" | tee -a "$GITHUB_OUTPUT"
+          echo "runvisualtest=on" | tee -a "$GITHUB_OUTPUT"
           echo "publish=off" | tee -a "$GITHUB_OUTPUT"
           echo "notarize=on" | tee -a "$GITHUB_OUTPUT"
           echo "runtestjob=on" | tee -a "$GITHUB_OUTPUT"

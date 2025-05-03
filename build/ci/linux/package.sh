@@ -18,7 +18,7 @@
 #
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <https://www.gnu.org/licenses/>.
-echo "Package MuseScore"
+echo "############################## Package MuseScore ##############################"
 trap 'echo Package failed; exit 1' ERR
 
 df -h .
@@ -90,7 +90,7 @@ if [ "$PACKTYPE" == "appimage" ]; then
     *) unset UPDATE_INFORMATION;; # disable updates for other build modes
     esac
 
-    bash ./build/ci/linux/tools/make_appimage.sh "${INSTALL_DIR}" "${ARTIFACT_NAME}.AppImage"
+    bash ./build/ci/linux/tools/make_appimage.sh "${INSTALL_DIR}" "${ARTIFACT_NAME}.AppImage" "${PACKARCH}"
     mv "${BUILD_DIR}/${ARTIFACT_NAME}.AppImage" "${ARTIFACTS_DIR}/"
     bash ./build/ci/tools/make_artifact_name_env.sh $ARTIFACT_NAME.AppImage
 

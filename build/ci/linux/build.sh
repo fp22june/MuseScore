@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-echo "Build Linux MuseScore AppImage"
+echo "############################## Build Linux MuseScore AppImage ##############################"
 
 #set -x
 trap 'echo Build failed; exit 1' ERR
@@ -12,8 +12,9 @@ TELEMETRY_TRACK_ID=""
 ARTIFACTS_DIR=build.artifacts
 BUILD_MODE=""
 BUILDTYPE=portable # portable build is the default build
-SUFFIX="" # appended to `mscore` command name to avoid conflicts (e.g. `mscore-dev`)
 OPTIONS=""
+VTESTSUBDIR=software
+SUFFIX="" # appended to `mscore` command name to avoid conflicts (e.g. `mscore-dev`)
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
@@ -21,6 +22,7 @@ while [[ "$#" -gt 0 ]]; do
         --telemetry) TELEMETRY_TRACK_ID="$2"; shift ;;
         --build_mode) BUILD_MODE="$2"; shift ;;
         --arch) PACKARCH="$2"; shift ;;
+        --vtestsubdir) VTESTSUBDIR="$2"; shift ;; # vtest musescore 3
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
     esac
     shift
@@ -38,6 +40,8 @@ case "${BUILD_MODE}" in
 "testing") MUSESCORE_BUILD_CONFIG=testing; SUFFIX=-testing;;
 "stable")  MUSESCORE_BUILD_CONFIG=release; SUFFIX="";;
 "mtests")  MUSESCORE_BUILD_CONFIG=dev; BUILDTYPE=installdebug; OPTIONS="USE_SYSTEM_FREETYPE=ON UPDATE_CACHE=FALSE PREFIX=$ARTIFACTS_DIR/software";;
+"vtest")  MUSESCORE_BUILD_CONFIG=dev; BUILDTYPE=installdebug; OPTIONS="COVERAGE=ON PREFIX=$ARTIFACTS_DIR/$VTESTSUBDIR";; # vtest musescore 3
+
 esac
 
 if [ "${BUILDTYPE}" == "portable" ]; then

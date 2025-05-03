@@ -22,7 +22,7 @@
 # For maximum AppImage compatibility, build on the oldest Linux distribution
 # that still receives security updates from its manufacturer.
 
-echo "Setup Linux build environment"
+echo "############################## Setup Linux build environment ##############################"
 trap 'echo Setup failed; exit 1' ERR
 
 df -h .
@@ -50,16 +50,14 @@ fi
 
 echo "echo 'Setup MuseScore build environment'" >> $ENV_FILE
 
-# sudo verbal(x86) docker(arm) see build_linux.yml
-
-echo "=== GET DEPENDENCIES === "
+echo "############################## GET DEPENDENCIES ##############################"
 
 apt_packages=(
 # musescore 3 working linux x64 https://github.com/Jojo-Schmitz/MuseScore/blob/919eccce/build/ci/linux/setup.sh
   # apt_packages_basic=(
   file
   git
-  # pkg-config # removed in musescore 4 # https://github.com/musescore/MuseScore/pull/25609
+  # pkg-config # https://github.com/musescore/MuseScore/pull/25609
   software-properties-common # installs `add-apt-repository`
   unzip
   p7zip-full
@@ -80,14 +78,13 @@ apt_packages=(
   portaudio19-dev # removed in musescore 4
   wget
 # adapt musescore 4
-# https://github.com/musescore/MuseScore/pull/15923
-# https://github.com/theofficialgman/MuseScore/blob/e37447ffa69a5047569f56c59e694c4c3601b308/build/ci/linux/setup-arm.sh
+# https://github.com/musescore/MuseScore/blob/b02a3fc49e37ae5d7a41892add56d36d3ee689d9/buildscripts/ci/linux/setup.sh
 # comment out duplicates from musescore 3
-  cimg-dev
+  coreutils
   # curl
-  desktop-file-utils
+  # desktop-file-utils # installs `desktop-file-validate` for appimagetool. appimagetool not compiled anymore
+  gawk
   # file
-  fuse
   # git
   gpg
   libboost-dev
@@ -97,38 +94,32 @@ apt_packages=(
   libfuse-dev
   libtool
   libssl-dev
-  patchelf
-  pkg-config
-  # software-properties-common # installs `add-apt-repository`
-  # unzip
-  # wget
+  # pkg-config # https://github.com/musescore/MuseScore/pull/25609
   xxd
   # p7zip-full
   # libasound2-dev 
   # libfontconfig1-dev
-  # libfreetype6-dev
   # libfreetype6
+  # libfreetype6-dev
+  libgcrypt20-dev
   # libgl1-mesa-dev
+  libglib2.0-dev
+  # libgpgme-dev # install for appimagetool. appimagetool not compiled anymore
   # libjack-dev
   # libnss3-dev
   # libportmidi-dev
   # libpulse-dev
-  # libsndfile1-dev
-  # zlib1g-dev
-  # make
-  patch
-  coreutils
-  gawk
-  sed
-  desktop-file-utils # installs `desktop-file-validate` for appimagetool
-  zsync # installs `zsyncmake` for appimagetool
-  libgpgme-dev # install for appimagetool
-  libglib2.0-dev
   librsvg2-dev
-  argagg-dev
-  libgcrypt20-dev
-  libcurl4-openssl-dev
-  libgpg-error-dev
+  # libsndfile1-dev
+  # libssl-dev
+  # libtool
+  # make
+  # p7zip-full
+  sed
+  # software-properties-common # installs `add-apt-repository`
+  # unzip
+  # wget
+  # zsync # installs `zsyncmake` for appimagetool. appimagetool not compiled anymore
   )
 
 # MuseScore compiles without these but won't run without them
@@ -147,8 +138,7 @@ apt_packages_runtime=(
   libxtst-dev
   libdrm-dev
 # adapt musescore 4
-# https://github.com/musescore/MuseScore/pull/15923
-# https://github.com/theofficialgman/MuseScore/blob/e37447ffa69a5047569f56c59e694c4c3601b308/build/ci/linux/setup-arm.sh
+# https://github.com/musescore/MuseScore/blob/b02a3fc49e37ae5d7a41892add56d36d3ee689d9/buildscripts/ci/linux/setup.sh
 # comment out duplicates from musescore 3
   # libcups2
   # libdbus-1-3
@@ -156,6 +146,7 @@ apt_packages_runtime=(
   libgles2-mesa-dev
   # libodbc1
   # libpq-dev
+  # libssl-dev
   # libxcomposite-dev
   # libxcursor-dev
   # libxi-dev
@@ -169,9 +160,14 @@ apt_packages_runtime=(
   libxcb-randr0
   libxcb-render-util0
   libxcb-xinerama0
+  
+  libxcb-xkb-dev
+  libxkbcommon-dev
+  libopengl-dev
+  libvulkan-dev
   )
 
-# backported msuescore 4, unsure if needed in musescore 3
+# backported msuescore 4 arm, unsure if needed in musescore 3
 apt_packages_ffmpeg=(
   ffmpeg
   libavcodec-dev 
@@ -185,9 +181,19 @@ apt-get install -y --no-install-recommends \
   "${apt_packages_runtime[@]}" \
   "${apt_packages_ffmpeg[@]}"
 
-echo "=== GET QT part 1/2 ==="
+echo "############################## GET QT ##############################"
+
 case "$PACKARCH" in
   x86_64)
+    # 5152 second try
+      # https://github.com/Jojo-Schmitz/MuseScore/commit/1e58c6a9f6d3971801d530098f813475a1b104fc
+      # 5.9 to 5.15
+      # Mainly to fix https://musescore.org/en/node/317323 for macOS. but
+      # updating the builds for Linux and Windows too.
+      # https://github.com/Jojo-Schmitz/MuseScore/commit/3a8e9017f13ad456ca2fa36f71d90bca53482b38
+      # 5.15 revert back to 5.9
+      # Fix vtests build using a similar method as the mtest.
+      # Doesn't work, so back to 5.9.8, for Linux, for now...
     qt_version="5152"
     qt_dir="$BUILD_TOOLS/Qt/${qt_version}"
     if [[ ! -d "${qt_dir}" ]]; then
@@ -200,50 +206,14 @@ case "$PACKARCH" in
   armv7l | aarch64)
     # kitware is the cmake company
     wget -O - https://apt.kitware.com/keys/kitware-archive-latest.asc 2>/dev/null | gpg --dearmor - | tee /usr/share/keyrings/kitware-archive-keyring.gpg >/dev/null
-    echo 'deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ bionic main' | tee /etc/apt/sources.list.d/kitware.list >/dev/null # see github workflow build linux yml docker
+    echo 'deb [signed-by=/usr/share/keyrings/kitware-archive-keyring.gpg] https://apt.kitware.com/ubuntu/ bionic main' | tee /etc/apt/sources.list.d/kitware.list >/dev/null
 
-    add-apt-repository --yes ppa:theofficialgman/opt-qt-5.15.2-focal-arm # see github workflow build linux yml docker
-    # todo   add-apt-repository --yes ppa:theofficialgman/opt-qt-5.15.4-bionic-arm    
+    add-apt-repository --yes ppa:theofficialgman/opt-qt-5.15.2-focal-arm
     echo "using ppa:theofficialgman/opt-qt-5.15.2-focal-arm"
     qt_version="5152"
     qt_dir="/opt/qt515"
     apt-get update
 
-    # add an exception for the "detected dubious ownership in repository" (only seen inside a Docker image)
-    git config --global --add safe.directory /MuseScore
-    ;;
-esac
-
-echo "=== GET COMPILERS === "
-apt_packages_compiler=(
-  automake
-  gcc
-  g++
-  )
-apt-get install -y --no-install-recommends \
-  "${apt_packages_compiler[@]}"
-
-update-alternatives \
-  --install /usr/bin/gcc gcc "$(readlink -f "$(which gcc)")" 40 \
-  --slave /usr/bin/g++ g++ "$(readlink -f "$(which g++)")"
-
-echo export CC="$(readlink -f "$(which gcc)")" >> ${ENV_FILE}
-echo export CXX="$(readlink -f "$(which g++)")" >> ${ENV_FILE}
-
-# CMAKE
-# Get newer CMake (only used cached version if it is the same)
-apt-get install -y --no-install-recommends cmake
-cmake --version
-
-# not backported, using cmake build.sh L73
-# Ninja
-apt-get install -y --no-install-recommends ninja-build
-echo "ninja version"
-ninja --version
-
-echo "=== GET QT part 2/2 ==="
-case "$PACKARCH" in
-  armv7l | aarch64)
     apt_packages_qt=(
       qt515base
       qt515declarative
@@ -259,12 +229,12 @@ case "$PACKARCH" in
       qt515wayland
       qt515x11extras
       qt515xmlpatterns
-      qt515webengine # main/cmakelists.txt L232 QtWebEngineProcess
+      qt515webengine # main/cmakelists.txt L232 QtWebEngineProcess  ? needed ? cause bug ?
       )
     apt-get install -y \
       "${apt_packages_qt[@]}"
     ;;
-esac  
+esac
 
 echo export PATH="${qt_dir}/bin:\${PATH}" >> ${ENV_FILE}
 echo export LD_LIBRARY_PATH="${qt_dir}/lib:\${LD_LIBRARY_PATH}" >> ${ENV_FILE}
@@ -272,141 +242,62 @@ echo export QT_PATH="${qt_dir}" >> ${ENV_FILE}
 echo export QT_PLUGIN_PATH="${qt_dir}/plugins" >> ${ENV_FILE}
 echo export QML2_IMPORT_PATH="${qt_dir}/qml" >> ${ENV_FILE}
 
+echo "############################## GET COMPILERS ##############################"
+
+apt-get install -y --no-install-recommends automake
+
 case "$PACKARCH" in
+  x86_64)
+    gcc_version="9"
+    apt-get install -y --no-install-recommends "g++-${gcc_version}"
+    update-alternatives \
+      --install /usr/bin/gcc gcc "/usr/bin/gcc-${gcc_version}" 40 \
+      --slave /usr/bin/g++ g++ "/usr/bin/g++-${gcc_version}"
+    echo export CC="/usr/bin/gcc-${gcc_version}" >> ${ENV_FILE}
+    echo export CXX="/usr/bin/g++-${gcc_version}" >> ${ENV_FILE}
+    gcc-${gcc_version} --version
+    g++-${gcc_version} --version
+    ;;
   armv7l | aarch64)
-    echo '=== Compile and install nlohmann-json ==='
-    export CFLAGS="-Wno-psabi"
-    export CXXFLAGS="-Wno-psabi"
-    CURRDIR=${PWD}
-    cd /
-
-    git clone https://github.com/nlohmann/json
-    cd /json/
-    git checkout --recurse-submodules v3.10.4
-    git submodule update --init --recursive
-    mkdir -p build
-    cd build
-    cmake -DJSON_BuildTests=OFF ..
-    cmake --build . -j $(nproc)
-    cmake --build . --target install
-    cd /
-
-    echo '=== Compile and install linuxdeploy ==='
-
-    git clone https://github.com/linuxdeploy/linuxdeploy
-    cd /linuxdeploy/
-    git checkout --recurse-submodules 49f4f237762395c6a37
-    git submodule update --init --recursive
-    mkdir -p build
-    cd build
-    cmake -DBUILD_TESTING=OFF -DUSE_SYSTEM_BOOST=ON ..
-    cmake --build . -j $(nproc)
-    mkdir -p $BUILD_TOOLS/linuxdeploy
-    mv /linuxdeploy/build/bin/* $BUILD_TOOLS/linuxdeploy/
-    $BUILD_TOOLS/linuxdeploy/linuxdeploy --version
-    cd /
-
-    echo '=== Compile and install linuxdeploy-plugin-qt ==='
-
-    git clone https://github.com/linuxdeploy/linuxdeploy-plugin-qt
-    cd /linuxdeploy-plugin-qt/
-    git checkout --recurse-submodules 59b6c1f90e21ba14
-    git submodule update --init --recursive
-    mkdir -p build
-    cd build
-    cmake -DBUILD_TESTING=OFF -DUSE_SYSTEM_BOOST=ON ..
-    cmake --build . -j $(nproc)
-    mv /linuxdeploy-plugin-qt/build/bin/linuxdeploy-plugin-qt $BUILD_TOOLS/linuxdeploy/linuxdeploy-plugin-qt
-    $BUILD_TOOLS/linuxdeploy/linuxdeploy --list-plugins
-    cd /
-
-    echo '=== Compile and install linuxdeploy-plugin-appimage ==='
-
-    git clone https://github.com/linuxdeploy/linuxdeploy-plugin-appimage
-    cd /linuxdeploy-plugin-appimage/
-    git checkout --recurse-submodules 779bd58443e8cc
-    git submodule update --init --recursive
-    mkdir -p build
-    cd build
-    cmake -DBUILD_TESTING=OFF ..
-    cmake --build . -j $(nproc)
-    mv /linuxdeploy-plugin-appimage/build/src/linuxdeploy-plugin-appimage $BUILD_TOOLS/linuxdeploy/linuxdeploy-plugin-appimage
-    cd /
-    $BUILD_TOOLS/linuxdeploy/linuxdeploy --list-plugins
-
-    echo '=== Compile and install AppImageKit ==='
-
-    git clone https://github.com/AppImage/AppImageKit
-    cd /AppImageKit/
-    git checkout --recurse-submodules 13
-    git submodule update --init --recursive
-    mkdir -p build
-    cd build
-    cmake -DBUILD_TESTING=OFF ..
-    cmake --build . -j $(nproc)
-    cmake --build . --target install
-    mkdir -p $BUILD_TOOLS/appimagetool
-    cd /
-    appimagetool --version
-
-    echo '=== Compile and install appimageupdatetool ==='
-
-    git clone https://github.com/AppImageCommunity/AppImageUpdate.git
-    cd AppImageUpdate
-    git checkout --recurse-submodules 2.0.0-alpha-1-20220512
-    git submodule update --init --recursive
-    mkdir -p build
-    cd build
-    # switch to using pkgconf
-    # the following is a super ugly hack that exists upstream
-    apt-get install -y --no-install-recommends pkgconf
-
-    if [[ "$PACKARCH" == "armv7l" ]]; then
-      cp ../ci/libgcrypt.pc /usr/lib/arm-linux-gnueabihf/pkgconfig/libgcrypt.pc
-      sed -i 's|x86_64-linux-gnu|arm-linux-gnueabihf|g' /usr/lib/arm-linux-gnueabihf/pkgconfig/libgcrypt.pc
-      sed -i 's|x86_64-pc-linux-gnu|arm-pc-linux-gnueabihf|g' /usr/lib/arm-linux-gnueabihf/pkgconfig/libgcrypt.pc
-    elif [[ "$PACKARCH" == "aarch64" ]]; then
-      cp ../ci/libgcrypt.pc /usr/lib/aarch64-linux-gnu/pkgconfig/libgcrypt.pc
-      sed -i 's|x86_64|aarch64|g' /usr/lib/aarch64-linux-gnu/pkgconfig/libgcrypt.pc
-    fi
-
-    # the hack uses pkgconf to produce a partial makefile and then installs back pkg-config to finish producing the makefile
-    cmake -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RelWithDebInfo .. || true
-    apt-get install -y --no-install-recommends pkg-config
-    cmake -DBUILD_TESTING=OFF -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
-    make -j"$(nproc)"
-    # create the extracted appimage directory
-    mkdir -p $BUILD_TOOLS/appimageupdatetool
-    make install DESTDIR=$BUILD_TOOLS/appimageupdatetool/appimageupdatetool-${PACKARCH}.AppDir
-    mkdir -p $BUILD_TOOLS/appimageupdatetool/appimageupdatetool-${PACKARCH}.AppDir/resources
-    cp -v ../resources/*.xpm $BUILD_TOOLS/appimageupdatetool/appimageupdatetool-${PACKARCH}.AppDir/resources/
-    $BUILD_TOOLS/linuxdeploy/linuxdeploy -v0 --appdir $BUILD_TOOLS/appimageupdatetool/appimageupdatetool-${PACKARCH}.AppDir  --output appimage -d ../resources/appimageupdatetool.desktop -i ../resources/appimage.png
-    cd $BUILD_TOOLS/appimageupdatetool
-    ln -s "appimageupdatetool-${PACKARCH}.AppDir/AppRun" appimageupdatetool # symlink for convenience
-    rm -rf /usr/lib/arm-linux-gnueabihf/pkgconfig/libgcrypt.pc /usr/lib/aarch64-linux-gnu/pkgconfig/libgcrypt.pc
-    cd /
-    $BUILD_TOOLS/appimageupdatetool/appimageupdatetool --version
-
-    cd ${CURRDIR}
-
-    # delete build folders
-    rm -rf /linuxdeploy*
-    rm -rf /AppImageKit
-    rm -rf /AppImageUpdate
+    apt-get install -y --no-install-recommends gcc
+    apt-get install -y --no-install-recommends g++
+    update-alternatives \
+      --install /usr/bin/gcc gcc "$(readlink -f "$(which gcc)")" 40 \
+      --slave /usr/bin/g++ g++ "$(readlink -f "$(which g++)")"
+    echo export CC="$(readlink -f "$(which gcc)")" >> ${ENV_FILE}
+    echo export CXX="$(readlink -f "$(which g++)")" >> ${ENV_FILE}
     ;;
 esac
+
+case "$PACKARCH" in
+  x86_64)
+    cmake_version="3.16.0"
+    cmake_dir="$BUILD_TOOLS/cmake/${cmake_version}"
+    if [[ ! -d "$cmake_dir" ]]; then
+      mkdir -p "$cmake_dir"
+      cmake_url="https://cmake.org/files/v${cmake_version%.*}/cmake-${cmake_version}-linux-x86_64.tar.gz" 
+      wget -q --show-progress --no-check-certificate -O - "${cmake_url}" | tar --strip-components=1 -xz -C "${cmake_dir}"
+    fi
+    export PATH="$cmake_dir/bin:$PATH"
+    echo export PATH="$cmake_dir/bin:\${PATH}" >> ${ENV_FILE}
+    ;;
+  armv7l | aarch64)
+    apt-get install -y --no-install-recommends cmake
+    ;;
+esac
+cmake --version
 
 echo export CFLAGS="-Wno-psabi" >> ${ENV_FILE}
 echo export CXXFLAGS="-Wno-psabi" >> ${ENV_FILE}
 
-echo '=== POST INSTALL ==='
+echo "############################## POST INSTALL ##############################"
 
 chmod +x "$ENV_FILE"
 
-# # tidy up (reduce size of Docker image)
-# apt-get clean autoclean
-# apt-get autoremove --purge -y
-# rm -rf /tmp/* /var/{cache,log,backups}/* /var/lib/apt/*
+if [[ "$PACKARCH" == "armv7l" ]]; then
+  # add an exception for the "detected dubious ownership in repository" (only seen inside a Docker image)
+  git config --global --add safe.directory /MuseScore
+fi
 
 df -h .
 echo "Setup script done"

@@ -1,10 +1,17 @@
 #!/usr/bin/env bash
+trap 'echo Making AppImage failed; exit 1' ERR
 
 INSTALL_DIR="$1" # MuseScore was installed here
 APPIMAGE_NAME="$2" # name for AppImage file (created outside $INSTALL_DIR)
+PACKARCH="$3" # architecture (x86_64, aarch64, armv7l)
 
 if [ -z "$INSTALL_DIR" ]; then echo "error: not set INSTALL_DIR"; exit 1; fi
 if [ -z "$APPIMAGE_NAME" ]; then echo "error: not set APPIMAGE_NAME"; exit 1; fi
+if [ -z "$PACKARCH" ]; then 
+  PACKARCH="x86_64"
+elif [ "$PACKARCH" == "armv7l" ]; then
+  PACKARCH="armhf"
+fi
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ORIGIN_DIR=${PWD}
@@ -12,9 +19,7 @@ BUILD_TOOLS=$HOME/build_tools
 
 mkdir -p $BUILD_TOOLS
 
-##########################################################################
-# INSTALL APPIMAGETOOL AND LINUXDEPLOY
-##########################################################################
+echo "############################## INSTALL APPIMAGETOOL AND LINUXDEPLOY ##############################"
 
 function download_github_release()
 {
@@ -24,7 +29,8 @@ function download_github_release()
   else
     local -r url="https://github.com/${repo_slug}/releases/download/${release_tag}/${file}"
   fi
-  wget -q --show-progress "${url}"
+  # use curl instead of wget which fails on armhf
+  curl "${url}" -O -L
   chmod +x "${file}"
 }
 
@@ -33,7 +39,12 @@ function extract_appimage()
   # Extract AppImage so we can run it without having to install FUSE
   local -r appimage="$1" binary_name="$2"
   local -r appdir="${appimage%.AppImage}.AppDir"
-  "./${appimage}" --appimage-extract >/dev/null # dest folder "squashfs-root"
+  # run appimage in docker container with QEMU emulation directly since binfmt fails
+  if [[ "$PACKARCH" == armhf ]]; then
+    /usr/bin/qemu-arm-static "./${appimage}" --appimage-extract >/dev/null # dest folder "squashfs-root"
+  else
+    "./${appimage}" --appimage-extract >/dev/null # dest folder "squashfs-root"
+  fi
   mv squashfs-root "${appdir}" # rename folder to avoid collisions
   ln -s "${appdir}/AppRun" "${binary_name}" # symlink for convenience
   rm -f "${appimage}"
@@ -42,19 +53,40 @@ function extract_appimage()
 function download_appimage_release()
 {
   local -r github_repo_slug="$1" binary_name="$2" tag="$3"
-  local -r appimage="${binary_name}-x86_64.AppImage"
+  local -r appimage="${binary_name}-${PACKARCH}.AppImage"
   download_github_release "${github_repo_slug}" "${tag}" "${appimage}"
   extract_appimage "${appimage}" "${binary_name}"
+  # mv "${appimage}" "${binary_name}" # use this instead of the previous line for the static runtime AppImage
 }
 
 if [[ ! -d $BUILD_TOOLS/appimagetool ]]; then
   mkdir $BUILD_TOOLS/appimagetool
   cd $BUILD_TOOLS/appimagetool
-  download_appimage_release AppImage/AppImageKit appimagetool continuous
+  download_appimage_release AppImage/AppImageKit appimagetool continuous # use AppImage/appimagetool for the static runtime AppImage
   cd $ORIGIN_DIR
 fi
 export PATH="$BUILD_TOOLS/appimagetool:$PATH"
 appimagetool --version
+
+function download_linuxdeploy_component()
+{
+  download_appimage_release "linuxdeploy/$1" "$1" continuous
+}
+
+if [[ ! -f $BUILD_TOOLS/linuxdeploy/linuxdeploy ]]; then
+  mkdir -p $BUILD_TOOLS/linuxdeploy
+  cd $BUILD_TOOLS/linuxdeploy
+  download_linuxdeploy_component linuxdeploy
+  cd $ORIGIN_DIR
+fi
+if [[ ! -f $BUILD_TOOLS/linuxdeploy/linuxdeploy-plugin-qt ]]; then
+  mkdir -p $BUILD_TOOLS/linuxdeploy
+  cd $BUILD_TOOLS/linuxdeploy
+  download_linuxdeploy_component linuxdeploy-plugin-qt
+  cd $ORIGIN_DIR
+fi
+export PATH="$BUILD_TOOLS/linuxdeploy:$PATH"
+linuxdeploy --list-plugins
 
 if [[ ! -d $BUILD_TOOLS/appimageupdatetool ]]; then
   mkdir $BUILD_TOOLS/appimageupdatetool
@@ -64,27 +96,13 @@ if [[ ! -d $BUILD_TOOLS/appimageupdatetool ]]; then
 fi
 if [[ "${UPDATE_INFORMATION}" ]]; then
   export PATH="$BUILD_TOOLS/appimageupdatetool:$PATH"
-  appimageupdatetool --version
+
+  # `appimageupdatetool`'s `AppRun` script gets confused when called via a symlink.
+  # Resolve the symlink here to avoid this issue.
+  $(readlink -f "$(which appimageupdatetool)") --version
 fi
 
-function download_linuxdeploy_component()
-{
-  download_appimage_release "linuxdeploy/$1" "$1" continuous
-}
-
-if [[ ! -d $BUILD_TOOLS/linuxdeploy ]]; then
-  mkdir $BUILD_TOOLS/linuxdeploy
-  cd $BUILD_TOOLS/linuxdeploy
-  download_linuxdeploy_component linuxdeploy
-  download_linuxdeploy_component linuxdeploy-plugin-qt
-  cd $ORIGIN_DIR
-fi
-export PATH="$BUILD_TOOLS/linuxdeploy:$PATH"
-linuxdeploy --list-plugins
-
-##########################################################################
-# BUNDLE DEPENDENCIES INTO APPDIR
-##########################################################################
+echo "############################## BUNDLE DEPENDENCIES INTO APPDIR ##############################"
 
 cd "$(dirname "${INSTALL_DIR}")"
 appdir="$(basename "${INSTALL_DIR}")" # directory that will become the AppImage
@@ -99,8 +117,12 @@ mv "${appdir}/bin/findlib" "${appdir}/../findlib"
 qt_sql_drivers_path="${QT_PATH}/plugins/sqldrivers"
 qt_sql_drivers_tmp="/tmp/qtsqldrivers"
 mkdir -p "$qt_sql_drivers_tmp"
-mv "${qt_sql_drivers_path}/libqsqlmysql.so" "${qt_sql_drivers_tmp}/libqsqlmysql.so"
-mv "${qt_sql_drivers_path}/libqsqlpsql.so" "${qt_sql_drivers_tmp}/libqsqlpsql.so"
+[ -f "${qt_sql_drivers_path}/libqsqlmysql.so" ] && mv "${qt_sql_drivers_path}/libqsqlmysql.so" "${qt_sql_drivers_tmp}/libqsqlmysql.so"
+[ -f "${qt_sql_drivers_path}/libqsqlpsql.so" ] && mv "${qt_sql_drivers_path}/libqsqlpsql.so" "${qt_sql_drivers_tmp}/libqsqlpsql.so"
+
+# Semicolon-separated list of platforms to deploy in addition to `libqxcb.so`.
+# Used by linuxdeploy-plugin-qt.
+export EXTRA_PLATFORM_PLUGINS="libqwayland-egl.so;libqwayland-generic.so" # libqoffscreen.so solves regression musescore 4 only
 
 # Colon-separated list of root directories containing QML files.
 # Needed for linuxdeploy-plugin-qt to scan for QML imports.
@@ -109,6 +131,13 @@ export QML_SOURCES_PATHS=./
 
 linuxdeploy --appdir "${appdir}" # adds all shared library dependencies
 linuxdeploy-plugin-qt --appdir "${appdir}" # adds all Qt dependencies
+
+# The system must be used
+if [ -f ${appdir}/lib/libglib-2.0.so.0 ]; then
+  rm -f ${appdir}/lib/libglib-2.0.so.0 
+fi
+
+unset QML_SOURCES_PATHS EXTRA_PLATFORM_PLUGINS
 
 # Approximately on June 1, the QtQuick/Controls.2 stopped being deploying 
 # (at that time the linux deploy was updated). 
@@ -120,28 +149,14 @@ if [ ! -f ${appdir}/usr/lib/libQt5QuickControls2.so.5 ]; then
     cp ${QT_PATH}/lib/libQt5QuickTemplates2.so.5 ${appdir}/usr/lib/libQt5QuickTemplates2.so.5 
 fi
 
-# At an unknown point in time, the libqgtk3 plugin stopped being deployed
-if [ ! -f ${appdir}/plugins/platformthemes/libqgtk3.so ]; then
-  cp ${QT_PATH}/plugins/platformthemes/libqgtk3.so ${appdir}/plugins/platformthemes/libqgtk3.so 
-fi
-
-# The system must be used
-if [ -f ${appdir}/lib/libglib-2.0.so.0 ]; then
-  rm -f ${appdir}/lib/libglib-2.0.so.0 
-fi
-
-unset QML_SOURCES_PATHS
-
-# In case this container is reused multiple times, return the moved libraries back
-mv "${qt_sql_drivers_tmp}/libqsqlmysql.so" "${qt_sql_drivers_path}/libqsqlmysql.so"
-mv "${qt_sql_drivers_tmp}/libqsqlpsql.so" "${qt_sql_drivers_path}/libqsqlpsql.so"
+# Return the moved libraries back
+[ -f "${qt_sql_drivers_tmp}/libqsqlmysql.so" ] && mv "${qt_sql_drivers_tmp}/libqsqlmysql.so" "${qt_sql_drivers_path}/libqsqlmysql.so"
+[ -f "${qt_sql_drivers_tmp}/libqsqlpsql.so" ] && mv "${qt_sql_drivers_tmp}/libqsqlpsql.so" "${qt_sql_drivers_path}/libqsqlpsql.so"
 
 # Put the non-RUNPATH binaries back
 mv "${appdir}/../findlib" "${appdir}/bin/findlib"
 
-##########################################################################
-# BUNDLE REMAINING DEPENDENCIES MANUALLY
-##########################################################################
+echo "############################## BUNDLE REMAINING DEPENDENCIES MANUALLY ##############################"
 
 function find_library()
 {
@@ -169,7 +184,8 @@ function fallback_library()
 # Report new additions at https://github.com/linuxdeploy/linuxdeploy/issues
 # or https://github.com/linuxdeploy/linuxdeploy-plugin-qt/issues for Qt libs.
 unwanted_files=(
-  # none
+  # https://github.com/musescore/MuseScore/issues/24068#issuecomment-2297823192
+  lib/libwayland-client.so.0
 )
 
 # ADDITIONAL QT COMPONENTS
@@ -177,15 +193,29 @@ unwanted_files=(
 # List them here using paths relative to the Qt root directory. Report new
 # additions at https://github.com/linuxdeploy/linuxdeploy-plugin-qt/issues
 additional_qt_components=(
-  /plugins/printsupport/libcupsprintersupport.so
+  plugins/printsupport/libcupsprintersupport.so
+
+  # At an unknown point in time, the libqgtk3 plugin stopped being deployed
+  plugins/platformthemes/libqgtk3.so
+
+  # Wayland support (run with QT_QPA_PLATFORM=wayland to use)
+  plugins/wayland-decoration-client
+  plugins/wayland-graphics-integration-client
+  plugins/wayland-shell-integration
 )
 
 # ADDITIONAL LIBRARIES
 # linuxdeploy may have missed some libraries that we need
 # Report new additions at https://github.com/linuxdeploy/linuxdeploy/issues
-additional_libraries=(
-  # none
-)
+if [[ "$PACKARCH" == "x86_64" ]]; then
+  additional_libraries=(
+    libssl.so.1.1    # OpenSSL (for Save Online)
+    libcrypto.so.1.1 # OpenSSL (for Save Online)
+  )
+else
+  additional_libraries=()
+fi
+
 
 # FALLBACK LIBRARIES
 # These get bundled in the AppImage, but are only loaded if the user does not
@@ -197,6 +227,7 @@ additional_libraries=(
 # Report new additions at https://github.com/linuxdeploy/linuxdeploy/issues
 fallback_libraries=(
   libjack.so.0 # https://github.com/LMMS/lmms/pull/3958
+  libOpenGL.so.0 # https://bugreports.qt.io/browse/QTBUG-89754
 )
 
 # PREVIOUSLY EXTRACTED APPIMAGES
@@ -217,11 +248,19 @@ for file in "${unwanted_files[@]}"; do
 done
 
 for file in "${additional_qt_components[@]}"; do
+  if [ -f "${appdir}/${file}" ]; then
+    echo "Warning: ${file} was already deployed. Skipping."
+    continue
+  fi
   mkdir -p "${appdir}/$(dirname "${file}")"
-  cp -L "${QT_PATH}/${file}" "${appdir}/${file}"
+  cp -Lr "${QT_PATH}/${file}" "${appdir}/${file}"
 done
 
 for lib in "${additional_libraries[@]}"; do
+  if [ -f "${appdir}/lib/${lib}" ]; then
+    echo "Warning: ${file} was already deployed. Skipping."
+    continue
+  fi
   full_path="$(find_library "${lib}")"
   cp -L "${full_path}" "${appdir}/lib/${lib}"
 done
@@ -281,9 +320,8 @@ for file in "${libnss3_files[@]}"; do
   rm -f "${appdir}/lib/$(basename "${file}")" # in case it was already packaged by linuxdeploy
 done
 
-##########################################################################
-# TURN APPDIR INTO AN APPIMAGE
-##########################################################################
+
+echo "############################## TURN APPDIR INTO AN APPIMAGE ##############################"
 
 appimage="${APPIMAGE_NAME}" # name to use for AppImage file
 
@@ -312,15 +350,5 @@ fi
 
 # create AppImage
 appimagetool "${appimagetool_args[@]}" "${appdir}" "${appimage}"
-
-# We are running as root in the Docker image so all created files belong to
-# root. Allow non-root users outside the Docker image to access these files.
-chmod a+rwx "${created_files[@]}"
-parent_dir="${PWD}"
-while [[ "$(dirname "${parent_dir}")" != "${parent_dir}" ]]; do
-  [[ "$parent_dir" == "/" ]] && break
-  chmod a+rwx "$parent_dir"
-  parent_dir="$(dirname "$parent_dir")"
-done
 
 echo "Making AppImage finished"

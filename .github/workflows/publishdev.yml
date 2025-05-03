@@ -8,9 +8,9 @@ name: Build and draft release
 on:
   # schedule: # scheduled workflows will only run on the default branch. edit default values under gen1 and gen2 below
   #   - cron: '0 4 */1 * *' # At 04:00 on every day-of-month
-  push: # push.inputs field does not exist, use gen1 and gen2 below
-    branches:
-    - temp23
+  # push: # push.inputs field does not exist, use gen1 and gen2 below
+  #   branches:
+  #   - temp31
   # pull_request: # pull_request.inputs field does not exist, edit gen1 below
   workflow_dispatch: # triggered by github web ui run "Build and draft release" workflow button
     inputs:
@@ -40,7 +40,7 @@ on:
         type: string
         required: false
       mtestuploadpath:
-        description: 'Upload mtest generated eg ./build.debug/mtest/libmscore/midi (empty to disable) (in linux yml)'
+        description: 'Create mtest artifact eg ./build.debug/mtest/libmscore/midi (empty to disable) (in linux yml)'
         default: ''
         type: string
         required: false
@@ -50,7 +50,7 @@ on:
         type: string
         required: false
       publish:
-        description: 'Publish to FTP when nightly generated (obsolete): on, off'
+        description: 'Publish to FTP when nightly generated (obsolete)'
         default: 'off'
         type: string
         required: true
@@ -76,7 +76,7 @@ jobs:
   #       echo "inputs.platforms=${{ inputs.platforms }}"
 
   plan:
-    name: Generate default values (pub dev yml)
+    name: generate default values (pub dev yml)
     runs-on: ubuntu-latest
     outputs:
       manual_name: ${{ steps.gen1.outputs.manual_name }}
@@ -100,7 +100,7 @@ jobs:
           echo "manual_name=default" | tee -a "$GITHUB_OUTPUT"
           echo "manual_tag=default" | tee -a "$GITHUB_OUTPUT"
           echo "platforms=linux_x64 linux_armhf linux_arm64 macos_intel macos_apple windows_x64 windows_x32 windows_portable_x64 windows_portable_x32" | tee -a "$GITHUB_OUTPUT"
-          echo "build_mode=devel" | tee -a "$GITHUB_OUTPUT"
+          echo "build_mode=devel" | tee -a "$GITHUB_OUTPUT"  # copied from make_build_mode_env.sh
           echo "runtest=on" | tee -a "$GITHUB_OUTPUT"
           echo "mtestuploadpath=''" | tee -a "$GITHUB_OUTPUT"
           echo "runvisualtest=on" | tee -a "$GITHUB_OUTPUT"
@@ -114,7 +114,7 @@ jobs:
           echo "manual_name=default" | tee -a "$GITHUB_OUTPUT"
           echo "manual_tag=default" | tee -a "$GITHUB_OUTPUT"
           echo "platforms=linux_x64 linux_armhf linux_arm64 macos_intel macos_apple windows_x64 windows_x32 windows_portable_x64 windows_portable_x32" | tee -a "$GITHUB_OUTPUT"
-          echo "build_mode=nightly" | tee -a "$GITHUB_OUTPUT"  # copy from make_build_mode_env.sh
+          echo "build_mode=nightly" | tee -a "$GITHUB_OUTPUT"  # copied from make_build_mode_env.sh
           echo "runtest=on" | tee -a "$GITHUB_OUTPUT"
           echo "mtestuploadpath=''" | tee -a "$GITHUB_OUTPUT"
           echo "runvisualtest=on" | tee -a "$GITHUB_OUTPUT"
@@ -128,7 +128,7 @@ jobs:
           echo "manual_name=default" | tee -a "$GITHUB_OUTPUT"
           echo "manual_tag=default" | tee -a "$GITHUB_OUTPUT"
           echo "platforms=linux_x64 linux_armhf linux_arm64 macos_intel macos_apple windows_x64 windows_x32 windows_portable_x64 windows_portable_x32" | tee -a "$GITHUB_OUTPUT"
-          echo "build_mode=devel" | tee -a "$GITHUB_OUTPUT"  # copy from make_build_mode_env.sh
+          echo "build_mode=devel" | tee -a "$GITHUB_OUTPUT"  # copied from make_build_mode_env.sh
           echo "runtest=on" | tee -a "$GITHUB_OUTPUT"
           echo "mtestuploadpath=''" | tee -a "$GITHUB_OUTPUT"
           echo "runvisualtest=on" | tee -a "$GITHUB_OUTPUT"
@@ -182,11 +182,13 @@ jobs:
         else
           echo "release_name=${{ needs.plan.outputs.manual_name }}" | tee -a "$GITHUB_OUTPUT"
         fi
+        
         if [[ "${{ needs.plan.outputs.manual_tag }}" == "default" ]] ; then
           echo "release_tag=$(git log -1 --format=%cd --date=format:%Y%m%d)" | tee -a "$GITHUB_OUTPUT"
         else
           echo "release_tag=${{ needs.plan.outputs.manual_tag }}" | tee -a "$GITHUB_OUTPUT"
         fi
+
         if [[ $(git tag -list "$release_tag") ]]; then
           echo "tag already exists"
           if [[ "$(git tag --points-at $GITHUB_SHA)" != "$release_tag" ]]; then
