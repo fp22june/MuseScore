@@ -4,16 +4,9 @@ trap 'echo setup.sh failed; exit 1' ERR
 
 df -h .
 
-echo "bash home = $HOME"
-
 # var bash and github
-ARTIFACTS_DIR="build.artifacts"
-ENV_FILE=$ARTIFACTS_DIR/environment.sh # does not use $HOME or $BUILD_TOOLS(derived from $HOME), as bash $HOME != github action $HOME
-echo "ENV_FILE at $ENV_FILE"
-# setup.sh create and write $ENV_FILE
-mkdir -p $ARTIFACTS_DIR
-rm -f $ENV_FILE
-echo "echo 'Setup MuseScore build environment'" >> $ENV_FILE
+eval "$(./build/ci/tools/create_artifact_env.sh)"
+echo 'echo "Setup MuseScore build environment"' >> $ENV_FILE
 
 # param
 #   optional
@@ -43,16 +36,15 @@ fi
 
 echo "############################## GET DEPENDENCIES ##############################"
 
-# missing on github workflow machine
 apt_packages=( # musescore 3
-  # apt_packages_basic=( # missing when switch from using Travis CI to Docker
+  # apt_packages_basic=(
   file
   git
   # pkg-config # https://github.com/musescore/MuseScore/pull/25609
   software-properties-common # installs `add-apt-repository`
   unzip
   p7zip-full
-  # apt_packages_standard=( # missing on Travis CI and Docker
+  # apt_packages_standard=(
   curl
   libasound2-dev 
   libfontconfig1-dev
@@ -68,24 +60,16 @@ apt_packages=( # musescore 3
   make
   portaudio19-dev # musescore 3 needs, but removed in musescore 4
   wget
-)
+  )
 apt_packagesARM=(
-# musescore 3 ARM used to self build tools, these their dep (unsure). If bug appears on ARM, try re-enabling, or test artifacts here https://github.com/fp22june/MuseScore/actions/runs/14763611042
-  # argagg-dev
-  # fuse
-  # gpg
-  # libcurl4-openssl-dev
-  # libgpg-error-dev
-  # patchelf
-  # patch
 # adapt musescore 4. Apr20,2025 https://github.com/musescore/MuseScore/blob/b02a3fc49e37ae5d7a41892add56d36d3ee689d9/buildscripts/ci/linux/setup.sh
 # comment out to leave as future backport ref, mark 3 = duplicate musescore 3
   coreutils
-  # curl # 3
+  # 3 curl
   desktop-file-utils # installs `desktop-file-validate` for appimagetool
   gawk
-  # file # 3
-  # git # 3
+  # 3 file
+  # 3 git
   libboost-dev
   libboost-filesystem-dev
   libboost-regex-dev
@@ -93,31 +77,31 @@ apt_packagesARM=(
   libfuse-dev
   libtool
   libssl-dev
-  # pkg-config # 3
+  # 3 pkg-config
   xxd
-  # p7zip-full # 3
-  # libasound2-dev  # 3
-  # libfontconfig1-dev # 3
-  # libfreetype6 # 3
-  # libfreetype6-dev # 3
+  # 3 p7zip-full
+  # 3 libasound2-dev 
+  # 3 libfontconfig1-dev
+  # 3 libfreetype6
+  # 3 libfreetype6-dev
   libgcrypt20-dev
-  # libgl1-mesa-dev # 3
+  # 3 libgl1-mesa-dev
   libglib2.0-dev
   libgpgme-dev # install for appimagetool
-  # libjack-dev # 3
-  # libnss3-dev # 3
-  # libportmidi-dev # 3
-  # libpulse-dev # 3
+  # 3 libjack-dev
+  # 3 libnss3-dev
+  # 3 libportmidi-dev
+  # 3 libpulse-dev
   librsvg2-dev
-  # libsndfile1-dev # 3
-  # libssl-dev # 3
-  # libtool # 3
-  # make # 3
-  # p7zip-full # 3
+  # 3 libsndfile1-dev
+  # 3 libssl-dev
+  # 3 libtool
+  # 3 make
+  # 3 p7zip-full
   sed
-  # software-properties-common # 3
-  # unzip # 3
-  # wget # 3
+  # 3 software-properties-common
+  # 3 unzip
+  # 3 wget
   zsync # installs `zsyncmake` for appimagetool
   )
 
@@ -135,36 +119,42 @@ apt_packages_runtime=(
   libxrandr2
   libxtst-dev
   libdrm-dev
-)
-apt_packages_runtimeARM=( # adapt musescore 4. Apr20,2025 https://github.com/musescore/MuseScore/blob/b02a3fc49e37ae5d7a41892add56d36d3ee689d9/buildscripts/ci/linux/setup.sh
-# comment out to leave as future backport ref, mark 3 = duplicate musescore 3
-  # libcups2 # 3
-  # libdbus-1-3 # 3
-  # libegl1-mesa-dev # 3
-  libgles2-mesa-dev # arm64 https://github.com/musescore/MuseScore/commit/2c38219cdb956003d7d5b1872447d8eee1f5205c
-  # libodbc1 # 3
-  # libpq-dev # 3
-  # libssl-dev # 3
-  # libxcomposite-dev # 3
-  # libxcursor-dev # 3
-  # libxi-dev # 3
-  # libxkbcommon-x11-0 # 3
-  # libxrandr2 # 3
-  # libxtst-dev # 3
-  # libdrm-dev # 3
-  libxcb-icccm4 
+  libxcb-icccm4
   libxcb-image0
   libxcb-keysyms1
   libxcb-randr0
   libxcb-render-util0
   libxcb-xinerama0
-  libxcb-xkb-dev
-  libxkbcommon-dev
-  libopengl-dev # fix ARM startup bug   https://github.com/musescore/MuseScore/issues/24228
-  # libvulkan-dev # Qt6.2 https://github.com/musescore/MuseScore/pull/21544/files
+  )
+apt_packages_runtimeARM=( # adapt musescore 4. Apr20,2025 https://github.com/musescore/MuseScore/blob/b02a3fc49e37ae5d7a41892add56d36d3ee689d9/buildscripts/ci/linux/setup.sh
+# comment out to leave as future backport ref, mark 3 = duplicate musescore 3
+  # 3 libcups2
+  # 3 libdbus-1-3
+  # 3 libegl1-mesa-dev
+  libgles2-mesa-dev # arm64 https://github.com/musescore/MuseScore/commit/2c38219cdb956003d7d5b1872447d8eee1f5205c
+  # 3 libodbc1
+  # 3 libpq-dev
+  # 3 libssl-dev
+  # 3 libxcomposite-dev
+  # 3 libxcursor-dev
+  # 3 libxi-dev
+  # 3 libxkbcommon-x11-0
+  # 3 libxrandr2
+  # 3 libxtst-dev
+  # 3 libdrm-dev
+  # 3 libxcb-icccm4
+  # 3 libxcb-image0
+  # 3 libxcb-keysyms1
+  # 3 libxcb-randr0
+  # 3 libxcb-render-util0
+  # 3 libxcb-xinerama0
+  # libxcb-xkb-dev # Added support Qt6.2 to Lin CI #21544 
+  # libxkbcommon-dev # Added support Qt6.2 to Lin CI #21544 
+  libopengl-dev # fix ARM startup bug   https://github.com/musescore/MuseScore/issues/24228 , qt5 and qt6 https://bugreports.qt.io/browse/QTBUG-89754 , libOpenGL.so.0 in make_appimage.sh 
+  # libvulkan-dev # Added support Qt6.2 to Lin CI #21544 
   )
 
-# tried to exclude on ARM, get xkb missing package compile error
+# ARM xkb missing package compile error
 apt_packages_ffmpeg=(
   ffmpeg
   libavcodec-dev 
@@ -177,8 +167,7 @@ case "$PACKARCH" in
   x86_64)
     apt-get install -y --no-install-recommends \
       "${apt_packages[@]}" \
-      "${apt_packages_runtime[@]}" \
-      "${apt_packages_ffmpeg[@]}"
+      "${apt_packages_runtime[@]}" 
     ;;
   armv7l | aarch64)
     apt-get install -y --no-install-recommends \
@@ -202,16 +191,28 @@ case "$PACKARCH" in
     #   5.15 revert back to 5.9
     #   Fix vtests build using a similar method as the mtest.
     #   Doesn't work, so back to 5.9.8, for Linux, for now...
-    #
-    # trying 5152 again see if vtest ok
-    qt_version="5152"
-    qt_dir="$BUILD_TOOLS/Qt/${qt_version}"
+
+    # qtselect="qt5"
+    # qt_version="5152"
+    # qt_dir="$BUILD_TOOLS/Qt/${qt_version}"
+    # if [[ ! -d "${qt_dir}" ]]; then
+    #   mkdir -p "${qt_dir}"
+    #   qt_url="https://s3.amazonaws.com/utils.musescore.org/Qt${qt_version}_gcc64.7z"
+    #   wget -q --show-progress -O qt5.7z "${qt_url}"
+    #   7z x -y qt5.7z -o"${qt_dir}"
+    # fi
+
+    qtselect="qt5"
+    qt_version="598"
+    qt_dir="/opt/qt${qt_version}"
     if [[ ! -d "${qt_dir}" ]]; then
       mkdir -p "${qt_dir}"
-      qt_url="https://s3.amazonaws.com/utils.musescore.org/Qt${qt_version}_gcc64.7z"
-      wget -q --show-progress -O qt5.7z "${qt_url}"
-      7z x -y qt5.7z -o"${qt_dir}"
+      qt_url="https://s3.amazonaws.com/utils.musescore.org/qt${qt_version}.zip"
+      wget -q --show-progress -O qt5.zip "${qt_url}"
+      7z x -y qt5.zip -o"${qt_dir}"
     fi
+    # todo : utils.musescore.org does not contain wayland, edit also make_appimage.sh
+
     ;;
   armv7l | aarch64)
     # kitware is the cmake company
@@ -221,8 +222,8 @@ case "$PACKARCH" in
 
     add-apt-repository --yes ppa:theofficialgman/opt-qt-5.15.2-focal-arm
     echo "using ppa:theofficialgman/opt-qt-5.15.2-focal-arm" # one package containing focal jammy and bionic
-    qt_version="5152"
-    qt_dir="/opt/qt515"
+    qtselect="qt5"
+    qt_dir="/opt/qt515" # qt_version="5152"
     apt-get update
 
     apt_packages_qt=(
@@ -247,6 +248,7 @@ case "$PACKARCH" in
     ;;
 esac
 
+echo export QT_SELECT="$qtselect" >> ${ENV_FILE}
 echo export PATH="${qt_dir}/bin:\${PATH}" >> ${ENV_FILE}
 echo export LD_LIBRARY_PATH="${qt_dir}/lib:\${LD_LIBRARY_PATH}" >> ${ENV_FILE}
 echo export QT_PATH="${qt_dir}" >> ${ENV_FILE}
@@ -299,8 +301,8 @@ case "$PACKARCH" in
 esac
 cmake --version
 
-echo export CFLAGS="'$CFLAGS'" >> ${ENV_FILE}
-echo export CXXFLAGS="'$CXXFLAGS'" >> ${ENV_FILE}
+echo export CFLAGS="'$CFLAGS'" >> $ENV_FILE
+echo export CXXFLAGS="'$CXXFLAGS'" >> $ENV_FILE
 
 # ms3 does not use ninja (yet)
 

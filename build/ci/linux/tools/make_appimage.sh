@@ -123,8 +123,12 @@ mkdir -p "$qt_sql_drivers_tmp"
 
 # Semicolon-separated list of platforms to deploy in addition to `libqxcb.so`.
 # Used by linuxdeploy-plugin-qt.
-export EXTRA_PLATFORM_PLUGINS="libqwayland-egl.so;libqwayland-generic.so"
-# libqoffscreen.so not backported, it fixes musescore 4 headless regression https://github.com/musescore/MuseScore/issues/17247
+if [[ "$PACKARCH" == armhf ]]; then
+  export EXTRA_PLATFORM_PLUGINS="libqwayland-egl.so;libqwayland-generic.so" # x86_64 uses qt 5.9 at utils.musescore.org does not include wayland, see setup.sh L200
+  # libqoffscreen.so not backported, it fixes musescore 4 headless regression https://github.com/musescore/MuseScore/issues/17247
+else
+  export EXTRA_PLATFORM_PLUGINS=""
+fi
 
 # Colon-separated list of root directories containing QML files.
 # Needed for linuxdeploy-plugin-qt to scan for QML imports.
@@ -194,12 +198,13 @@ unwanted_files=(
 # linuxdeploy-plugin-qt may have missed some Qt files or folders that we need.
 # List them here using paths relative to the Qt root directory. Report new
 # additions at https://github.com/linuxdeploy/linuxdeploy-plugin-qt/issues
-additional_qt_components=(
+additional_qt_components_copyifexist=(
   plugins/printsupport/libcupsprintersupport.so
 
   # At an unknown point in time, the libqgtk3 plugin stopped being deployed
-  plugins/platformthemes/libqgtk3.so # file dialog https://github.com/musescore/MuseScore/issues/10836
+  # plugins/platformthemes/libqgtk3.so # file dialog https://github.com/musescore/MuseScore/issues/10836
 
+  # if exist. todo: use qt5 containing wayland
   # Wayland support (run with QT_QPA_PLATFORM=wayland to use)
   plugins/wayland-decoration-client
   plugins/wayland-graphics-integration-client
@@ -212,7 +217,7 @@ additional_qt_components=(
 if [[ "$PACKARCH" == "x86_64" ]]; then
   additional_libraries=(
     libssl.so.1.1    # OpenSSL (for Save Online)
-    libcrypto.so.1.1 # OpenSSL (for Save Online). missing after github ubuntu update https://github.com/musescore/MuseScore/issues/18120#issuecomment-1604116777
+    libcrypto.so.1.1 # OpenSSL (for Save Online). openssl missing after github ubuntu update https://github.com/musescore/MuseScore/issues/18120#issuecomment-1604116777
   )
 else
   additional_libraries=()
@@ -229,7 +234,7 @@ fi
 # Report new additions at https://github.com/linuxdeploy/linuxdeploy/issues
 fallback_libraries=(
   libjack.so.0 # https://github.com/LMMS/lmms/pull/3958
-  libOpenGL.so.0 # qt5 and qt6 https://bugreports.qt.io/browse/QTBUG-89754
+  libOpenGL.so.0 # fix ARM startup bug   https://github.com/musescore/MuseScore/issues/24228 , qt5 and qt6 https://bugreports.qt.io/browse/QTBUG-89754, libopengl-dev in setup.sh
 )
 
 # PREVIOUSLY EXTRACTED APPIMAGES
@@ -249,13 +254,15 @@ for file in "${unwanted_files[@]}"; do
   rm -rf "${appdir}/${file}"
 done
 
-for file in "${additional_qt_components[@]}"; do
+for file in "${additional_qt_components_copyifexist[@]}"; do # copyifexist
   if [ -f "${appdir}/${file}" ]; then
     echo "Warning: ${file} was already deployed. Skipping."
     continue
   fi
-  mkdir -p "${appdir}/$(dirname "${file}")"
-  cp -Lr "${QT_PATH}/${file}" "${appdir}/${file}"
+  if [ -f "${QT_PATH}/${file}" ]; then
+    mkdir -p "${appdir}/$(dirname "${file}")"
+    cp -Lr "${QT_PATH}/${file}" "${appdir}/${file}"
+  fi
 done
 
 for lib in "${additional_libraries[@]}"; do

@@ -3,9 +3,9 @@ name: 'Build: All'
 on:
   # schedule: # scheduled workflows will only run on the default branch. edit default values under gen1 below
   #   - cron: '0 4 */1 * *' # At 04:00 on every day-of-month
-  push: # push.inputs field does not exist, use gen1 below
-    branches:
-      - temp32
+  # push: # push.inputs field does not exist, use gen1 below
+  #   branches:
+  #     - temp32
   # pull_request: # pull_request.inputs field does not exist, edit gen1 below
   workflow_dispatch: # triggered by github web ui run "build all" workflow button
     inputs:
@@ -173,7 +173,6 @@ jobs:
           echo "runtestjob=off" | tee -a "$GITHUB_OUTPUT"
           if [[ -z "${{ inputs.execfrom }}" ]]; then
             echo "execfrom=buildall" | tee -a "$GITHUB_OUTPUT"
-            echo "platforms=" | tee -a "$GITHUB_OUTPUT"
           else
             echo "execfrom=${{ inputs.execfrom }}" | tee -a "$GITHUB_OUTPUT"
           fi
@@ -192,7 +191,7 @@ jobs:
         fi
 
   linux:
-    name: Linux
+    name: Linux and Unit tests (mtest)
     needs:
       - plan
     uses: ./.github/workflows/build_linux.yml

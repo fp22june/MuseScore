@@ -62,7 +62,7 @@ defaults:
 
 jobs:
   plan:
-    name: setup (pub dev yml)
+    name: Setup (pub dev yml)
     runs-on: ubuntu-latest
     outputs:
       manual_name: ${{ steps.gen1.outputs.manual_name }}
@@ -117,7 +117,9 @@ jobs:
           echo "publish=off" | tee -a "$GITHUB_OUTPUT"
           echo "notarize=on" | tee -a "$GITHUB_OUTPUT"
 
-          echo "platforms=macos_intel" | tee -a "$GITHUB_OUTPUT" 
+          echo "platforms=linux_armhf linux_arm64" | tee -a "$GITHUB_OUTPUT" 
+          echo "runtest=off" | tee -a "$GITHUB_OUTPUT"
+          echo "runvisualtest=off" | tee -a "$GITHUB_OUTPUT"
 
         else
 
@@ -167,6 +169,8 @@ jobs:
           if [[ "$(git tag --points-at $GITHUB_SHA)" != "$release_tag" ]]; then
             echo "tag is not on the latest commit"
             exit 1
+          else
+            echo "reusing tag"
           fi
         fi
 
@@ -207,6 +211,7 @@ jobs:
       run: |
         build/ci/release/collate_release_binaries.sh
     - name: Tag the lastest commit on default branch
+      if: git tag -list "${{ needs.plan2.outputs.release_tag }}"
       run: |
         git tag "${{ needs.plan2.outputs.release_tag }}" "${GITHUB_SHA}"
         git push origin "${{ needs.plan2.outputs.release_tag }}"

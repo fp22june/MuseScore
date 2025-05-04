@@ -5,10 +5,7 @@ trap 'echo package.sh failed; exit 1' ERR
 df -h .
 
 # var bash and github
-ARTIFACTS_DIR="build.artifacts"
-ENV_FILE=$ARTIFACTS_DIR/environment.sh # does not use $HOME or $BUILD_TOOLS(derived from $HOME), as bash $HOME != github action $HOME
-echo "ENV_FILE at $ENV_FILE"
-source "$ENV_FILE"
+eval "$(./build/ci/tools/read_artifact_env.sh)"
 
 # param
 #  optional
@@ -31,8 +28,8 @@ if [ -z "$PACKARCH" ]; then echo "error: not set PACKARCH"; exit 1; fi
 BUILD_DIR=build.release
 INSTALL_DIR="$(cat $BUILD_DIR/PREFIX.txt)" # MuseScore was installed here
 PACKTYPE=appimage
-if [ -z "$BUILD_MODE" ]; then BUILD_MODE=$(cat $ARTIFACTS_DIR/env/build_mode.env); fi # active get param
-if [ -z "$BUILD_VERSION" ]; then BUILD_VERSION=$(cat $ARTIFACTS_DIR/env/build_version.env); fi # active get param
+if [ -z "$BUILD_MODE" ]; then BUILD_MODE=$(cat $ARTIFACTS_DIR/env/build_mode.env); fi
+if [ -z "$BUILD_VERSION" ]; then BUILD_VERSION=$(cat $ARTIFACTS_DIR/env/build_version.env); fi
 
 # main
 if [ -z "$BUILD_MODE" ]; then echo "error: not set BUILD_MODE"; exit 1; fi

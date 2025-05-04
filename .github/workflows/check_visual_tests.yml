@@ -1,21 +1,21 @@
 name: 'Check: Visual Tests (vtests)'
 
 on:
-  # schedule:
+  # schedule: # scheduled workflows will only run on the default branch. edit default values under gen1 below
+  #   - cron: '0 4 */1 * *' # At 04:00 on every day-of-month
   # push: # push.inputs field does not exist, use gen1 below
   #   branches:
   #   - 3.x
-  # pull_request:
-  #   branches:
-  #   - temp32
-  # workflow_dispatch: # triggered by github web ui run "Check: Visual Tests (vtest)" workflow button.
+  pull_request:
+  workflow_dispatch: # triggered by github web ui run "Check: Visual Tests (vtest)" workflow button.
   workflow_call: # triggered by "uses" from other yml files.
+
+env:
+  CPUS: 4
 
 jobs:
   run_vtests:
     runs-on: ubuntu-22.04
-    env:
-      CPUS: 4
     steps:
     - name: Cancel Previous Runs
       uses: styfle/cancel-workflow-action@0.12.1
@@ -52,19 +52,19 @@ jobs:
       run: |
         git checkout $BASEREF
         sudo bash ./build/ci/linux/build.sh -p "$HOME/softwarebase" -n ${{ github.run_id }} -m vtests -u $CPUS
-    - name: Run vtests using proposed change build
+    - name: Run vtests using current build
       if: contains( env.found, '1')
       run: |
-        bash ./build/ci/tools/read_artifact_env.sh
+        eval "$(./build/ci/tools/read_artifact_env.sh)"
         cd vtest
         export VTEST_MSCORE="$HOME/softwarebase/bin/mscore"
         export VTEST_BROWSER=ls
         export VTEST_DIR=$(pwd)
         xvfb-run ./gen
-    - name: Run vtests using current build
+    - name: Run vtests using proposed change build
       if: contains( env.found, '1')
       run: |
-        bash ./build/ci/tools/read_artifact_env.sh
+        eval "$(./build/ci/tools/read_artifact_env.sh)"
         git checkout -
         cd vtest
         mkdir -p compare
@@ -77,7 +77,7 @@ jobs:
     - name: Compare vtests
       if: contains( env.found, '1')
       run: |
-        bash ./build/ci/tools/read_artifact_env.sh
+        eval "$(./build/ci/tools/read_artifact_env.sh)"
         cd vtest
         export VTEST_DIR=$(pwd)
         ./gen_compare

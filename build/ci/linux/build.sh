@@ -5,10 +5,7 @@ trap 'echo build.sh failed; exit 1' ERR
 df -h .
 
 # var bash and github
-ARTIFACTS_DIR="build.artifacts"
-ENV_FILE=$ARTIFACTS_DIR/environment.sh # does not use $HOME or $BUILD_TOOLS(derived from $HOME), as bash $HOME != github action $HOME
-echo "ENV_FILE at $ENV_FILE"
-source "$ENV_FILE"
+eval "$(./build/ci/tools/read_artifact_env.sh)"
 
 # param
 #   optional
@@ -51,6 +48,8 @@ if [ "${BUILDTYPE}" == "portable" ]; then
   SUFFIX="-portable${SUFFIX}" # special value needed for CMakeLists.txt
 fi
 
+echo "=== COMPILE PARAM AND ENVIRONMENT === "
+
 echo "CPUS: $CPUS"
 echo "MUSESCORE_BUILD_CONFIG: $MUSESCORE_BUILD_CONFIG"
 echo "BUILD_NUMBER: $BUILD_NUMBER"
@@ -59,8 +58,7 @@ echo "BUILD_MODE: $BUILD_MODE"
 echo "BUILDTYPE: $BUILDTYPE"
 echo "OPTIONS: $OPTIONS"
 
-echo "=== ENVIRONMENT === "
-
+echo " "
 cat "$ENV_FILE"
 echo " "
 ${CXX} --version
@@ -73,8 +71,8 @@ echo "=== BUILD ==="
 
 MUSESCORE_REVISION=$(git rev-parse --short=7 HEAD)
 
-if [ "${PREFIX}" != '' ]; then
-  mkdir -p "${PREFIX}"
+if [[ -n $PREFIX ]]; then
+  mkdir -p $PREFIX
 fi
 
 make clean
