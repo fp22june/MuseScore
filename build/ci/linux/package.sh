@@ -1,61 +1,48 @@
 #!/usr/bin/env bash
-# SPDX-License-Identifier: GPL-3.0-only
-# MuseScore-CLA-applies
-#
-# MuseScore
-# Music Composition & Notation
-#
-# Copyright (C) 2021 MuseScore BVBA and others
-#
-# This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License version 3 as
-# published by the Free Software Foundation.
-#
-# This program is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
-#
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <https://www.gnu.org/licenses/>.
-echo "Package MuseScore"
-trap 'echo Package failed; exit 1' ERR
+echo "############################## Package MuseScore (package.sh) ##############################"
+trap 'echo package.sh failed; exit 1' ERR
 
 df -h .
 
-BUILD_TOOLS=$HOME/build_tools
-ARTIFACTS_DIR=build.artifacts
-BUILD_MODE=""
-BUILD_DIR=build.release
-INSTALL_DIR="$(cat $BUILD_DIR/PREFIX.txt)" # MuseScore was installed here
+# var bash and github
+ARTIFACTS_DIR="build.artifacts"
+ENV_FILE=$ARTIFACTS_DIR/environment.sh # does not use $HOME or $BUILD_TOOLS(derived from $HOME), as bash $HOME != github action $HOME
+echo "ENV_FILE at $ENV_FILE"
+source "$ENV_FILE"
 
+# param
+#  optional
+BUILD_MODE=''
+BUILD_VERSION=''
+#  consume
 while [[ "$#" -gt 0 ]]; do
     case $1 in
-        --build_mode) BUILD_MODE="$2"; shift ;;
+        -m|--build_mode) BUILD_MODE="$2"; shift ;;
         -v|--version) BUILD_VERSION="$2"; shift ;;
-        --arch) PACKARCH="$2"; shift ;;
+        -a|--arch) PACKARCH="$2"; shift ;;
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
     esac
     shift
 done
+#  required
+if [ -z "$PACKARCH" ]; then echo "error: not set PACKARCH"; exit 1; fi
 
-source $BUILD_TOOLS/environment.sh
+# init
+BUILD_DIR=build.release
+INSTALL_DIR="$(cat $BUILD_DIR/PREFIX.txt)" # MuseScore was installed here
+PACKTYPE=appimage
+if [ -z "$BUILD_MODE" ]; then BUILD_MODE=$(cat $ARTIFACTS_DIR/env/build_mode.env); fi # active get param
+if [ -z "$BUILD_VERSION" ]; then BUILD_VERSION=$(cat $ARTIFACTS_DIR/env/build_version.env); fi # active get param
 
-if [ -z "$BUILD_MODE" ]; then BUILD_MODE=$(cat $ARTIFACTS_DIR/env/build_mode.env); fi
-if [ -z "$BUILD_VERSION" ]; then BUILD_VERSION=$(cat $ARTIFACTS_DIR/env/build_version.env); fi
-
+# main
 if [ -z "$BUILD_MODE" ]; then echo "error: not set BUILD_MODE"; exit 1; fi
 if [ -z "$BUILD_VERSION" ]; then echo "error: not set BUILD_VERSION"; exit 1; fi
-
-PACKTYPE=appimage
 if [ "$BUILD_MODE" == "devel" ]; then PACKTYPE=appimage; fi
 if [ "$BUILD_MODE" == "nightly" ]; then PACKTYPE=appimage; fi
 if [ "$BUILD_MODE" == "testing" ]; then PACKTYPE=appimage; fi
 if [ "$BUILD_MODE" == "stable" ]; then PACKTYPE=appimage; fi
 
 MAJOR_VERSION="${BUILD_VERSION%%.*}"
-
-if [ -z "$PACKARCH" ]; then PACKARCH="x86_64"; fi
 
 echo "BUILD_MODE: $BUILD_MODE"
 echo "BUILD_VERSION: $BUILD_VERSION"
@@ -90,7 +77,7 @@ if [ "$PACKTYPE" == "appimage" ]; then
     *) unset UPDATE_INFORMATION;; # disable updates for other build modes
     esac
 
-    bash ./build/ci/linux/tools/make_appimage.sh "${INSTALL_DIR}" "${ARTIFACT_NAME}.AppImage"
+    bash ./build/ci/linux/tools/make_appimage.sh "${INSTALL_DIR}" "${ARTIFACT_NAME}.AppImage" "${PACKARCH}"
     mv "${BUILD_DIR}/${ARTIFACT_NAME}.AppImage" "${ARTIFACTS_DIR}/"
     bash ./build/ci/tools/make_artifact_name_env.sh $ARTIFACT_NAME.AppImage
 
@@ -102,4 +89,4 @@ fi
 
 df -h .
 
-echo "Package has finished!"
+echo "package.sh has finished!"
