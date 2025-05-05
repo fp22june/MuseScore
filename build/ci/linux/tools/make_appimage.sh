@@ -139,8 +139,7 @@ linuxdeploy --appdir "${appdir}" # adds all shared library dependencies
 linuxdeploy-plugin-qt --appdir "${appdir}" # adds all Qt dependencies
 
 # The system must be used
-# musescore 3 x86_64 mtest workspace
-if  [[ "$PACKARCH" == armhf ]] && [ -f ${appdir}/lib/libglib-2.0.so.0 ]; then
+if [ -f ${appdir}/lib/libglib-2.0.so.0 ]; then
   rm -f ${appdir}/lib/libglib-2.0.so.0 
 fi
 
@@ -149,12 +148,13 @@ unset QML_SOURCES_PATHS EXTRA_PLATFORM_PLUGINS
 # Approximately on June 1, the QtQuick/Controls.2 stopped being deploying 
 # (at that time the linux deploy was updated). 
 # This is a hack, for the deployment of QtQuick/Controls.2 
-if [ ! -f ${appdir}/usr/lib/libQt5QuickControls2.so.5 ]; then
-    cp -r ${QT_PATH}/qml/QtQuick/Controls.2 ${appdir}/usr/qml/QtQuick/Controls.2
-    cp -r ${QT_PATH}/qml/QtQuick/Templates.2 ${appdir}/usr/qml/QtQuick/Templates.2
-    cp ${QT_PATH}/lib/libQt5QuickControls2.so.5 ${appdir}/usr/lib/libQt5QuickControls2.so.5 
-    cp ${QT_PATH}/lib/libQt5QuickTemplates2.so.5 ${appdir}/usr/lib/libQt5QuickTemplates2.so.5 
-fi
+# if [ ! -f ${appdir}/usr/lib/libQt5QuickControls2.so.5 ]; then
+#     echo "libQt5QuickControls2 QtQuick/Controls.2 hack"
+#     cp -r ${QT_PATH}/qml/QtQuick/Controls.2 ${appdir}/usr/qml/QtQuick/Controls.2
+#     cp -r ${QT_PATH}/qml/QtQuick/Templates.2 ${appdir}/usr/qml/QtQuick/Templates.2
+#     cp ${QT_PATH}/lib/libQt5QuickControls2.so.5 ${appdir}/usr/lib/libQt5QuickControls2.so.5 
+#     cp ${QT_PATH}/lib/libQt5QuickTemplates2.so.5 ${appdir}/usr/lib/libQt5QuickTemplates2.so.5 
+# fi
 
 # Return the moved libraries back
 [ -f "${qt_sql_drivers_tmp}/libqsqlmysql.so" ] && mv "${qt_sql_drivers_tmp}/libqsqlmysql.so" "${qt_sql_drivers_path}/libqsqlmysql.so"
@@ -203,7 +203,7 @@ additional_qt_components_copyifexist=(
   plugins/printsupport/libcupsprintersupport.so
 
   # At an unknown point in time, the libqgtk3 plugin stopped being deployed
-  # plugins/platformthemes/libqgtk3.so # file dialog https://github.com/musescore/MuseScore/issues/10836
+  plugins/platformthemes/libqgtk3.so # file dialog https://github.com/musescore/MuseScore/issues/10836
 
   # add if exist. todo: use qt5 containing wayland, see setup.sh L200
   # Wayland support (run with QT_QPA_PLATFORM=wayland to use)

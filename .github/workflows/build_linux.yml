@@ -125,7 +125,7 @@ jobs:
           echo "publish=off" | tee -a "$GITHUB_OUTPUT"
 
 
-          echo "platforms=linux_x64" | tee -a "$GITHUB_OUTPUT"
+          echo "platforms=linux_x64 linux_arm64" | tee -a "$GITHUB_OUTPUT"
 
         else
 
