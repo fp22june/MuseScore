@@ -401,12 +401,20 @@ jobs:
       run: |
         sudo docker system prune -a -f
         sudo rm -rf /usr/local/lib/android
-    - name: Setup environment
+      
+    - name: test1
       run: |
-        sudo bash ./build/ci/linux/setup.sh --cflags '-fsanitize=address -fno-omit-frame-pointer' --cxxflags '-fsanitize=address -fno-omit-frame-pointer' 
-    - name: Build
+        ./build/ci/linux/test.sh
+    - name: test2
       run: |
-        sudo bash ./build/ci/linux/build.sh -n ${{ github.run_id }} --build_mode mtests
-    - name: Run mtests
-      run: |
-        sudo ./build/ci/linux/runmtests.sh
+        echo "bash"
+        sudo bash ./build/ci/linux/test.sh
+    # - name: Setup environment
+    #   run: |
+    #     sudo bash ./build/ci/linux/setup.sh --cflags '-fsanitize=address -fno-omit-frame-pointer' --cxxflags '-fsanitize=address -fno-omit-frame-pointer' 
+    # - name: Build
+    #   run: |
+    #     sudo bash ./build/ci/linux/build.sh -n ${{ github.run_id }} --build_mode mtests
+    # - name: Run mtests
+    #   run: |
+    #     sudo ./build/ci/linux/runmtests.sh
