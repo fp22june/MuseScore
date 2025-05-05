@@ -119,12 +119,6 @@ apt_packages_runtime=(
   libxrandr2
   libxtst-dev
   libdrm-dev
-  libxcb-icccm4
-  libxcb-image0
-  libxcb-keysyms1
-  libxcb-randr0
-  libxcb-render-util0
-  libxcb-xinerama0
   )
 apt_packages_runtimeARM=( # adapt musescore 4. Apr20,2025 https://github.com/musescore/MuseScore/blob/b02a3fc49e37ae5d7a41892add56d36d3ee689d9/buildscripts/ci/linux/setup.sh
 # comment out to leave as future backport ref, mark 3 = duplicate musescore 3
@@ -142,12 +136,12 @@ apt_packages_runtimeARM=( # adapt musescore 4. Apr20,2025 https://github.com/mus
   # 3 libxrandr2
   # 3 libxtst-dev
   # 3 libdrm-dev
-  # 3 libxcb-icccm4
-  # 3 libxcb-image0
-  # 3 libxcb-keysyms1
-  # 3 libxcb-randr0
-  # 3 libxcb-render-util0
-  # 3 libxcb-xinerama0
+  libxcb-icccm4
+  libxcb-image0
+  libxcb-keysyms1
+  libxcb-randr0
+  libxcb-render-util0
+  libxcb-xinerama0
   # libxcb-xkb-dev # Added support Qt6.2 to Lin CI #21544 
   # libxkbcommon-dev # Added support Qt6.2 to Lin CI #21544 
   libopengl-dev # fix ARM startup bug   https://github.com/musescore/MuseScore/issues/24228 , qt5 and qt6 https://bugreports.qt.io/browse/QTBUG-89754 , libOpenGL.so.0 in make_appimage.sh 
