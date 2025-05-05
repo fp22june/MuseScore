@@ -11,13 +11,13 @@ eval "$(./build/ci/tools/read_artifact_env.sh)"
 #   optional
 TELEMETRY_TRACK_ID=""
 CPUS=4
-PREFIX=''
+VTESTPREFIX=''
 #   consume
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         -t|--telemetry) TELEMETRY_TRACK_ID="$2"; shift ;;
         -u|--cpus) CPUS="$2"; shift ;;
-        -p|--prefix) PREFIX="$2"; shift ;;
+        -p|--prefix) VTESTPREFIX="$2"; shift ;;
         -n|--number) BUILD_NUMBER="$2"; shift ;;
         -m|--build_mode) BUILD_MODE="$2"; shift ;;
         *) echo "Unknown parameter passed: $1"; exit 1 ;;
@@ -41,7 +41,7 @@ case "${BUILD_MODE}" in
 "testing") MUSESCORE_BUILD_CONFIG=testing; SUFFIX=-testing;;
 "stable")  MUSESCORE_BUILD_CONFIG=release; SUFFIX="";;
 "mtests")  MUSESCORE_BUILD_CONFIG=dev; BUILDTYPE=installdebug; OPTIONS="USE_SYSTEM_FREETYPE=ON UPDATE_CACHE=FALSE PREFIX=$ARTIFACTS_DIR/software";;
-"vtests")  MUSESCORE_BUILD_CONFIG=dev; BUILDTYPE=installdebug; OPTIONS="COVERAGE=ON DOWNLOAD_SOUNDFONT=OFF PREFIX=$PREFIX";;
+"vtests")  MUSESCORE_BUILD_CONFIG=dev; BUILDTYPE=installdebug; OPTIONS="COVERAGE=ON DOWNLOAD_SOUNDFONT=OFF PREFIX=$VTESTPREFIX";;
 esac
 
 if [ "${BUILDTYPE}" == "portable" ]; then
@@ -71,8 +71,8 @@ echo "=== BUILD ==="
 
 MUSESCORE_REVISION=$(git rev-parse --short=7 HEAD)
 
-if [[ -n $PREFIX ]]; then
-  mkdir -p $PREFIX
+if [[ -n $VTESTPREFIX ]]; then
+  mkdir -p $VTESTPREFIX
 fi
 
 make clean
@@ -93,3 +93,5 @@ bash ./build/ci/tools/make_branch_env.sh
 bash ./build/ci/tools/make_datetime_env.sh
 
 df -h .
+
+echo "build.sh ended"

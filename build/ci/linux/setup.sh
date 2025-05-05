@@ -312,4 +312,4 @@ case "$PACKARCH" in
 esac
 
 df -h .
-echo "setup.sh script done"
+echo "setup.sh ended"

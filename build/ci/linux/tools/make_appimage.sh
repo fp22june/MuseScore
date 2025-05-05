@@ -138,9 +138,11 @@ export QML_SOURCES_PATHS=./
 linuxdeploy --appdir "${appdir}" # adds all shared library dependencies
 linuxdeploy-plugin-qt --appdir "${appdir}" # adds all Qt dependencies
 
-# The system must be used
-if [ -f ${appdir}/lib/libglib-2.0.so.0 ]; then
-  rm -f ${appdir}/lib/libglib-2.0.so.0 
+if [[ "$PACKARCH" == "armhf" ]]; then
+  # The system must be used
+  if [ -f ${appdir}/lib/libglib-2.0.so.0 ]; then
+    rm -f ${appdir}/lib/libglib-2.0.so.0 
+  fi
 fi
 
 unset QML_SOURCES_PATHS EXTRA_PLATFORM_PLUGINS
@@ -203,7 +205,7 @@ additional_qt_components_copyifexist=(
   plugins/printsupport/libcupsprintersupport.so
 
   # At an unknown point in time, the libqgtk3 plugin stopped being deployed
-  plugins/platformthemes/libqgtk3.so # file dialog https://github.com/musescore/MuseScore/issues/10836
+  # plugins/platformthemes/libqgtk3.so # file dialog https://github.com/musescore/MuseScore/issues/10836
 
   # add if exist. todo: use qt5 containing wayland, see setup.sh L200
   # Wayland support (run with QT_QPA_PLATFORM=wayland to use)
@@ -233,10 +235,16 @@ fi
 # startup if the library was not found. The fallback library may not provide
 # the full functionality of the system version, but it does avoid the crash.
 # Report new additions at https://github.com/linuxdeploy/linuxdeploy/issues
-fallback_libraries=(
-  libjack.so.0 # https://github.com/LMMS/lmms/pull/3958
-  libOpenGL.so.0 # fix ARM startup bug https://github.com/musescore/MuseScore/issues/24228 , qt5 and qt6 https://bugreports.qt.io/browse/QTBUG-89754, libopengl-dev in setup.sh
-)
+if [[ "$PACKARCH" == "x86_64" ]]; then
+  fallback_libraries=(
+    libjack.so.0 # https://github.com/LMMS/lmms/pull/3958
+  )
+else
+  fallback_libraries=(
+    libjack.so.0 # https://github.com/LMMS/lmms/pull/3958
+    libOpenGL.so.0 # fix ARM startup bug https://github.com/musescore/MuseScore/issues/24228 , qt5 and qt6 https://bugreports.qt.io/browse/QTBUG-89754, libopengl-dev in setup.sh
+  )
+fi
 
 # PREVIOUSLY EXTRACTED APPIMAGES
 # These include their own dependencies. We bundle them uncompressed to avoid
@@ -363,4 +371,4 @@ fi
 # create AppImage
 appimagetool "${appimagetool_args[@]}" "${appdir}" "${appimage}"
 
-echo "make_appimage.sh finished"
+echo "make_appimage.sh ended"

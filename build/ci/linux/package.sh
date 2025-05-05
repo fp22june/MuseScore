@@ -86,4 +86,4 @@ fi
 
 df -h .
 
-echo "package.sh has finished!"
+echo "package.sh ended"

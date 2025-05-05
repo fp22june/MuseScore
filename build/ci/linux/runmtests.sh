@@ -24,4 +24,4 @@ ctest -j2 --output-on-failure
 
 df -h .
 
-echo "package.sh end"
+echo "run_mtests.sh ended"
