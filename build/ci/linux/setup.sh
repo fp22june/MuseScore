@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 echo "############################## Setup Linux build environment (setup.sh) ##############################"
-trap 'echo setup.sh failed; exit 1' ERR
+trap 'echo setup.sh failed; exit 1'  ERR
 
 df -h .
 
