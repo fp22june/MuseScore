@@ -2358,6 +2358,90 @@ Shortcut Shortcut::_sc[] = {
       {
          MsWidget::SCORE_TAB,
          STATE_NORMAL | STATE_NOTE_ENTRY,
+         "pedal-straight-hooks",
+         QT_TRANSLATE_NOOP("action","Pedal (straight hooks)"),    // Appears in menu, so Title Case
+         QT_TRANSLATE_NOOP("action","Add Pedal (straight hooks)") // Appears in Edit > Preferences > Shortcuts, so Sentence case
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "pedal-angled-end-hook",
+         QT_TRANSLATE_NOOP("action","Pedal (angled end hook)"),
+         QT_TRANSLATE_NOOP("action","Add Pedal (angled end hook)")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "pedal-both-hooks-angled",
+         QT_TRANSLATE_NOOP("action","Pedal (both hooks angled)"),
+         QT_TRANSLATE_NOOP("action","Add Pedal (both hooks angled)")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "pedal-angled-start-hook",
+         QT_TRANSLATE_NOOP("action","Pedal (angled start hook)"),
+         QT_TRANSLATE_NOOP("action","Add Pedal (angled start hook)")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "dynamics-symbol-ppp",
+         QT_TRANSLATE_NOOP("action","Dynamics symbol ppp"),
+         QT_TRANSLATE_NOOP("action","Add Dynamics symbol ppp")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "dynamics-symbol-pp",
+         QT_TRANSLATE_NOOP("action","Dynamics symbol pp"),
+         QT_TRANSLATE_NOOP("action","Add Dynamics symbol pp")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "dynamics-symbol-p",
+         QT_TRANSLATE_NOOP("action","Dynamics symbol p"),
+         QT_TRANSLATE_NOOP("action","Add Dynamics symbol p")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "dynamics-symbol-mp",
+         QT_TRANSLATE_NOOP("action","Dynamics symbol mp"),
+         QT_TRANSLATE_NOOP("action","Add Dynamics symbol mp")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "dynamics-symbol-mf",
+         QT_TRANSLATE_NOOP("action","Dynamics symbol mf"),
+         QT_TRANSLATE_NOOP("action","Add Dynamics symbol mf")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "dynamics-symbol-f",
+         QT_TRANSLATE_NOOP("action","Dynamics symbol f"),
+         QT_TRANSLATE_NOOP("action","Add Dynamics symbol f")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "dynamics-symbol-ff",
+         QT_TRANSLATE_NOOP("action","Dynamics symbol ff"),
+         QT_TRANSLATE_NOOP("action","Add Dynamics symbol ff")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
+         "dynamics-symbol-fff",
+         QT_TRANSLATE_NOOP("action","Dynamics symbol fff"),
+         QT_TRANSLATE_NOOP("action","Add Dynamics symbol fff")
+         },
+      {
+         MsWidget::SCORE_TAB,
+         STATE_NORMAL | STATE_NOTE_ENTRY,
          "picture",
          QT_TRANSLATE_NOOP("action","Image"),
          QT_TRANSLATE_NOOP("action","Add image")

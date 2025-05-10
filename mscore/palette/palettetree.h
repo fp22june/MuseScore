@@ -133,8 +133,6 @@ class PalettePanel {
       QString _name;
       Type _type;
 
-      std::vector<PaletteCellPtr> cells;
-
       QSize _gridSize = QSize(64, 64);
 //       int hgrid;
 //       int vgrid;
@@ -155,6 +153,8 @@ class PalettePanel {
 
    public:
       PalettePanel(Type t = Type::Custom) : _type(t) {}
+
+      std::vector<PaletteCellPtr> cells;
 
       PaletteCell* insert(int idx, Element* e, const QString& name, QString tag = QString(), qreal mag = 1.0);
       PaletteCell* append(Element* e, const QString& name, QString tag = QString(), qreal mag = 1.0);
