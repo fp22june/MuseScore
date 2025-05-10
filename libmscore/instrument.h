@@ -327,6 +327,7 @@ class Instrument {
       void appendChannel(Channel* c)                         { _channel.append(c); }
       void removeChannel(Channel* c)                         { _channel.removeOne(c);}
       void clearChannels()                                   { _channel.clear(); }
+      void addChannel(Score* score);
 
       void setMidiActions(const QList<NamedEventList>& l)    { _midiActions = l;  }
       void setArticulation(const QList<MidiArticulation>& l) { _articulation = l; }

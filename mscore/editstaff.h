@@ -73,6 +73,7 @@ class EditStaff : public QDialog, private Ui::EditStaffBase {
       void gotoNextStaff();
       void gotoPreviousStaff();
       void transpositionChanged();
+void addChannel();
 
    signals:
       void instrumentChanged();

@@ -1696,5 +1696,19 @@ QStringList StaffNameList::toStringList() const
 
       return result;
       }
-}
+ 
+void Instrument::addChannel(Score* score){
 
+      Channel* c = new Channel;
+      c->setName("123");
+      c->setProgram(0);
+      if (c->bank() == 128)
+            c->setBank(0);
+      appendChannel(c);
+      
+      score->masterScore()->rebuildMidiMapping();
+      score->masterScore()->updateChannel();
+      score->setInstrumentsChanged(true);
+      score->setLayoutAll();
+      }
+}

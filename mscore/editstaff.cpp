@@ -35,6 +35,7 @@
 #include "libmscore/text.h"
 #include "libmscore/undo.h"
 #include "libmscore/utils.h"
+#include "libmscore/instrument.h"
 
 namespace Ms {
 
@@ -71,6 +72,7 @@ EditStaff::EditStaff(Staff* s, const Fraction& tick, QWidget* parent)
       connect(invisible,            SIGNAL(clicked()),            SLOT(invisibleChanged()));
       connect(nextButton,           SIGNAL(clicked()),            SLOT(gotoNextStaff()));
       connect(previousButton,       SIGNAL(clicked()),            SLOT(gotoPreviousStaff()));
+      connect(addC,       SIGNAL(clicked()),            SLOT(addChannel()));
 
       connect(iList,                SIGNAL(currentIndexChanged(int)),  SLOT(transpositionChanged()));
 
@@ -627,5 +629,14 @@ void EditStaff::showStaffTypeDialog()
             updateStaffType();
             }
       }
-}
 
+void EditStaff::addChannel() {
+      Score* score  = orgStaff->score();
+      Part* part    = orgStaff->part();
+      Instrument* instr = part->instrument();
+      instr->addChannel(score);
+      instrument = *instr;
+      updateInstrument();
+      }
+
+}
