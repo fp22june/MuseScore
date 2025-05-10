@@ -337,6 +337,8 @@ void PluginAPI::registerQmlTypes()
       qmlRegisterType<Note>();
       qmlRegisterType<Segment>();
       qmlRegisterType<Measure>();
+      qmlRegisterType<SpannerSegment>();
+      qmlRegisterType<System>();
       qmlRegisterType<Part>();
       qmlRegisterType<Staff>();
       qmlRegisterType<Instrument>();
@@ -353,6 +355,8 @@ void PluginAPI::registerQmlTypes()
       qmlRegisterAnonymousType<Note>("MuseScore", 3);
       qmlRegisterAnonymousType<Segment>("MuseScore", 3);
       qmlRegisterAnonymousType<Measure>("MuseScore", 3);
+      qmlRegisterAnonymousType<SpannerSegment>("MuseScore", 3);
+      qmlRegisterAnonymousType<System>("MuseScore", 3);
       qmlRegisterAnonymousType<Part>("MuseScore", 3);
       qmlRegisterAnonymousType<Staff>("MuseScore", 3);
       qmlRegisterAnonymousType<Instrument>("MuseScore", 3);
