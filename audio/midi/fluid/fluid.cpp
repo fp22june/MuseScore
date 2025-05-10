@@ -787,7 +787,7 @@ int Fluid::sfload(const QString& filename)
       sf->setId(++sfont_id);
 
       /* insert the sfont as the first one on the list */
-      sfonts.prepend(sf);
+      sfonts.append(sf);
 
       /* reset the presets for all channels */
 

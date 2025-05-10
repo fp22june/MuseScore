@@ -351,7 +351,7 @@ void FluidGui::onSoundFontLoaded()
             item->setText(_loadedSfName);
             item->setData(Qt::UserRole, _loadedSfPath);
             //files->insertItem(0, item);
-            soundFonts->insertItem(0, item);
+            soundFonts->addItem(item); // soundFonts->insertItem(0, item);
             emit valueChanged();
             emit sfChanged();
             }
