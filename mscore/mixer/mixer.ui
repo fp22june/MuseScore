@@ -82,7 +82,7 @@
     <item>
      <widget class="QScrollArea" name="tracks_scrollArea">
       <property name="autoFillBackground">
-       <bool>true</bool>
+       <bool>false</bool>
       </property>
       <property name="widgetResizable">
        <bool>true</bool>
@@ -98,6 +98,9 @@
          <width>308</width>
          <height>299</height>
         </rect>
+       </property>
+       <property name="autoFillBackground">
+        <bool>false</bool>
        </property>
        <layout class="QGridLayout" name="gridLayout">
         <property name="leftMargin">
@@ -138,7 +141,7 @@
        <string/>
       </property>
       <property name="icon">
-       <iconset resource="../musescore.qrc">
+       <iconset>
         <normaloff>:/data/icons/triangleUp.svg</normaloff>
         <normalon>:/data/icons/triangleDown.svg</normalon>:/data/icons/triangleUp.svg</iconset>
       </property>

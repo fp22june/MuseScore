@@ -49,11 +49,11 @@ class MixerDetails : public QWidget, public Ui::MixerDetails, public ChannelList
       void updateFromTrack();
 
 public slots:
-      void partNameChanged();
+      // void partNameChanged();
       void trackColorChanged(QColor);
       void patchChanged(int);
-      void volumeChanged(double);
-      void panChanged(double);
+      // void volumeChanged(double);
+      // void panChanged(double);
       void chorusChanged(double);
       void reverbChanged(double);
       void drumkitToggled(bool);

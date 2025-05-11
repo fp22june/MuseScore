@@ -45,7 +45,7 @@ MixerDetails::MixerDetails(QWidget *parent) :
       {
       setupUi(this);
 
-      connect(partNameLineEdit,    SIGNAL(editingFinished()),              SLOT(partNameChanged()));
+      // connect(partNameLineEdit,    SIGNAL(editingFinished()),              SLOT(partNameChanged()));
       connect(trackColorLabel,     SIGNAL(colorChanged(QColor)),           SLOT(trackColorChanged(QColor)));
       connect(patchCombo,          SIGNAL(activated(int)),                 SLOT(patchChanged(int)));
       // connect(volumeSlider,        &QSlider::valueChanged,       this,     &MixerDetails::volumeChanged);
@@ -89,7 +89,7 @@ void MixerDetails::updateFromTrack()
       if (!_mti) {
             drumkitCheck->setChecked(false);
             patchCombo->clear();
-            partNameLineEdit->setText("");
+            // partNameLineEdit->setText("");
             channelLabel->setText("");
             // volumeSlider->setValue(0);
             // volumeSpinBox->setValue(0);
@@ -107,7 +107,7 @@ void MixerDetails::updateFromTrack()
 
             drumkitCheck->setEnabled(false);
             patchCombo->setEnabled(false);
-            partNameLineEdit->setEnabled(false);
+            // partNameLineEdit->setEnabled(false);
             // volumeSlider->setEnabled(false);
             // volumeSpinBox->setEnabled(false);
             // panSlider->setEnabled(false);
@@ -120,7 +120,7 @@ void MixerDetails::updateFromTrack()
             channelSpinBox->setEnabled(false);
             trackColorLabel->setEnabled(false);
 
-            labelName->setEnabled(false);
+            // labelName->setEnabled(false);
             labelChannel->setEnabled(false);
             labelChannel_2->setEnabled(false);
             labelChorus->setEnabled(false);
@@ -134,7 +134,7 @@ void MixerDetails::updateFromTrack()
 
       drumkitCheck->setEnabled(true);
       patchCombo->setEnabled(true);
-      partNameLineEdit->setEnabled(true);
+      // partNameLineEdit->setEnabled(true);
       // volumeSlider->setEnabled(true);
       // volumeSpinBox->setEnabled(true);
       // panSlider->setEnabled(true);
@@ -147,7 +147,7 @@ void MixerDetails::updateFromTrack()
       channelSpinBox->setEnabled(true);
       trackColorLabel->setEnabled(true);
 
-      labelName->setEnabled(true);
+      // labelName->setEnabled(true);
       labelChannel->setEnabled(true);
       labelChannel_2->setEnabled(true);
       labelChorus->setEnabled(true);
@@ -209,13 +209,13 @@ void MixerDetails::updateFromTrack()
 
       patchCombo->blockSignals(false);
 
-      QString partName = part->partName();
+      // QString partName = part->partName();
       if (!chan->name().isEmpty())
             channelLabel->setText(qApp->translate("InstrumentsXML", chan->name().toUtf8().data()));
       else
             channelLabel->setText("");
-      partNameLineEdit->setText(partName);
-      partNameLineEdit->setToolTip(partName);
+      // partNameLineEdit->setText(partName);
+      // partNameLineEdit->setToolTip(partName);
 
 
       trackColorLabel->blockSignals(true);
@@ -320,24 +320,24 @@ void MixerDetails::setVoiceMute(int staffIdx, int voice, bool shouldMute)
 //   partNameChanged
 //---------------------------------------------------------
 
-void MixerDetails::partNameChanged()
-      {
-      if (!_mti)
-            return;
+// void MixerDetails::partNameChanged()
+//       {
+//       if (!_mti)
+//             return;
 
-      QString text = partNameLineEdit->text();
-      Part* part = _mti->part();
-      if (part->partName() == text) {
-            return;
-            }
+//       QString text = partNameLineEdit->text();
+//       Part* part = _mti->part();
+//       if (part->partName() == text) {
+//             return;
+//             }
 
-      Score* score = part->score();
-      if (score) {
-            score->startCmd();
-            score->undo(new ChangePart(part, part->instrument(), text));
-            score->endCmd();
-            }
-      }
+//       Score* score = part->score();
+//       if (score) {
+//             score->startCmd();
+//             score->undo(new ChangePart(part, part->instrument(), text));
+//             score->endCmd();
+//             }
+//       }
 
 //---------------------------------------------------------
 //   trackColorChanged
@@ -415,14 +415,14 @@ void MixerDetails::propertyChanged(Channel::Prop property)
                   trackColorChanged(chan->color());
                   break;
                   }
-            case Channel::Prop::NAME: {
-                  partNameLineEdit->blockSignals(true);
-                  Part* part = _mti->part();
-                  QString partName = part->partName();
-                  partNameLineEdit->setText(partName);
-                  partNameLineEdit->blockSignals(false);
-                  break;
-                  }
+            // case Channel::Prop::NAME: {
+            //       partNameLineEdit->blockSignals(true);
+            //       Part* part = _mti->part();
+            //       QString partName = part->partName();
+            //       partNameLineEdit->setText(partName);
+            //       partNameLineEdit->blockSignals(false);
+            //       break;
+            //       }
             default:
                   break;
             }
@@ -432,26 +432,26 @@ void MixerDetails::propertyChanged(Channel::Prop property)
 //   volumeChanged
 //---------------------------------------------------------
 
-void MixerDetails::volumeChanged(double value)
-      {
-      if (!_mti)
-            return;
+// void MixerDetails::volumeChanged(double value)
+//       {
+//       if (!_mti)
+//             return;
 
-      _mti->setVolume(value);
-      }
+//       _mti->setVolume(value);
+//       }
 
 
 //---------------------------------------------------------
 //   panChanged
 //---------------------------------------------------------
 
-void MixerDetails::panChanged(double value)
-      {
-      if (!_mti)
-            return;
+// void MixerDetails::panChanged(double value)
+//       {
+//       if (!_mti)
+//             return;
 
-      _mti->setPan(value);
-      }
+//       _mti->setPan(value);
+//       }
 
 
 //---------------------------------------------------------
