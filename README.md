@@ -4,16 +4,19 @@
 
 Linux x86_64
 
-- x86_64.7z
 - x86_64.AppImage
-- x86_64.paf.exe 
 
 Linux ARM (untested)
 
 - aarch64.AppImage
 - armv7l.AppImage
 
-Windows
+Windows 64-bit
+
+- x86_64.7z
+- x86_64.paf.exe
+
+Windows 32-bit
 
 - x86.7z
 - x86.paf.exe
