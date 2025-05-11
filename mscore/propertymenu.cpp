@@ -239,7 +239,7 @@ void ScoreView::createElementPropertyMenu(Element* e, QMenu* popup)
             a = popup->addSeparator();
 
             a->setText(tr("Staff"));
-            a = new QAction(tr("Staff/Part Properties…"), 0);
+            a = new QAction(tr("Instrument/Staff Properties…"), 0);
             a->setData("staff-props");
             popup->addAction(a);
 
@@ -258,7 +258,7 @@ void ScoreView::createElementPropertyMenu(Element* e, QMenu* popup)
             a = popup->addSeparator();
 
             a->setText(tr("Staff"));
-            a = new QAction(tr("Staff/Part Properties…"), 0);
+            a = new QAction(tr("Instrument/Staff Properties…"), 0);
             a->setData("staff-props");
             popup->addAction(a);
 

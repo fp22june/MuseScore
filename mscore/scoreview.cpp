@@ -439,7 +439,7 @@ void ScoreView::measurePopup(QContextMenuEvent* ev, Measure* obj)
       a = popup->addAction(tr("Piano Roll Editor…"));
       a->setData("pianoroll");
 
-      a = popup->addAction(tr("Staff/Part Properties…"));
+      a = popup->addAction(tr("Instrument/Staff Properties…"));
       a->setData("staff-properties");
       a = popup->addAction(tr("Split Staff…"));
       a->setData("staff-split");
