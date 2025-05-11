@@ -20,6 +20,15 @@ set(_components
     Help
   )
 
+#https://github.com/Jojo-Schmitz/MuseScore/commit/eea2c0d2e301415d405a6efa91599e6e9dcfa48d
+
+  set(_components
+    ${_components}
+    WebEngine
+    WebEngineCore
+    WebEngineWidgets
+	)
+
 if (WIN32)
     set(_components
       ${_components}
