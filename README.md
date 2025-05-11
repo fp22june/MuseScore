@@ -1,3 +1,13 @@
+[Download](https://github.com/fp22june/MuseScore/releases)
+
+<hr>
+ 
+\* [temp37](https://github.com/fp22june/MuseScore/tree/temp37), [temp38](https://github.com/fp22june/MuseScore/tree/temp38) UI: right click menu, instrument/staff properties window <br>
+\* temp5, temp11/13, temp14/15 applied <br>
+\* e3c89a03 (May 9, 2025 [Jojo-Schmitz/3.x](https://github.com/Jojo-Schmitz/MuseScore/tree/3.x)) <br>
+| ... <br>
+
+ <hr>
 
 \* [temp14](https://github.com/fp22june/MuseScore/tree/temp14), [temp15](https://github.com/fp22june/MuseScore/tree/temp15) add plugin access: [system].spannerSegments and [frame].elements (veritcal frame children text title, composer etc at the top of the first page). [win (webengine)](https://github.com/fp22june/MuseScore/actions/runs/14693217348), and [win (no webengine), mac, linux](https://github.com/fp22june/MuseScore/actions/runs/14693513150)<br>
 \* temp2, temp5, temp11/13 applied <br>
