@@ -48,10 +48,10 @@ MixerDetails::MixerDetails(QWidget *parent) :
       connect(partNameLineEdit,    SIGNAL(editingFinished()),              SLOT(partNameChanged()));
       connect(trackColorLabel,     SIGNAL(colorChanged(QColor)),           SLOT(trackColorChanged(QColor)));
       connect(patchCombo,          SIGNAL(activated(int)),                 SLOT(patchChanged(int)));
-      connect(volumeSlider,        &QSlider::valueChanged,       this,     &MixerDetails::volumeChanged);
-      connect(volumeSpinBox,       SIGNAL(valueChanged(double)),           SLOT(volumeChanged(double)));
-      connect(panSlider,           &QSlider::valueChanged,       this,     &MixerDetails::panChanged);
-      connect(panSpinBox,          SIGNAL(valueChanged(double)),           SLOT(panChanged(double)));
+      // connect(volumeSlider,        &QSlider::valueChanged,       this,     &MixerDetails::volumeChanged);
+      // connect(volumeSpinBox,       SIGNAL(valueChanged(double)),           SLOT(volumeChanged(double)));
+      // connect(panSlider,           &QSlider::valueChanged,       this,     &MixerDetails::panChanged);
+      // connect(panSpinBox,          SIGNAL(valueChanged(double)),           SLOT(panChanged(double)));
       connect(chorusSlider,        &QSlider::valueChanged,       this,     &MixerDetails::chorusChanged);
       connect(chorusSpinBox,       SIGNAL(valueChanged(double)),           SLOT(chorusChanged(double)));
       connect(reverbSlider,        &QSlider::valueChanged,       this,     &MixerDetails::reverbChanged);
@@ -91,10 +91,10 @@ void MixerDetails::updateFromTrack()
             patchCombo->clear();
             partNameLineEdit->setText("");
             channelLabel->setText("");
-            volumeSlider->setValue(0);
-            volumeSpinBox->setValue(0);
-            panSlider->setValue(0);
-            panSpinBox->setValue(0);
+            // volumeSlider->setValue(0);
+            // volumeSpinBox->setValue(0);
+            // panSlider->setValue(0);
+            // panSpinBox->setValue(0);
             reverbSlider->setValue(0);
             reverbSpinBox->setValue(0);
             chorusSlider->setValue(0);
@@ -108,10 +108,10 @@ void MixerDetails::updateFromTrack()
             drumkitCheck->setEnabled(false);
             patchCombo->setEnabled(false);
             partNameLineEdit->setEnabled(false);
-            volumeSlider->setEnabled(false);
-            volumeSpinBox->setEnabled(false);
-            panSlider->setEnabled(false);
-            panSpinBox->setEnabled(false);
+            // volumeSlider->setEnabled(false);
+            // volumeSpinBox->setEnabled(false);
+            // panSlider->setEnabled(false);
+            // panSpinBox->setEnabled(false);
             reverbSlider->setEnabled(false);
             reverbSpinBox->setEnabled(false);
             chorusSlider->setEnabled(false);
@@ -124,21 +124,21 @@ void MixerDetails::updateFromTrack()
             labelChannel->setEnabled(false);
             labelChannel_2->setEnabled(false);
             labelChorus->setEnabled(false);
-            labelPan->setEnabled(false);
+            // labelPan->setEnabled(false);
             labelPatch->setEnabled(false);
             labelPort->setEnabled(false);
             labelReverb->setEnabled(false);
-            labelVolume->setEnabled(false);
+            // labelVolume->setEnabled(false);
             return;
             }
 
       drumkitCheck->setEnabled(true);
       patchCombo->setEnabled(true);
       partNameLineEdit->setEnabled(true);
-      volumeSlider->setEnabled(true);
-      volumeSpinBox->setEnabled(true);
-      panSlider->setEnabled(true);
-      panSpinBox->setEnabled(true);
+      // volumeSlider->setEnabled(true);
+      // volumeSpinBox->setEnabled(true);
+      // panSlider->setEnabled(true);
+      // panSpinBox->setEnabled(true);
       reverbSlider->setEnabled(true);
       reverbSpinBox->setEnabled(true);
       chorusSlider->setEnabled(true);
@@ -151,11 +151,11 @@ void MixerDetails::updateFromTrack()
       labelChannel->setEnabled(true);
       labelChannel_2->setEnabled(true);
       labelChorus->setEnabled(true);
-      labelPan->setEnabled(true);
+      // labelPan->setEnabled(true);
       labelPatch->setEnabled(true);
       labelPort->setEnabled(true);
       labelReverb->setEnabled(true);
-      labelVolume->setEnabled(true);
+      // labelVolume->setEnabled(true);
 
 
       MidiMapping* midiMap = _mti->midiMap();
@@ -219,10 +219,10 @@ void MixerDetails::updateFromTrack()
 
 
       trackColorLabel->blockSignals(true);
-      volumeSlider->blockSignals(true);
-      volumeSpinBox->blockSignals(true);
-      panSlider->blockSignals(true);
-      panSpinBox->blockSignals(true);
+      // volumeSlider->blockSignals(true);
+      // volumeSpinBox->blockSignals(true);
+      // panSlider->blockSignals(true);
+      // panSpinBox->blockSignals(true);
       reverbSlider->blockSignals(true);
       reverbSpinBox->blockSignals(true);
       chorusSlider->blockSignals(true);
@@ -233,10 +233,10 @@ void MixerDetails::updateFromTrack()
 
       trackColorLabel->setColor(QColor(_mti->color() | 0xff000000));
 
-      volumeSlider->setValue((int)chan->volume());
-      volumeSpinBox->setValue(chan->volume());
-      panSlider->setValue((int)chan->pan());
-      panSpinBox->setValue(chan->pan());
+      // volumeSlider->setValue((int)chan->volume());
+      // volumeSpinBox->setValue(chan->volume());
+      // panSlider->setValue((int)chan->pan());
+      // panSpinBox->setValue(chan->pan());
       reverbSlider->setValue((int)chan->reverb());
       reverbSpinBox->setValue(chan->reverb());
       chorusSlider->setValue((int)chan->chorus());
@@ -246,10 +246,10 @@ void MixerDetails::updateFromTrack()
       channelSpinBox->setValue(part->masterScore()->midiMapping(chan->channel())->channel() + 1);
 
       trackColorLabel->blockSignals(false);
-      volumeSlider->blockSignals(false);
-      volumeSpinBox->blockSignals(false);
-      panSlider->blockSignals(false);
-      panSpinBox->blockSignals(false);
+      // volumeSlider->blockSignals(false);
+      // volumeSpinBox->blockSignals(false);
+      // panSlider->blockSignals(false);
+      // panSpinBox->blockSignals(false);
       reverbSlider->blockSignals(false);
       reverbSpinBox->blockSignals(false);
       chorusSlider->blockSignals(false);
@@ -264,10 +264,13 @@ void MixerDetails::updateFromTrack()
 
       mutePerVoiceGrid = new QGridLayout();
       mutePerVoiceHolder->setLayout(mutePerVoiceGrid);
-      mutePerVoiceGrid->setContentsMargins(0, 0, 0, 0);
+      mutePerVoiceGrid->setContentsMargins(0, 4, 0, 4);
       mutePerVoiceGrid->setSpacing(7);
 
       for (int staffIdx = 0; staffIdx < (*part->staves()).length(); ++staffIdx) {
+            QLabel* sl = new QLabel;
+            sl->setText(QString("Staff %1:").arg(staffIdx + 1));
+            mutePerVoiceGrid->addWidget(sl, staffIdx, 0);
             Staff* staff = (*part->staves())[staffIdx];
             for (int voice = 0; voice < VOICES; ++voice) {
                   QPushButton* tb = new QPushButton;
@@ -280,7 +283,7 @@ void MixerDetails::updateFromTrack()
                   tb->setChecked(!staff->playbackVoice(voice));
                   tb->setToolTip(QString(tr("Staff %1:")).arg(staffIdx + 1));
 
-                  mutePerVoiceGrid->addWidget(tb, staffIdx, voice);
+                  mutePerVoiceGrid->addWidget(tb, staffIdx, voice + 1);
                   MixerDetailsVoiceButtonHandler* handler =
                               new MixerDetailsVoiceButtonHandler(this, staffIdx, voice, tb);
                   connect(tb, SIGNAL(toggled(bool)), handler, SLOT(setVoiceMute(bool)));
@@ -364,28 +367,28 @@ void MixerDetails::propertyChanged(Channel::Prop property)
       Channel* chan = _midiMap->articulation();
 
       switch (property) {
-            case Channel::Prop::VOLUME: {
-                  volumeSlider->blockSignals(true);
-                  volumeSpinBox->blockSignals(true);
+            // case Channel::Prop::VOLUME: {
+            //       volumeSlider->blockSignals(true);
+            //       volumeSpinBox->blockSignals(true);
 
-                  volumeSlider->setValue((int)chan->volume());
-                  volumeSpinBox->setValue(chan->volume());
+            //       volumeSlider->setValue((int)chan->volume());
+            //       volumeSpinBox->setValue(chan->volume());
 
-                  volumeSlider->blockSignals(false);
-                  volumeSpinBox->blockSignals(false);
-                  break;
-                  }
-            case Channel::Prop::PAN: {
-                  panSlider->blockSignals(true);
-                  panSpinBox->blockSignals(true);
+            //       volumeSlider->blockSignals(false);
+            //       volumeSpinBox->blockSignals(false);
+            //       break;
+            //       }
+            // case Channel::Prop::PAN: {
+            //       panSlider->blockSignals(true);
+            //       panSpinBox->blockSignals(true);
 
-                  panSlider->setValue((int)chan->pan());
-                  panSpinBox->setValue(chan->pan());
+            //       panSlider->setValue((int)chan->pan());
+            //       panSpinBox->setValue(chan->pan());
 
-                  panSlider->blockSignals(false);
-                  panSpinBox->blockSignals(false);
-                  break;
-                  }
+            //       panSlider->blockSignals(false);
+            //       panSpinBox->blockSignals(false);
+            //       break;
+            //       }
             case Channel::Prop::CHORUS: {
                   chorusSlider->blockSignals(true);
                   chorusSpinBox->blockSignals(true);

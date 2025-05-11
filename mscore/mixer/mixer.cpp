@@ -103,13 +103,13 @@ Mixer::Mixer(QWidget* parent)
       float minDecibels = synti->minGainAsDecibels;
       float maxDecibels = synti->maxGainAsDecibels;
       float currentDecibels = synti->gainAsDecibels();
-      masterSlider->setMaxValue(maxDecibels);
-      masterSlider->setMinValue(minDecibels);
-      masterSlider->setNumMinorTicks(4);
-      masterSlider->setNumMajorTicks(3);
-      masterSlider->setHilightColor(QColor(51, 153, 255));
-      masterSlider->setValue(currentDecibels);
-      masterSlider->setDoubleClickValue(synti->defaultGainAsDecibels);
+      masterSlider->setMaximum((int)maxDecibels);
+      masterSlider->setMinimum((int)minDecibels);
+      // masterSlider->setNumMinorTicks(4);
+      // masterSlider->setNumMajorTicks(3);
+      // masterSlider->setHilightColor(QColor(51, 153, 255));
+      masterSlider->setValue((int)currentDecibels);
+      // masterSlider->setDoubleClickValue(synti->defaultGainAsDecibels);
 
       masterSpin->setMaximum(maxDecibels);
       masterSpin->setMinimum(minDecibels);
@@ -117,16 +117,16 @@ Mixer::Mixer(QWidget* parent)
       masterSpin->setValue(currentDecibels);
 
 
-      QIcon iconSliderHead;
-      iconSliderHead.addFile(QStringLiteral(":/data/icons/mixer-slider-handle-vertical.svg"), QSize(), QIcon::Normal, QIcon::Off);
-      masterSlider->setSliderHeadIcon(iconSliderHead);
+      // QIcon iconSliderHead;
+      // iconSliderHead.addFile(QStringLiteral(":/data/icons/mixer-slider-handle-vertical.svg"), QSize(), QIcon::Normal, QIcon::Off);
+      // masterSlider->setSliderHeadIcon(iconSliderHead);
 
       connect(toggleDetailsButton, &QPushButton::toggled, this, &Mixer::showDetailsToggled);
-      connect(masterSlider, SIGNAL(valueChanged(double)), SLOT(masterVolumeChanged(double)));
+      connect(masterSlider, &QSlider::valueChanged,       this,     &Mixer::masterVolumeChanged);
       connect(masterSpin, SIGNAL(valueChanged(double)), SLOT(masterVolumeChanged(double)));
       connect(synti, SIGNAL(gainChanged(float)), SLOT(synthGainChanged(float)));
-      connect(tracks_scrollArea->horizontalScrollBar(), SIGNAL(rangeChanged(int, int)), SLOT(adjustScrollPosition(int, int)));
-      connect(tracks_scrollArea->horizontalScrollBar(), SIGNAL(valueChanged(int)), SLOT(checkKeptScrollValue(int)));
+      connect(tracks_scrollArea->verticalScrollBar(), SIGNAL(rangeChanged(int, int)), SLOT(adjustScrollPosition(int, int)));
+      connect(tracks_scrollArea->verticalScrollBar(), SIGNAL(valueChanged(int)), SLOT(checkKeptScrollValue(int)));
 
       retranslate(true);
       }
@@ -164,13 +164,13 @@ void Mixer::synthGainChanged(float)
 void Mixer::adjustScrollPosition(int, int)
       {
       if (_needToKeepScrollPosition)
-            tracks_scrollArea->horizontalScrollBar()->setValue(_scrollPosition);
+            tracks_scrollArea->verticalScrollBar()->setValue(_scrollPosition);
       }
 
 void Mixer::checkKeptScrollValue(int scrollPos)
       {
       if (_needToKeepScrollPosition) {
-            tracks_scrollArea->horizontalScrollBar()->setValue(_scrollPosition);
+            tracks_scrollArea->verticalScrollBar()->setValue(_scrollPosition);
             if (_scrollPosition == scrollPos)
                   _needToKeepScrollPosition = false;
             }
@@ -178,7 +178,7 @@ void Mixer::checkKeptScrollValue(int scrollPos)
 
 void Mixer::keepScrollPosition()
       {
-      _scrollPosition = tracks_scrollArea->horizontalScrollBar()->sliderPosition();
+      _scrollPosition = tracks_scrollArea->verticalScrollBar()->sliderPosition();
       _needToKeepScrollPosition = true;
       }
 
@@ -387,7 +387,7 @@ void Mixer::updateTracks()
             return;
 
       trackHolder = new QWidget();
-      QHBoxLayout* holderLayout = new QHBoxLayout();
+      QVBoxLayout* holderLayout = new QVBoxLayout();
       holderLayout->setContentsMargins(0, 0, 0, 0);
       holderLayout->setSpacing(0);
       trackHolder->setLayout(holderLayout);

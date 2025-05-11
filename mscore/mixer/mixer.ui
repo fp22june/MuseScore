@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>328</width>
-    <height>250</height>
+    <height>435</height>
    </rect>
   </property>
   <property name="focusPolicy">
@@ -50,12 +50,15 @@
         </widget>
        </item>
        <item>
-        <widget class="Awl::StyledSlider" name="masterSlider" native="true">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
+        <widget class="QSlider" name="masterSlider">
+         <property name="maximum">
+          <number>100</number>
+         </property>
+         <property name="pageStep">
+          <number>5</number>
+         </property>
+         <property name="orientation">
+          <enum>Qt::Orientation::Horizontal</enum>
          </property>
         </widget>
        </item>
@@ -72,14 +75,20 @@
     <item>
      <widget class="QCheckBox" name="partOnlyCheckBox">
       <property name="text">
-       <string>Play part only</string>
+       <string>Mute instruments not in current Part</string>
       </property>
      </widget>
     </item>
     <item>
      <widget class="QScrollArea" name="tracks_scrollArea">
+      <property name="autoFillBackground">
+       <bool>true</bool>
+      </property>
       <property name="widgetResizable">
        <bool>true</bool>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignTop</set>
       </property>
       <widget class="QWidget" name="scrollAreaWidgetContents">
        <property name="geometry">
@@ -87,22 +96,33 @@
          <x>0</x>
          <y>0</y>
          <width>308</width>
-         <height>114</height>
+         <height>299</height>
         </rect>
        </property>
-       <widget class="QWidget" name="trackArea" native="true">
-        <property name="geometry">
-         <rect>
-          <x>0</x>
-          <y>0</y>
-          <width>100</width>
-          <height>30</height>
-         </rect>
+       <layout class="QGridLayout" name="gridLayout">
+        <property name="leftMargin">
+         <number>0</number>
         </property>
-        <property name="autoFillBackground">
-         <bool>false</bool>
+        <property name="topMargin">
+         <number>0</number>
         </property>
-       </widget>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item row="0" column="0">
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <property name="spacing">
+           <number>0</number>
+          </property>
+          <item alignment="Qt::AlignmentFlag::AlignTop">
+           <widget class="QWidget" name="trackArea" native="true"/>
+          </item>
+         </layout>
+        </item>
+       </layout>
       </widget>
      </widget>
     </item>
@@ -142,14 +162,6 @@
    </layout>
   </widget>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>Awl::StyledSlider</class>
-   <extends>QWidget</extends>
-   <header>awl/styledslider.h</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources>
   <include location="../musescore.qrc"/>
   <include location="../musescore.qrc"/>

@@ -111,17 +111,17 @@ MixerTrackPart::MixerTrackPart(QWidget *parent, MixerTrackItemPtr mti, bool expa
       muteBn->setChecked(chan->mute());
 
       chan->addListener(this);
-      volumeSlider->setValue(chan->volume());
-      volumeSlider->setToolTip(tr("Volume: %1").arg(QString::number(chan->volume())));
-      volumeSlider->setMaxValue(127);
-      volumeSlider->setMinValue(0);
-      volumeSlider->setDoubleClickValue(Channel::defaultVolume);
-      volumeSlider->setNumMajorTicks(10);
-      volumeSlider->setNumMinorTicks(4);
+      // volumeSlider->setToolTip(tr("Volume: %1").arg(QString::number(chan->volume())));
+      volumeSlider->setMaximum(127);
+      volumeSlider->setMinimum(0);
+      volumeSlider->setValue((int)chan->volume());
+      // volumeSlider->setDoubleClickValue(Channel::defaultVolume);
+      // volumeSlider->setNumMajorTicks(10);
+      // volumeSlider->setNumMinorTicks(4);
 
-      QIcon iconSliderHead;
-      iconSliderHead.addFile(QStringLiteral(":/data/icons/mixer-slider-handle-vertical.svg"), QSize(), QIcon::Normal, QIcon::Off);
-      volumeSlider->setSliderHeadIcon(iconSliderHead);
+      // QIcon iconSliderHead;
+      // iconSliderHead.addFile(QStringLiteral(":/data/icons/mixer-slider-handle-vertical.svg"), QSize(), QIcon::Normal, QIcon::Off);
+      // volumeSlider->setSliderHeadIcon(iconSliderHead);
 
       panSlider->setValue(chan->pan());
       panSlider->setToolTip(tr("Pan: %1").arg(QString::number(chan->pan())));
@@ -129,10 +129,10 @@ MixerTrackPart::MixerTrackPart(QWidget *parent, MixerTrackItemPtr mti, bool expa
       panSlider->setMinValue(0);
       panSlider->setDclickValue1(64);
 
-      connect(volumeSlider, SIGNAL(valueChanged(double)),      SLOT(volumeChanged(double)));
+      connect(volumeSlider, &QSlider::valueChanged,       this,     &MixerTrackPart::volumeChanged);
       connect(panSlider,    SIGNAL(valueChanged(double, int)), SLOT(panChanged(double)));
 
-      connect(volumeSlider, SIGNAL(sliderPressed()),    SLOT(controlSelected()));
+      // connect(volumeSlider, SIGNAL(sliderPressed()),    SLOT(controlSelected()));
       connect(panSlider,    SIGNAL(sliderPressed(int)), SLOT(controlSelected()));
       }
 
@@ -174,18 +174,11 @@ void MixerTrackPart::updateNameLabel()
       Part* part = _mti->part();
       Channel* chan = _mti->focusedChan();
       trackLabel->setText(part->partName());
-
       MidiPatch* mp = synti->getPatchInfo(chan->synti(), chan->bank(), chan->program());
-
-
-      QString tooltip = tr("Part Name: %1\n"
-                                "Primary Instrument: %2\n"
-                                "Bank: %3\n"
-                                "Program: %4\n"
-                                "Sound: %5")
-                  .arg(part->partName(),
-                       part->longName().replace("&amp;", "&"),
-                       QString::number(chan->bank()),
+      QString tooltip = tr( "Bank: %1\n"
+                            "Program: %2\n"
+                            "Sound: %3")
+                  .arg(QString::number(chan->bank()),
                        QString::number(chan->program()),
                        mp ? mp->name : tr("~no sound~"));
 
@@ -195,12 +188,11 @@ void MixerTrackPart::updateNameLabel()
       QString colName = bgCol.name();
       int val = bgCol.value();
 
-      QString ss = QString(".QLabel {"
-                 "border: 2px solid black;"
-                 "background: %1;"
-                "color: %2;"
-                 "padding: 6px 0px;"
-             "}").arg(colName, val > 128 ? "black" : "white");
+      QString ss = QString(   ".QLabel {"
+                              "border: 2px solid black;"
+                              "background: %1;"
+                              "color: %2;"
+            "}").arg(colName, val > 128 ? "black" : "white");
 
       trackLabel->setStyleSheet(ss);
 
@@ -209,7 +201,7 @@ void MixerTrackPart::updateNameLabel()
       bgCol.getHsvF(&h, &s, &v);
       QColor brightCol = QColor::fromHsvF(h, s, 1);
       panSlider->setScaleValueColor(brightCol);
-      volumeSlider->setHilightColor(brightCol);
+      // volumeSlider->setHilightColor(brightCol);
       }
 
 //---------------------------------------------------------
@@ -234,7 +226,7 @@ void MixerTrackPart::propertyChanged(Channel::Prop property)
       switch (property) {
             case Channel::Prop::VOLUME: {
                   volumeSlider->blockSignals(true);
-                  volumeSlider->setValue(chan->volume());
+                  volumeSlider->setValue((int)(chan->volume()));
                   volumeSlider->setToolTip(tr("Volume: %1").arg(QString::number(chan->volume())));
                   volumeSlider->blockSignals(false);
                   break;

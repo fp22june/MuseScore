@@ -93,27 +93,27 @@ MixerTrackChannel::MixerTrackChannel(QWidget *parent, MixerTrackItemPtr mti) :
       muteBn->setChecked(chan->mute());
 
       chan->addListener(this);
-      volumeSlider->setValue(chan->volume());
-      volumeSlider->setToolTip(tr("Volume: %1").arg(QString::number(chan->volume())));
-      volumeSlider->setMaxValue(127);
-      volumeSlider->setMinValue(0);
-      volumeSlider->setDoubleClickValue(Channel::defaultVolume);
-      volumeSlider->setNumMajorTicks(10);
-      volumeSlider->setNumMinorTicks(5);
+      // volumeSlider->setToolTip(tr("Volume: %1").arg(QString::number(chan->volume())));
+      volumeSlider->setMaximum(127);
+      volumeSlider->setMinimum(0);
+      volumeSlider->setValue((int)chan->volume());
+      // volumeSlider->setDoubleClickValue(Channel::defaultVolume);
+      // volumeSlider->setNumMajorTicks(10);
+      // volumeSlider->setNumMinorTicks(5);
 
-      QIcon iconSliderHead;
-      iconSliderHead.addFile(QStringLiteral(":/data/icons/mixer-slider-handle-vertical.svg"), QSize(), QIcon::Normal, QIcon::Off);
-      volumeSlider->setSliderHeadIcon(iconSliderHead);
+      // QIcon iconSliderHead;
+      // iconSliderHead.addFile(QStringLiteral(":/data/icons/mixer-slider-handle-vertical.svg"), QSize(), QIcon::Normal, QIcon::Off);
+      // volumeSlider->setSliderHeadIcon(iconSliderHead);
 
       panSlider->setValue(chan->pan());
       panSlider->setToolTip(tr("Pan: %1").arg(QString::number(chan->pan())));
       panSlider->setMaxValue(127);
       panSlider->setMinValue(0);
 
-      connect(volumeSlider, SIGNAL(valueChanged(double)),      SLOT(volumeChanged(double)));
+      connect(volumeSlider, &QSlider::valueChanged,       this,     &MixerTrackChannel::volumeChanged);
       connect(panSlider,    SIGNAL(valueChanged(double, int)), SLOT(panChanged(double)));
 
-      connect(volumeSlider, SIGNAL(sliderPressed()),    SLOT(controlSelected()));
+      // connect(volumeSlider, SIGNAL(sliderPressed()),    SLOT(controlSelected()));
       connect(panSlider,    SIGNAL(sliderPressed(int)), SLOT(controlSelected()));
 
       applyStyle();
@@ -148,26 +148,14 @@ void MixerTrackChannel::updateNameLabel()
       Instrument* instr = _mti->instrument();
       Channel* chan = _mti->chan();
 
-      QString shortName;
-      if (instr->shortNames().count())
-            shortName = instr->shortNames().first().name() + "-";
-      else
-            shortName = "";
-      QString text = QString("%1%2").arg(shortName, qApp->translate("InstrumentsXML", chan->name().toUtf8().data()));
-      trackLabel->setText(text);
+      trackLabel->setText( qApp->translate("InstrumentsXML", chan->name().toUtf8().data()) );
 
       MidiPatch* mp = synti->getPatchInfo(chan->synti(), chan->bank(), chan->program());
 
-      QString tooltip = tr("Part Name: %1\n"
-                           "Instrument: %2\n"
-                           "Channel: %3\n"
-                           "Bank: %4\n"
-                           "Program: %5\n"
-                           "Sound: %6")
-                  .arg(part->partName(),
-                       instr->trackName(),
-                       qApp->translate("InstrumentsXML", chan->name().toUtf8().data()),
-                       QString::number(chan->bank()),
+      QString tooltip = tr("Bank: %1\n"
+                           "Program: %2\n"
+                           "Sound: %3")
+                  .arg(QString::number(chan->bank()),
                        QString::number(chan->program()),
                        mp ? mp->name : tr("~no sound~"));
 
@@ -177,12 +165,11 @@ void MixerTrackChannel::updateNameLabel()
       QString trackColorName = bgCol.name();
       int val = bgCol.value();
 
-      QString trackStyle = QString(".QLabel {"
-                 "border: 2px solid black;"
-                 "background: %1;"
-                 "color: %2;"
-                 "padding: 6px 0px;"
-             "}").arg(trackColorName, val > 128 ? "black" : "white");
+      QString trackStyle = QString( ".QLabel {"
+                                    "border: 2px solid black;"
+                                    "background: %1;"
+                                    "color: %2;"
+            "}").arg(trackColorName, val > 128 ? "black" : "white");
 
       trackLabel->setStyleSheet(trackStyle);
 
@@ -190,27 +177,12 @@ void MixerTrackChannel::updateNameLabel()
       QString partColorName = bgPartCol.name();
       val = bgPartCol.value();
 
-      //Part header
-      partLabel->setText(part->partName());
-
-      QString partStyle = QString(".QLabel {"
-                 "border: 2px solid black;"
-                 "background: %1;"
-                 "color: %2;"
-                 "padding: 6px 0px;"
-             "}").arg(partColorName, val > 128 ? "black" : "white");
-
-      partLabel->setStyleSheet(partStyle);
-      partLabel->setToolTip(tr("This channel is a child of part %1").arg(part->partName()));
-
-
-
       //Update component colors
       qreal h, s, v;
       bgCol.getHsvF(&h, &s, &v);
       QColor brightCol = QColor::fromHsvF(h, s, 1);
       panSlider->setScaleValueColor(brightCol);
-      volumeSlider->setHilightColor(brightCol);
+      // volumeSlider->setHilightColor(brightCol);
       }
 
 //---------------------------------------------------------
