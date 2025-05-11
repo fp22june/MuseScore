@@ -409,20 +409,6 @@ void ScoreView::measurePopup(QContextMenuEvent* ev, Measure* obj)
       popup->setSeparatorsCollapsible(false);
 
       QAction* a = popup->addSeparator();
-      a->setText(tr("Staff"));
-      a = popup->addAction(tr("Edit Drumset…"));
-      a->setData("edit-drumset");
-      a->setEnabled(staff->part()->instrument(obj->tick())->drumset() != 0);
-
-      a = popup->addAction(tr("Piano Roll Editor…"));
-      a->setData("pianoroll");
-
-      a = popup->addAction(tr("Staff/Part Properties…"));
-      a->setData("staff-properties");
-      a = popup->addAction(tr("Split Staff…"));
-      a->setData("staff-split");
-
-      a = popup->addSeparator();
       a->setText(tr("Measure"));
       popup->addAction(getAction("cut"));
       popup->addAction(getAction("copy"));
@@ -440,12 +426,23 @@ void ScoreView::measurePopup(QContextMenuEvent* ev, Measure* obj)
       menuAdd->addAction(getAction("insert-vbox"));
       menuAdd->addAction(getAction("insert-textframe"));
 
-      popup->addSeparator();
-
       a = popup->addAction(tr("Measure Properties…"));
       a->setData("props");
       a->setEnabled(!obj->isMMRest());
-      popup->addSeparator();
+
+      a = popup->addSeparator();
+      a->setText(tr("Staff"));
+      a = popup->addAction(tr("Edit Drumset…"));
+      a->setData("edit-drumset");
+      a->setEnabled(staff->part()->instrument(obj->tick())->drumset() != 0);
+
+      a = popup->addAction(tr("Piano Roll Editor…"));
+      a->setData("pianoroll");
+
+      a = popup->addAction(tr("Staff/Part Properties…"));
+      a->setData("staff-properties");
+      a = popup->addAction(tr("Split Staff…"));
+      a->setData("staff-split");
 
 #ifndef NDEBUG
       popup->addAction("Object Debugger")->setData("list");

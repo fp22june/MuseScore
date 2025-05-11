@@ -780,7 +780,7 @@ void ScoreView::mouseDoubleClickEvent(QMouseEvent* mouseEvent)
             return;
 
       if (!clickedElement->isEditable()) {
-            if (clickedElement->isInstrumentName()) // double-click an instrument name to open the edit staff/part properties menu
+            if (clickedElement->isInstrumentName()) // double-click an instrument name to open the edit Instrument/Staff properties menu
                   elementPropertyAction("staff-props", clickedElement);
             else if (clickedElement->isText() && (toText(clickedElement)->tid() == Tid::HEADER || toText(clickedElement)->tid() == Tid::FOOTER)) // double-click a header/footer to open the Header/Footer page in the Style dialog
                   elementPropertyAction("style", clickedElement);

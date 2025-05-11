@@ -227,39 +227,40 @@ void ScoreView::createElementPropertyMenu(Element* e, QMenu* popup)
             genPropertyMenu1(e, popup);
             }
       else if (e->isRest()) {
-            QAction* b = popup->actions()[0];
-            QAction* a = popup->insertSeparator(b);
-            a->setText(tr("Staff"));
-            a = new QAction(tr("Staff/Part Properties…"), 0);
-            a->setData("staff-props");
-            popup->insertAction(b, a);
+            QAction* a = popup->addSeparator();
 
-            a = popup->insertSeparator(b);
             a->setText(tr("Measure"));
             a = new QAction(tr("Measure Properties…"), 0);
             a->setData("measure-props");
             // disable property changes for multi measure rests
             a->setEnabled(!toRest(e)->segment()->measure()->isMMRest());
+            popup->addAction(a);
 
-            popup->insertAction(b, a);
-            genPropertyMenu1(e, popup);
-            }
-      else if (e->isNote()) {
-            QAction* b = popup->actions()[0];
-            QAction* a = popup->insertSeparator(b);
+            a = popup->addSeparator();
+
             a->setText(tr("Staff"));
             a = new QAction(tr("Staff/Part Properties…"), 0);
             a->setData("staff-props");
-            popup->insertAction(b, a);
+            popup->addAction(a);
 
-            a = popup->insertSeparator(b);
+            genPropertyMenu1(e, popup);
+            }
+      else if (e->isNote()) {
+            QAction* a = popup->addSeparator();
+
             a->setText(tr("Measure"));
             a = new QAction(tr("Measure Properties…"), 0);
             a->setData("measure-props");
             // disable property changes for multi measure rests
             a->setEnabled(!toNote(e)->chord()->segment()->measure()->isMMRest());
+            popup->addAction(a);
 
-            popup->insertAction(b, a);
+            a = popup->addSeparator();
+
+            a->setText(tr("Staff"));
+            a = new QAction(tr("Staff/Part Properties…"), 0);
+            a->setData("staff-props");
+            popup->addAction(a);
 
             genPropertyMenu1(e, popup);
 
@@ -273,7 +274,7 @@ void ScoreView::createElementPropertyMenu(Element* e, QMenu* popup)
             popup->addAction(tr("Select Instrument…"))->setData("ch-instr");
             }
       else if (e->isInstrumentName())
-            popup->addAction(tr("Staff/Part Properties…"))->setData("staff-props");
+            popup->addAction(tr("Instrument/Staff Properties…"))->setData("staff-props");
       else
             genPropertyMenu1(e, popup);
 
