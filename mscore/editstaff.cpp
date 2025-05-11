@@ -98,6 +98,13 @@ void EditStaff::setStaff(Staff* s, const Fraction& tick)
       instrument        = *part->instrument(tick);
       Score* score      = part->score();
       staff             = new Staff(score);
+      QList<Staff*>* ps = part->staves();
+
+      currentStaffNumber->setText(
+            QString::number(orgStaff->masterScore()->staffIdx(part) + ps->indexOf(orgStaff) + 1) + 
+            " / " + QString::number(orgStaff->masterScore()->nstaves()) );
+
+      groupStaffProps->setTitle(QString("Staff ") + QString::number(ps->indexOf(orgStaff) + 1) + " / " + QString::number(ps->size()));
       StaffType* stt = staff->setStaffType(Fraction(0,1), *orgStaff->staffType(Fraction(0,1)));
       stt->setSmall(orgStaff->staffType(Fraction(0,1))->isSmall());
       stt->setInvisible(orgStaff->staffType(Fraction(0,1))->invisible());
@@ -172,6 +179,10 @@ void EditStaff::updateStaffType()
 
 void EditStaff::updateInstrument()
       {
+      Part* part        = orgStaff->part();
+      QList<Part*>& sps = orgStaff->masterScore()->parts();
+      groupPartProps->setTitle(QString("Instrument ") + QString::number(sps.indexOf(part) + 1) + " / " + QString::number(sps.count()));
+
       updateInterval(instrument.transpose());
 
       QList<StaffName>& snl = instrument.shortNames();
