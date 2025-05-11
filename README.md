@@ -1,6 +1,29 @@
-[Download](https://github.com/fp22june/MuseScore/releases)
+### Download
 
-<hr>
+[Releases](https://github.com/fp22june/MuseScore/releases)
+
+Linux x86_64
+
+- x86_64.7z
+- x86_64.AppImage
+- x86_64.paf.exe 
+
+Linux ARM (untested)
+
+- aarch64.AppImage
+- armv7l.AppImage
+
+Windows
+
+- x86.7z
+- x86.paf.exe
+
+macOS
+
+- Apple.dmg
+- Intel.dmg
+
+### Develope
  
 \* [temp37](https://github.com/fp22june/MuseScore/tree/temp37), [temp38](https://github.com/fp22june/MuseScore/tree/temp38) UI: right click menu, instrument/staff properties window <br>
 \* temp5, temp11/13, temp14/15 applied <br>
