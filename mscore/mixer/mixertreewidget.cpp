@@ -162,7 +162,7 @@ void MixerTreeWidget::adjustHeaderWidths()
 
       int firstColumnMaximumWidth = 300;
       double ratio = 0.4; // instrument names take up 2/5 and controls 3/5
-      int margin = 2;   // factor to avoid triggering horizontal scrolling
+      int margin = 8;   // factor to avoid triggering horizontal scrolling
 
       int column0 = int(double(width) * ratio);
       int column1 = int(double(width) * (1-ratio) - margin);

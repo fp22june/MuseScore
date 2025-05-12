@@ -74,20 +74,20 @@
       <number>127</number>
      </property>
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
      <property name="tickPosition">
-      <enum>QSlider::NoTicks</enum>
+      <enum>QSlider::TickPosition::NoTicks</enum>
      </property>
     </widget>
    </item>
    <item>
     <spacer name="horizontalSpacer_2">
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
      <property name="sizeType">
-      <enum>QSizePolicy::Minimum</enum>
+      <enum>QSizePolicy::Policy::Minimum</enum>
      </property>
      <property name="sizeHint" stdset="0">
       <size>
@@ -132,17 +132,17 @@
       <bool>false</bool>
      </property>
      <property name="toolButtonStyle">
-      <enum>Qt::ToolButtonTextOnly</enum>
+      <enum>Qt::ToolButtonStyle::ToolButtonTextOnly</enum>
      </property>
     </widget>
    </item>
    <item>
     <spacer name="horizontalSpacer">
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
      <property name="sizeType">
-      <enum>QSizePolicy::Minimum</enum>
+      <enum>QSizePolicy::Policy::Minimum</enum>
      </property>
      <property name="sizeHint" stdset="0">
       <size>
@@ -187,17 +187,17 @@
       <bool>false</bool>
      </property>
      <property name="toolButtonStyle">
-      <enum>Qt::ToolButtonTextOnly</enum>
+      <enum>Qt::ToolButtonStyle::ToolButtonTextOnly</enum>
      </property>
     </widget>
    </item>
    <item>
     <spacer name="horizontalSpacer_3">
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
      <property name="sizeType">
-      <enum>QSizePolicy::Fixed</enum>
+      <enum>QSizePolicy::Policy::Fixed</enum>
      </property>
      <property name="sizeHint" stdset="0">
       <size>
@@ -222,26 +222,20 @@
       </size>
      </property>
      <property name="styleSheet">
-      <string notr="true">QFrame{
+      <string notr="true">QPushButton{
 background: red;
 border-radius: 3px;
 }</string>
-     </property>
-     <property name="frameShape">
-      <enum>QFrame::StyledPanel</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
      </property>
     </widget>
    </item>
    <item>
     <spacer name="horizontalSpacer_4">
      <property name="orientation">
-      <enum>Qt::Horizontal</enum>
+      <enum>Qt::Orientation::Horizontal</enum>
      </property>
      <property name="sizeType">
-      <enum>QSizePolicy::Fixed</enum>
+      <enum>QSizePolicy::Policy::Fixed</enum>
      </property>
      <property name="sizeHint" stdset="0">
       <size>
@@ -267,7 +261,7 @@ border-radius: 3px;
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="musescore.qrc"/>
+  <include location="../musescore.qrc"/>
  </resources>
  <connections/>
 </ui>
