@@ -304,6 +304,7 @@ void PlayPanel::setGain(float gain)  // respond to gainChanged() SIGNAL from Mas
       const QSignalBlocker blockVolumeSpinBoxSignals(volSpinBox);
       volumeSlider->setValue(synti->gainAsDecibels());
       volLabel();
+      volLabel();
       }
 
 
@@ -315,6 +316,8 @@ void PlayPanel::volumeChanged(double decibels, int)
       {
       synti->setGainAsDecibels(decibels);
       }
+
+
 
 //---------------------------------------------------------
 //   metronomeGainChanged

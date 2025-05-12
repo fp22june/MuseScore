@@ -17,26 +17,35 @@
 //  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //=============================================================================
 
-#ifndef __MIXERTRACKGROUP_H__
-#define __MIXERTRACKGROUP_H__
+#ifndef __GAINSLIDER_H__
+#define __GAINSLIDER_H__
+
+
+#include "awl/fastlog.h"
 
 namespace Ms {
 
-class Part;
-class MixerTrack;
+class GainSlider : public QSlider
+{
+      Q_OBJECT
+      double _minValue;
+      double _maxValue;
 
-//---------------------------------------------------------
-//   MixerTrackGroup
-//---------------------------------------------------------
+      void setMinLogValue(double min);
+      void setMaxLogValue(double max);
+      void setLogRange(double min, double max) { setMinLogValue(min); setMaxLogValue(max); };
 
-class MixerTrackGroup
-      {
 public:
-      virtual ~MixerTrackGroup() {}
-      virtual void expandToggled(Part* part, bool expanded) = 0;
-      virtual void notifyTrackSelected(MixerTrack* track) = 0;
+      GainSlider(QWidget* parent);
+
+      double doubleValue() const;
+      void setDoubleValue(double);
+
+      void sliderChange(QAbstractSlider::SliderChange change) override;
+
+signals:
+      void doubleValueChanged(double);
       };
 
 }
-
-#endif // MIXERTRACKGROUP_H
+#endif /* __GAINSLIDER_H__ */
