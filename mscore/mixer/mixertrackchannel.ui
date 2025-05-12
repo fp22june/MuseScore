@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>MixerTrackChannel</class>
  <widget class="QWidget" name="MixerTrackChannel">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>440</width>
+    <height>26</height>
+   </rect>
+  </property>
   <property name="minimumSize">
    <size>
     <width>0</width>
@@ -11,7 +19,7 @@
   <property name="maximumSize">
    <size>
     <width>16777215</width>
-    <height>34</height>
+    <height>26</height>
    </size>
   </property>
   <property name="styleSheet">
@@ -63,28 +71,38 @@
         <property name="spacing">
          <number>0</number>
         </property>
-        <property name="leftMargin">
-         <number>32</number>
-        </property>
-        <property name="rightMargin">
-         <number>4</number>
-        </property>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Orientation::Horizontal</enum>
+          </property>
+          <property name="sizeType">
+           <enum>QSizePolicy::Policy::Fixed</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>8</width>
+            <height>0</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
         <item>
          <widget class="QLabel" name="trackLabel">
           <property name="minimumSize">
            <size>
-            <width>64</width>
+            <width>56</width>
             <height>0</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
-            <width>64</width>
+            <width>56</width>
             <height>16777215</height>
            </size>
           </property>
           <property name="toolTip">
-           <string>Channel name</string>
+           <string>Channel</string>
           </property>
           <property name="styleSheet">
            <string notr="true">.QLabel {
@@ -97,106 +115,30 @@
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="soloBn">
+         <widget class="QSlider" name="volumeSlider">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
           <property name="minimumSize">
            <size>
-            <width>32</width>
-            <height>32</height>
+            <width>0</width>
+            <height>24</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
-            <width>32</width>
+            <width>16777215</width>
             <height>32</height>
            </size>
           </property>
-          <property name="toolTip">
-           <string>Solo</string>
+          <property name="maximum">
+           <number>127</number>
           </property>
-          <property name="styleSheet">
-           <string notr="true">.QPushButton {
-    border: none;
-    background-color: none;
-}
-</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset resource="../musescore.qrc">
-            <normaloff>:/data/icons/mixer-solo-off.svg</normaloff>
-            <normalon>:/data/icons/mixer-solo-on.svg</normalon>:/data/icons/mixer-solo-off.svg</iconset>
-          </property>
-          <property name="iconSize">
-           <size>
-            <width>32</width>
-            <height>32</height>
-           </size>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-          <property name="checked">
-           <bool>false</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="muteBn">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>32</width>
-            <height>32</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>32</width>
-            <height>32</height>
-           </size>
-          </property>
-          <property name="toolTip">
-           <string>Mute</string>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">.QPushButton {
-    border: none;
-    background-color: none;
-}
-</string>
-          </property>
-          <property name="text">
-           <string/>
-          </property>
-          <property name="icon">
-           <iconset resource="../musescore.qrc">
-            <normaloff>:/data/icons/mixer-mute-off.svg</normaloff>
-            <normalon>:/data/icons/mixer-mute-on.svg</normalon>:/data/icons/mixer-mute-off.svg</iconset>
-          </property>
-          <property name="iconSize">
-           <size>
-            <width>32</width>
-            <height>32</height>
-           </size>
-          </property>
-          <property name="checkable">
-           <bool>true</bool>
-          </property>
-          <property name="checked">
-           <bool>false</bool>
+          <property name="orientation">
+           <enum>Qt::Orientation::Horizontal</enum>
           </property>
          </widget>
         </item>
@@ -213,14 +155,14 @@
           </property>
           <property name="minimumSize">
            <size>
-            <width>32</width>
-            <height>32</height>
+            <width>24</width>
+            <height>24</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
-            <width>32</width>
-            <height>32</height>
+            <width>24</width>
+            <height>24</height>
            </size>
           </property>
           <property name="toolTip">
@@ -268,30 +210,106 @@
          </widget>
         </item>
         <item>
-         <widget class="QSlider" name="volumeSlider">
+         <widget class="QPushButton" name="muteBn">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
           </property>
           <property name="minimumSize">
            <size>
-            <width>0</width>
-            <height>32</height>
+            <width>24</width>
+            <height>24</height>
            </size>
           </property>
           <property name="maximumSize">
            <size>
-            <width>16777215</width>
+            <width>24</width>
+            <height>24</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Mute</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">.QPushButton {
+    border: none;
+    background-color: none;
+}
+</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="../musescore.qrc">
+            <normaloff>:/data/icons/mixer-mute-off.svg</normaloff>
+            <normalon>:/data/icons/mixer-mute-on.svg</normalon>:/data/icons/mixer-mute-off.svg</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>32</width>
             <height>32</height>
            </size>
           </property>
-          <property name="maximum">
-           <number>127</number>
+          <property name="checkable">
+           <bool>true</bool>
           </property>
-          <property name="orientation">
-           <enum>Qt::Orientation::Horizontal</enum>
+          <property name="checked">
+           <bool>false</bool>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="soloBn">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>24</width>
+            <height>24</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>24</width>
+            <height>24</height>
+           </size>
+          </property>
+          <property name="toolTip">
+           <string>Solo</string>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">.QPushButton {
+    border: none;
+    background-color: none;
+}
+</string>
+          </property>
+          <property name="text">
+           <string/>
+          </property>
+          <property name="icon">
+           <iconset resource="../musescore.qrc">
+            <normaloff>:/data/icons/mixer-solo-off.svg</normaloff>
+            <normalon>:/data/icons/mixer-solo-on.svg</normalon>:/data/icons/mixer-solo-off.svg</iconset>
+          </property>
+          <property name="iconSize">
+           <size>
+            <width>32</width>
+            <height>32</height>
+           </size>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+          <property name="checked">
+           <bool>false</bool>
           </property>
          </widget>
         </item>
