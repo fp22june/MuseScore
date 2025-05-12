@@ -17,26 +17,32 @@
 //  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //=============================================================================
 
-#ifndef __MIXERTRACKGROUP_H__
-#define __MIXERTRACKGROUP_H__
+#ifndef __MIXERMASTERCHANNEL_H__
+#define __MIXERMASTERCHANNEL_H__
+
+#include "ui_mixermasterchannel.h"
+#include "mixertrackitem.h"
+#include "libmscore/instrument.h"
+
 
 namespace Ms {
 
-class Part;
-class MixerTrack;
-
-//---------------------------------------------------------
-//   MixerTrackGroup
-//---------------------------------------------------------
-
-class MixerTrackGroup
+class MixerMasterChannel : public QWidget, public Ui::MixerMasterChannel
       {
-public:
-      virtual ~MixerTrackGroup() {}
-      virtual void expandToggled(Part* part, bool expanded) = 0;
-      virtual void notifyTrackSelected(MixerTrack* track) = 0;
+      Q_OBJECT
+
+      void setupAdditionalUi();
+      void setupSlotsAndSignals();
+      void update();
+
+      public slots:
+      void masterVolumeSliderMoved(int);
+      void updateUiControls(); // for showing/hiding color
+
+      public:
+      explicit MixerMasterChannel();
+      void volumeChanged(float);
       };
 
-}
-
-#endif // MIXERTRACKGROUP_H
+} // namespace Ms
+#endif // __MIXERMASTERCHANNEL_H__

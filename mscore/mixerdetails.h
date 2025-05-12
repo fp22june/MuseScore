@@ -21,77 +21,87 @@
 #define __MIXERDETAILS_H__
 
 #include "ui_mixerdetails.h"
-#include "libmscore/instrument.h"
+#include "libmscore/instrument.h"   // needed for ChannelListener
 #include "mixertrackitem.h"
+#include "mixer.h"
 
-#include <functional>
-#include <QPushButton>
+
 
 namespace Ms {
 
-
-class MixerTrackItem;
-
-
-//---------------------------------------------------------
-//   MixerDetails
-//---------------------------------------------------------
 
 class MixerDetails : public QWidget, public Ui::MixerDetails, public ChannelListener
       {
       Q_OBJECT
 
-      MixerTrackItemPtr _mti;
-      QWidget* mutePerVoiceHolder;
+      Mixer* mixer;
+      MixerTrackItem* selectedMixerTrackItem = nullptr;
+      void setupSlotsAndSignals();
       QGridLayout* mutePerVoiceGrid;
-      QList<QPushButton*> voiceButtons;
+      QList<QWidget*> voiceButtons; // used for dynamically updating tabOrder
 
-      void updateFromTrack();
+      void updateName();
+      void updatePatch();
+      void updateVolume();
+      void updatePan();
+      void updateMutePerVoice();
+      QPushButton* makeMuteButton(int staff, int voice);
+      void updateMidiChannelAndPort();
+      void updateReverb();
+      void updateChorus();
 
-public slots:
-      void partNameChanged();
-      void trackColorChanged(QColor);
-      void patchChanged(int);
-      void volumeChanged(double);
-      void panChanged(double);
-      void chorusChanged(double);
-      void reverbChanged(double);
-      void drumkitToggled(bool);
-      void midiChannelChanged(int);
+      void blockSignals(bool);
+      void updateTabOrder();
+            
+   public slots:
+      void drumsetCheckboxToggled(bool);
+      void patchComboEdited(int);
+      void volumeSliderMoved(int);
+      void volumeSpinBoxEdited(int);
+      void panSliderMoved(int);
+      void panSpinBoxEdited(int);
+      void midiChannelOrPortEdited(int);
+      void reverbSliderMoved(int);
+      void reverbSpinBoxEdited(int);
+      void chorusSliderMoved(int);
+      void chorusSpinBoxEdited(int);
+      void updateDetails(MixerTrackItem*);
 
-public:
-      explicit MixerDetails(QWidget *parent);
-
-      MixerTrackItemPtr track() { return _mti; }
-      void setTrack(MixerTrackItemPtr track);
-      void setVoiceMute(int staffIdx, int voice, bool shouldMute);
+   public:
+      MixerDetails(Mixer *mixer);
       void propertyChanged(Channel::Prop property) override;
+
+      void resetControls(); // apply default (0 or empty) values for when no track is selected
+      void voiceMuteButtonToggled(int staffIndex, int voiceIndex, bool shouldMute);
+      void updateUiOptions();
+
+      MixerTrackItem* getSelectedMixerTrackItem() { return selectedMixerTrackItem; };
       };
 
-//---------------------------------------------------------
-//   MixerDetailsVoiceButtonHandler
-//---------------------------------------------------------
 
-class MixerDetailsVoiceButtonHandler : public QObject
+class MixerDetails;
+
+class MixerVoiceMuteButtonHandler : public QObject
       {
       Q_OBJECT
 
-      MixerDetails* _mixerDetails;
-      int _staff;
-      int _voice;
-public:
-      MixerDetailsVoiceButtonHandler(MixerDetails* mixerDetails, int staff, int voice, QObject* parent = nullptr)
+      MixerDetails* mixerDetails;
+      int staffIndex;
+      int voiceIndex;
+
+   public:
+      MixerVoiceMuteButtonHandler(MixerDetails* mixerDetails, int staffIndex, int voiceIndex, QObject* parent = nullptr)
             : QObject(parent),
-              _mixerDetails(mixerDetails),
-              _staff(staff),
-              _voice(voice)
+              mixerDetails(mixerDetails),
+              staffIndex(staffIndex),
+              voiceIndex(voiceIndex)
             {}
 
 public slots:
-      void setVoiceMute(bool checked)
+      void buttonToggled(bool checked)
             {
-            _mixerDetails->setVoiceMute(_staff, _voice, checked);
+            mixerDetails->voiceMuteButtonToggled(staffIndex, voiceIndex, checked);
             }
-      };
+   };
 }
 #endif // __MIXERDETAILS_H__

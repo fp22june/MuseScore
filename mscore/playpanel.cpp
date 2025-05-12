@@ -239,9 +239,12 @@ void PlayPanel::setRelTempo(qreal val)
 //   setGain
 //---------------------------------------------------------
 
-void PlayPanel::setGain(float val)
+void PlayPanel::setGain(float val)  // respond to gainChanged() SIGNAL from MasterSynthesizer
       {
+      const QSignalBlocker blockVolumeSpinBoxSignals(volSpinBox);
       volumeSlider->setValue(val);
+      vol = val;
+      volLabel();
       }
 
 
@@ -249,12 +252,14 @@ void PlayPanel::setGain(float val)
 //   volumeChanged
 //---------------------------------------------------------
 
-void PlayPanel::volumeChanged(double val, int)
+void PlayPanel::volumeChanged(double value, int)
       {
-      emit gainChange(val);
-      vol = val;
+      emit gainChange(value);
+      vol = value;
       volLabel();
       }
+
+
 
 //---------------------------------------------------------
 //   metronomeGainChanged

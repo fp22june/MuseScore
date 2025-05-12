@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MixerTrackChannel</class>
- <widget class="QWidget" name="MixerTrackChannel">
+ <class>MixerMasterChannel</class>
+ <widget class="QWidget" name="MixerMasterChannel">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -48,7 +48,7 @@
     <number>0</number>
    </property>
    <item>
-    <widget class="Ms::MixerSlider" name="trackSlider">
+    <widget class="Ms::GainSlider" name="trackSlider">
      <property name="sizePolicy">
       <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
        <horstretch>0</horstretch>
@@ -98,7 +98,7 @@
     </spacer>
    </item>
    <item>
-    <widget class="QToolButton" name="soloButton">
+    <widget class="QToolButton" name="playButton">
      <property name="maximumSize">
       <size>
        <width>16</width>
@@ -117,7 +117,11 @@
       <string>Solo</string>
      </property>
      <property name="text">
-      <string>S</string>
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset resource="musescore.qrc">
+       <normaloff>:/data/icons/media-playback-start.svg</normaloff>:/data/icons/media-playback-start.svg</iconset>
      </property>
      <property name="iconSize">
       <size>
@@ -132,7 +136,7 @@
       <bool>false</bool>
      </property>
      <property name="toolButtonStyle">
-      <enum>Qt::ToolButtonTextOnly</enum>
+      <enum>Qt::ToolButtonIconOnly</enum>
      </property>
     </widget>
    </item>
@@ -153,7 +157,7 @@
     </spacer>
    </item>
    <item>
-    <widget class="QToolButton" name="muteButton">
+    <widget class="QToolButton" name="loopButton">
      <property name="maximumSize">
       <size>
        <width>16</width>
@@ -172,7 +176,11 @@
       <string>Mute</string>
      </property>
      <property name="text">
-      <string>M</string>
+      <string/>
+     </property>
+     <property name="icon">
+      <iconset resource="musescore.qrc">
+       <normaloff>:/data/icons/media-playback-loop.svg</normaloff>:/data/icons/media-playback-loop.svg</iconset>
      </property>
      <property name="iconSize">
       <size>
@@ -187,7 +195,7 @@
       <bool>false</bool>
      </property>
      <property name="toolButtonStyle">
-      <enum>Qt::ToolButtonTextOnly</enum>
+      <enum>Qt::ToolButtonIconOnly</enum>
      </property>
     </widget>
    </item>
@@ -208,7 +216,7 @@
     </spacer>
    </item>
    <item>
-    <widget class="Awl::ColorLabel" name="colorChooser">
+    <widget class="QLabel" name="colorChooser">
      <property name="minimumSize">
       <size>
        <width>12</width>
@@ -222,16 +230,13 @@
       </size>
      </property>
      <property name="styleSheet">
-      <string notr="true">QFrame{
+      <string notr="true">QLabel{
 background: red;
 border-radius: 3px;
 }</string>
      </property>
-     <property name="frameShape">
-      <enum>QFrame::StyledPanel</enum>
-     </property>
-     <property name="frameShadow">
-      <enum>QFrame::Raised</enum>
+     <property name="text">
+      <string/>
      </property>
     </widget>
    </item>
@@ -255,15 +260,9 @@ border-radius: 3px;
  </widget>
  <customwidgets>
   <customwidget>
-   <class>Ms::MixerSlider</class>
+   <class>Ms::GainSlider</class>
    <extends>QSlider</extends>
-   <header>mixerslider.h</header>
-  </customwidget>
-  <customwidget>
-   <class>Awl::ColorLabel</class>
-   <extends>QFrame</extends>
-   <header>awl/colorlabel.h</header>
-   <container>1</container>
+   <header>gainslider.h</header>
   </customwidget>
  </customwidgets>
  <resources>

@@ -17,26 +17,35 @@
 //  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //=============================================================================
 
-#ifndef __MIXERTRACK_H__
-#define __MIXERTRACK_H__
+#ifndef __GAINSLIDER_H__
+#define __GAINSLIDER_H__
 
-#include "mixertrackitem.h"
-#include <QWidget>
 
-class MixerTrackGroup;
+#include "awl/fastlog.h"
 
 namespace Ms {
 
-class MixerTrack {
+class GainSlider : public QSlider
+{
+      Q_OBJECT
+      double _minValue;
+      double _maxValue;
+
+      void setMinLogValue(double min);
+      void setMaxLogValue(double max);
+      void setLogRange(double min, double max) { setMinLogValue(min); setMaxLogValue(max); };
+
 public:
-      virtual ~MixerTrack() {}
-      virtual QWidget* getWidget() = 0;
-      virtual MixerTrackGroup* group() = 0;
-      virtual MixerTrackItemPtr mti() = 0;
-      virtual bool selected() = 0;
-      virtual void setSelected(bool) = 0;
+      GainSlider(QWidget* parent);
+
+      double doubleValue() const;
+      void setDoubleValue(double);
+
+      void sliderChange(QAbstractSlider::SliderChange change) override;
+
+signals:
+      void doubleValueChanged(double);
       };
 
 }
-
-#endif // MIXERTRACK_H
+#endif /* __GAINSLIDER_H__ */
