@@ -50,7 +50,6 @@ class Mixer : public QDockWidget, public Ui::Mixer
 
       Score* _score = nullptr;                        // playback score
       Score* _activeScore = nullptr;                  // may be a _score itself or its excerpt;
-      QGridLayout* gridLayout;                        // main layout - used to show/hide & position details panel
       MixerMasterChannel* masterChannelWidget;        // master volume + play / loop widget
 
       static MixerOptions* options;                   // UI options, e.g. show/hide track colors, slider modes

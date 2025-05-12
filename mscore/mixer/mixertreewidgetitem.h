@@ -49,7 +49,7 @@ class MixerTreeWidgetItem : public QTreeWidgetItem
       ~MixerTreeWidgetItem();
 
       MixerTrackItem* mixerTrackItem() { return _mixerTrackItem; };
-      MixerTrackChannel* mixerTrackChannel();
+      MixerTrackChannel* mixerTrackChannel() { return _mixerTrackChannel; };
       };
 
 

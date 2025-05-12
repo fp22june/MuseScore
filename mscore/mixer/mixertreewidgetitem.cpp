@@ -65,8 +65,9 @@ MixerTreeWidgetItem::MixerTreeWidgetItem(Part* part, Score* score, QTreeWidget* 
 
                   addChild(child);
                   treeWidget->setItemWidget(child, 1, child->mixerTrackChannel());
-                  // make the row non-editable - sub-instruments can't change their name
-                  child->setFlags(Qt::ItemIsEnabled);
+                  
+                  Qt::ItemFlags cFlags = QFlag(Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+                  child->setFlags(cFlags);
                   }
             }
       }
@@ -78,11 +79,6 @@ MixerTreeWidgetItem::MixerTreeWidgetItem(Channel* channel, Instrument* instrumen
       setToolTip(0, QString("%1 - %2").arg(part->partName()).arg(channel->name()));
       _mixerTrackItem = new MixerTrackItem(MixerTrackItem::TrackType::CHANNEL, part, instrument, channel);
       _mixerTrackChannel = new MixerTrackChannel(this);
-      }
-
-
-MixerTrackChannel* MixerTreeWidgetItem::mixerTrackChannel() {
-      return _mixerTrackChannel;
       }
 
 MixerTreeWidgetItem:: ~MixerTreeWidgetItem()

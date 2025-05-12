@@ -2,29 +2,9 @@
 <ui version="4.0">
  <class>MixerTrackChannel</class>
  <widget class="QWidget" name="MixerTrackChannel">
-  <property name="geometry">
-   <rect>
-    <x>0</x>
-    <y>0</y>
-    <width>150</width>
-    <height>27</height>
-   </rect>
-  </property>
-  <property name="sizePolicy">
-   <sizepolicy hsizetype="Fixed" vsizetype="Preferred">
-    <horstretch>0</horstretch>
-    <verstretch>0</verstretch>
-   </sizepolicy>
-  </property>
-  <property name="minimumSize">
-   <size>
-    <width>150</width>
-    <height>24</height>
-   </size>
-  </property>
   <property name="maximumSize">
    <size>
-    <width>2000</width>
+    <width>16777215</width>
     <height>27</height>
    </size>
   </property>
@@ -50,20 +30,14 @@
    <item>
     <widget class="Ms::MixerSlider" name="trackSlider">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+      <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
        <horstretch>0</horstretch>
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
-     <property name="minimumSize">
-      <size>
-       <width>90</width>
-       <height>0</height>
-      </size>
-     </property>
      <property name="maximumSize">
       <size>
-       <width>2000</width>
+       <width>16777215</width>
        <height>20</height>
       </size>
      </property>
@@ -91,7 +65,7 @@
      </property>
      <property name="sizeHint" stdset="0">
       <size>
-       <width>15</width>
+       <width>5</width>
        <height>20</height>
       </size>
      </property>
@@ -146,7 +120,7 @@
      </property>
      <property name="sizeHint" stdset="0">
       <size>
-       <width>10</width>
+       <width>5</width>
        <height>20</height>
       </size>
      </property>
@@ -201,7 +175,7 @@
      </property>
      <property name="sizeHint" stdset="0">
       <size>
-       <width>4</width>
+       <width>5</width>
        <height>16</height>
       </size>
      </property>
@@ -228,22 +202,6 @@ border-radius: 3px;
 }</string>
      </property>
     </widget>
-   </item>
-   <item>
-    <spacer name="horizontalSpacer_4">
-     <property name="orientation">
-      <enum>Qt::Orientation::Horizontal</enum>
-     </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::Policy::Fixed</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>15</width>
-       <height>16</height>
-      </size>
-     </property>
-    </spacer>
    </item>
   </layout>
  </widget>

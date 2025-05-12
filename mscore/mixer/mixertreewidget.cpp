@@ -39,7 +39,7 @@ MixerTreeWidget::MixerTreeWidget(QWidget *parent) :
       // make all bar column 0, non-editable
       setItemDelegateForColumn(1, new NonEditableItemDelegate (this));
 
-      header()->setSectionResizeMode(0, QHeaderView::Fixed);
+      header()->setSectionResizeMode(0, QHeaderView::Interactive);
       header()->setSectionResizeMode(1, QHeaderView::Fixed);
 
       setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -123,6 +123,7 @@ void MixerTreeWidget::setupSlotsAndSignals()
       connect(this, SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)), SLOT(selectedItemChanged()));
 
       connect(header(), SIGNAL(geometriesChanged()), SLOT(adjustHeaderWidths()));
+      connect(header(), &QHeaderView::sectionResized, this, &MixerTreeWidget::adjustHeaderWidths);
       connect(this, SIGNAL(itemExpanded(QTreeWidgetItem*)), SLOT(itemCollapsedOrExpanded(QTreeWidgetItem*)));
       connect(this, SIGNAL(itemCollapsed(QTreeWidgetItem*)), SLOT(itemCollapsedOrExpanded(QTreeWidgetItem*)));
       connect(this, SIGNAL(itemChanged(QTreeWidgetItem*, int)), SLOT(itemChanged(QTreeWidgetItem*, int)));
@@ -158,26 +159,9 @@ void MixerTreeWidget::updateSliders()
 
 void MixerTreeWidget::adjustHeaderWidths()
       {
-      int width = this->width();
-
-      int firstColumnMaximumWidth = 300;
-      double ratio = 0.4; // instrument names take up 2/5 and controls 3/5
-      int margin = 8;   // factor to avoid triggering horizontal scrolling
-
-      int column0 = int(double(width) * ratio);
-      int column1 = int(double(width) * (1-ratio) - margin);
-
-      if (column0 > firstColumnMaximumWidth) {
-            column0 = firstColumnMaximumWidth;
-            column1 = (width - firstColumnMaximumWidth) - margin;
-            }
-
-      header()->resizeSection(0, column0);
-      header()->resizeSection(1, column1);
-
       if (masterChannelTreeWidget) {
-            masterChannelTreeWidget->header()->resizeSection(0, column0);
-            masterChannelTreeWidget->header()->resizeSection(1, column1);
+            masterChannelTreeWidget->header()->resizeSection(0, header()->sectionSize(0));
+            masterChannelTreeWidget->header()->resizeSection(1, header()->sectionSize(1));
             }
       }
 
