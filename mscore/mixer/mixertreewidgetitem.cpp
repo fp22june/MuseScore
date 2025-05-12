@@ -36,7 +36,7 @@ namespace Ms {
       //TODO: can I initialise this with the mixerTrackItem itself?
 MixerTreeWidgetItem::MixerTreeWidgetItem(Part* part, Score* score, QTreeWidget* treeWidget)
       {
-      _mixerTrackItem = new MixerTrackItem(part, score);
+      _mixerTrackItem = new MixerTrackItem(MixerTrackItem::TrackType::PART, part, score);
       _mixerTrackChannel = new MixerTrackChannel(this);
 
       setText(0, part->partName());
@@ -45,7 +45,7 @@ MixerTreeWidgetItem::MixerTreeWidgetItem(Part* part, Score* score, QTreeWidget* 
       // make the row editable - but the tree itself will only allow editing in column 0
 
       // note: use of QFlag constructor is required to avoid errrors when compiler is strict
-      Qt::ItemFlags itemFlags = QFlag(Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+      Qt::ItemFlags itemFlags = QFlag(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
       setFlags(itemFlags);
 
 
@@ -66,7 +66,7 @@ MixerTreeWidgetItem::MixerTreeWidgetItem(Part* part, Score* score, QTreeWidget* 
                   addChild(child);
                   treeWidget->setItemWidget(child, 1, child->mixerTrackChannel());
                   
-                  Qt::ItemFlags cFlags = QFlag(Qt::ItemIsEditable | Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+                  Qt::ItemFlags cFlags = QFlag(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
                   child->setFlags(cFlags);
                   }
             }

@@ -10,14 +10,8 @@
     <x>0</x>
     <y>0</y>
     <width>270</width>
-    <height>283</height>
+    <height>295</height>
    </rect>
-  </property>
-  <property name="minimumSize">
-   <size>
-    <width>193</width>
-    <height>160</height>
-   </size>
   </property>
   <property name="focusPolicy">
    <enum>Qt::FocusPolicy::ClickFocus</enum>
@@ -29,12 +23,6 @@
    <string>Mixer</string>
   </property>
   <widget class="QWidget" name="dockWidgetContents">
-   <property name="sizePolicy">
-    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-     <horstretch>0</horstretch>
-     <verstretch>0</verstretch>
-    </sizepolicy>
-   </property>
    <layout class="QGridLayout" name="gridLayout_2">
     <property name="leftMargin">
      <number>4</number>
@@ -52,9 +40,6 @@
      <layout class="QHBoxLayout" name="h1">
       <item>
        <layout class="QVBoxLayout" name="v1">
-        <property name="spacing">
-         <number>0</number>
-        </property>
         <item>
          <widget class="QWidget" name="a1" native="true">
           <layout class="QHBoxLayout" name="horizontalLayout">
@@ -114,123 +99,130 @@
          </widget>
         </item>
         <item>
-         <widget class="QScrollArea" name="scrollArea">
-          <property name="horizontalScrollBarPolicy">
-           <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <property name="spacing">
+           <number>0</number>
           </property>
-          <property name="widgetResizable">
-           <bool>true</bool>
-          </property>
-          <widget class="QWidget" name="scrollAreaWidgetContents">
-           <property name="geometry">
-            <rect>
-             <x>0</x>
-             <y>0</y>
-             <width>256</width>
-             <height>192</height>
-            </rect>
-           </property>
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <layout class="QVBoxLayout" name="verticalLayout">
-            <property name="leftMargin">
-             <number>0</number>
+          <item>
+           <widget class="QScrollArea" name="scrollArea">
+            <property name="horizontalScrollBarPolicy">
+             <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
             </property>
-            <property name="topMargin">
-             <number>0</number>
+            <property name="widgetResizable">
+             <bool>true</bool>
             </property>
-            <property name="rightMargin">
-             <number>0</number>
+            <widget class="QWidget" name="scrollAreaWidgetContents">
+             <property name="geometry">
+              <rect>
+               <x>0</x>
+               <y>0</y>
+               <width>254</width>
+               <height>196</height>
+              </rect>
+             </property>
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="Ms::MixerTreeWidget" name="mixerTreeWidget">
+                <property name="accessibleName">
+                 <string>Mixer Track List</string>
+                </property>
+                <property name="horizontalScrollBarPolicy">
+                 <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+                </property>
+                <property name="autoScroll">
+                 <bool>false</bool>
+                </property>
+                <property name="tabKeyNavigation">
+                 <bool>true</bool>
+                </property>
+                <property name="indentation">
+                 <number>12</number>
+                </property>
+                <property name="allColumnsShowFocus">
+                 <bool>true</bool>
+                </property>
+                <property name="columnCount">
+                 <number>2</number>
+                </property>
+                <column>
+                 <property name="text">
+                  <string notr="true">1</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string notr="true">2</string>
+                 </property>
+                </column>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </widget>
+          </item>
+          <item>
+           <widget class="QTreeWidget" name="masterVolumeTreeWidget">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
             </property>
-            <property name="bottomMargin">
-             <number>0</number>
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>25</height>
+             </size>
             </property>
-            <item>
-             <widget class="Ms::MixerTreeWidget" name="mixerTreeWidget">
-              <property name="accessibleName">
-               <string>Mixer Track List</string>
-              </property>
-              <property name="horizontalScrollBarPolicy">
-               <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
-              </property>
-              <property name="autoScroll">
-               <bool>false</bool>
-              </property>
-              <property name="tabKeyNavigation">
-               <bool>true</bool>
-              </property>
-              <property name="indentation">
-               <number>12</number>
-              </property>
-              <property name="allColumnsShowFocus">
-               <bool>true</bool>
-              </property>
-              <property name="columnCount">
-               <number>2</number>
-              </property>
-              <column>
-               <property name="text">
-                <string notr="true">1</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string notr="true">2</string>
-               </property>
-              </column>
-             </widget>
-            </item>
-           </layout>
-          </widget>
-         </widget>
-        </item>
-        <item>
-         <widget class="QTreeWidget" name="masterVolumeTreeWidget">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="verticalScrollBarPolicy">
-           <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
-          </property>
-          <property name="horizontalScrollBarPolicy">
-           <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
-          </property>
-          <property name="tabKeyNavigation">
-           <bool>true</bool>
-          </property>
-          <property name="allColumnsShowFocus">
-           <bool>true</bool>
-          </property>
-          <property name="columnCount">
-           <number>2</number>
-          </property>
-          <attribute name="headerVisible">
-           <bool>false</bool>
-          </attribute>
-          <column>
-           <property name="text">
-            <string notr="true">1</string>
-           </property>
-          </column>
-          <column>
-           <property name="text">
-            <string notr="true">2</string>
-           </property>
-          </column>
-         </widget>
+            <property name="verticalScrollBarPolicy">
+             <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+            </property>
+            <property name="horizontalScrollBarPolicy">
+             <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+            </property>
+            <property name="tabKeyNavigation">
+             <bool>true</bool>
+            </property>
+            <property name="allColumnsShowFocus">
+             <bool>true</bool>
+            </property>
+            <property name="columnCount">
+             <number>2</number>
+            </property>
+            <attribute name="headerVisible">
+             <bool>false</bool>
+            </attribute>
+            <column>
+             <property name="text">
+              <string notr="true">1</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string notr="true">2</string>
+             </property>
+            </column>
+           </widget>
+          </item>
+         </layout>
         </item>
        </layout>
       </item>

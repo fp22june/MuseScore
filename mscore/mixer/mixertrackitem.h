@@ -42,9 +42,8 @@ public:
 private:
       TrackType _trackType;
       Part* _part;
-
-      Instrument* _instrument;
-      Channel* _channel;
+      Instrument* _instrument = nullptr;
+      Channel* _channel = nullptr;
 
       Channel* playbackChannel(const Channel* channel);
 
@@ -62,16 +61,17 @@ private:
       QString adjustedPatchName(const MidiPatch* patch, std::vector<QString> usedNames);
 
 public:
-      MixerTrackItem(TrackType trackType, Part* part, Instrument* _instr, Channel* _chan);
+      MixerTrackItem(TrackType trackType, Part* part, Score* score);
+      MixerTrackItem(TrackType trackType, Part* part, Instrument* instr, Channel* chan);
 
-      MixerTrackItem(Part* part, Score* score);
       TrackType trackType() { return _trackType; }
+      bool isPart() { return _trackType == TrackType::PART; }
       Part* part() { return _part; }
       Instrument* instrument() { return _instrument; }
       Channel* channel() { return _channel; }
+      
       MidiMapping *midiMap();
       int color();
-      bool isPart();
 
       QString detailedToolTip();
 

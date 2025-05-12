@@ -45,7 +45,7 @@ class MixerTreeWidget : public QTreeWidget
 
 private slots:
       void adjustHeaderWidths();
-      void itemChanged(QTreeWidgetItem* treeWidgetItem, int column);
+      // void itemChanged(QTreeWidgetItem* treeWidgetItem, int column);
       void itemCollapsedOrExpanded(QTreeWidgetItem* item);
       void selectedItemChanged();
 

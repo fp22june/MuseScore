@@ -28,6 +28,8 @@
 #include "mixeroptions.h"
 #include "../awl/colorlabel.h"
 
+#include "preferences.h"
+
 namespace Ms {
 
 //--------------------------------------------------------------
@@ -70,9 +72,17 @@ void MixerTrackChannel::takeSelection()
 
 void MixerTrackChannel::setupAdditionalUi()
       {
-      //TODO: a more responsible approach to styling that's also light/dark theme respectful
-      QString basicButton = "QToolButton{background: white; color: black; font-weight: bold; border: 1px solid gray;}";
-      QString colorTemplate = "QToolButton:checked, QToolButton:pressed { color: white; background: %1;}";
+      QString buttonfont = "black";
+      switch (preferences.effectiveGlobalStyle()){
+            case MuseScoreEffectiveStyleType::LIGHT_FUSION:
+                  buttonfont = "black";
+                  break;
+            case MuseScoreEffectiveStyleType::DARK_FUSION:
+                  buttonfont = "white";
+                  break;
+            }
+      QString basicButton("QToolButton{color: " + buttonfont + "; font-weight: bold; border: 1px solid gray;}");
+      QString colorTemplate("QToolButton:checked, QToolButton:pressed { color: white; background: %1;}");
       muteButton->setStyleSheet(basicButton + colorTemplate.arg("red"));
       soloButton->setStyleSheet(basicButton + colorTemplate.arg("green"));
       }

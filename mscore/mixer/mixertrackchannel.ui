@@ -2,6 +2,14 @@
 <ui version="4.0">
  <class>MixerTrackChannel</class>
  <widget class="QWidget" name="MixerTrackChannel">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>143</width>
+    <height>20</height>
+   </rect>
+  </property>
   <property name="maximumSize">
    <size>
     <width>16777215</width>
@@ -13,7 +21,7 @@
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <property name="spacing">
-    <number>0</number>
+    <number>2</number>
    </property>
    <property name="leftMargin">
     <number>0</number>
@@ -22,7 +30,7 @@
     <number>0</number>
    </property>
    <property name="rightMargin">
-    <number>0</number>
+    <number>4</number>
    </property>
    <property name="bottomMargin">
     <number>0</number>
@@ -54,22 +62,6 @@
       <enum>QSlider::TickPosition::NoTicks</enum>
      </property>
     </widget>
-   </item>
-   <item>
-    <spacer name="horizontalSpacer_2">
-     <property name="orientation">
-      <enum>Qt::Orientation::Horizontal</enum>
-     </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::Policy::Minimum</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>5</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
    </item>
    <item>
     <widget class="QToolButton" name="soloButton">
@@ -111,22 +103,6 @@
     </widget>
    </item>
    <item>
-    <spacer name="horizontalSpacer">
-     <property name="orientation">
-      <enum>Qt::Orientation::Horizontal</enum>
-     </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::Policy::Minimum</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>5</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item>
     <widget class="QToolButton" name="muteButton">
      <property name="maximumSize">
       <size>
@@ -164,22 +140,6 @@
       <enum>Qt::ToolButtonStyle::ToolButtonTextOnly</enum>
      </property>
     </widget>
-   </item>
-   <item>
-    <spacer name="horizontalSpacer_3">
-     <property name="orientation">
-      <enum>Qt::Orientation::Horizontal</enum>
-     </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::Policy::Fixed</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>5</width>
-       <height>16</height>
-      </size>
-     </property>
-    </spacer>
    </item>
    <item>
     <widget class="Awl::ColorLabel" name="colorChooser">

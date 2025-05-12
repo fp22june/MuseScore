@@ -126,7 +126,7 @@ void MixerTreeWidget::setupSlotsAndSignals()
       connect(header(), &QHeaderView::sectionResized, this, &MixerTreeWidget::adjustHeaderWidths);
       connect(this, SIGNAL(itemExpanded(QTreeWidgetItem*)), SLOT(itemCollapsedOrExpanded(QTreeWidgetItem*)));
       connect(this, SIGNAL(itemCollapsed(QTreeWidgetItem*)), SLOT(itemCollapsedOrExpanded(QTreeWidgetItem*)));
-      connect(this, SIGNAL(itemChanged(QTreeWidgetItem*, int)), SLOT(itemChanged(QTreeWidgetItem*, int)));
+      // connect(this, SIGNAL(itemChanged(QTreeWidgetItem*, int)), SLOT(itemChanged(QTreeWidgetItem*, int)));
 
       }
 
@@ -172,13 +172,15 @@ void MixerTreeWidget::setMasterChannelTreeWidget(QTreeWidget* masterChannelTreeW
 
 //MARK:- tree changes
 //called when an item is edited
-void MixerTreeWidget::itemChanged(QTreeWidgetItem* treeWidgetItem, int column)
-      {
-      MixerTreeWidgetItem* item = static_cast<MixerTreeWidgetItem*>(treeWidgetItem);
-      saveTreeSelection();
-      item->mixerTrackItem()->setName(item->text(column));
-      restoreTreeSelection();
-      }
+// void MixerTreeWidget::itemChanged(QTreeWidgetItem* treeWidgetItem, int column)
+//       {
+//       MixerTreeWidgetItem* item = static_cast<MixerTreeWidgetItem*>(treeWidgetItem);
+//       saveTreeSelection();
+//       if (column == 0) {
+//             item->mixerTrackItem()->setName(item->text(column));
+//             }
+//       restoreTreeSelection();
+//       }
 
       
 void MixerTreeWidget::resetAll()

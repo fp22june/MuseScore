@@ -60,29 +60,26 @@ namespace Ms {
 //   MixerTrackItem
 //---------------------------------------------------------
 
-// General purpose constructor
-MixerTrackItem::MixerTrackItem(TrackType trackType, Part* part, Instrument* instr, Channel *chan)
-      :_trackType(trackType), _part(part), _instrument(instr), _channel(chan)
+MixerTrackItem::MixerTrackItem(TrackType trackType, Part* part, Instrument* instr, Channel* chan)
       {
-      }
-      
-
-MixerTrackItem::MixerTrackItem(Part* part, Score* score)
-      {
-      _trackType = TrackType::PART;
+      _trackType = trackType;
       _part = part;
-      _instrument = nullptr;
-      _channel = nullptr;
-      
-      const InstrumentList* instrumenList = part->instruments();
-
-      if (instrumenList->empty())
-            return;
-
-      instrumenList->begin();
-      _instrument = instrumenList->begin()->second;
-      _channel = _instrument->playbackChannel(0, score->masterScore());
+      _instrument = instr;
+      _channel = chan;
       }
+
+MixerTrackItem::MixerTrackItem(TrackType trackType, Part* part, Score* score)
+      {
+      _trackType = trackType;
+      _part = part;
+      const InstrumentList* instrumenList = part->instruments();
+      if (!instrumenList->empty()){
+            Instrument* i = instrumenList->begin()->second;
+            _instrument = i;
+            _channel = i->playbackChannel(0, score->masterScore());
+            }
+      }
+
 
 //---------------------------------------------------------
 //   midiMap
@@ -271,19 +268,27 @@ QString MixerTrackItem::getChannelName()
       }
 
 
-void MixerTrackItem::setName(QString newName)
-{
-      if (part()->partName() == newName) {
-            return;
+void MixerTrackItem::setName(QString newName){
+      switch (_trackType) {
+            case TrackType::PART:
+                  if (part()->partName() == newName) {
+                        return;
+                        }
+
+                  Score* score = part()->score();
+                  if (score) {
+                        score->startCmd();
+                        score->undo(new ChangePart(part(), part()->instrument(), newName));
+                        score->endCmd();
+                        }
+                  break;
+            //case TrackType::CHANNEL:
+            //      
+            //      break;
+            }
+
       }
 
-      Score* score = part()->score();
-      if (score) {
-            score->startCmd();
-            score->undo(new ChangePart(part(), part()->instrument(), newName));
-            score->endCmd();
-      }
-}
 
 int MixerTrackItem::color()
       {
@@ -624,14 +629,6 @@ int MixerTrackItem::relativeAdjust(int mainSliderDelta, ChannelReader reader, Ch
                   }
             }
       return deltaAdjust;
-      }
-
-
-
-
-bool MixerTrackItem::isPart()
-      {
-      return _trackType == TrackType::PART;
       }
 
 

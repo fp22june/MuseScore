@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>178</width>
+    <width>144</width>
     <height>20</height>
    </rect>
   </property>
@@ -21,7 +21,7 @@
   </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <property name="spacing">
-    <number>0</number>
+    <number>2</number>
    </property>
    <property name="leftMargin">
     <number>0</number>
@@ -52,8 +52,11 @@
      <property name="accessibleName">
       <string>Volume</string>
      </property>
+     <property name="minimum">
+      <number>-60</number>
+     </property>
      <property name="maximum">
-      <number>127</number>
+      <number>20</number>
      </property>
      <property name="orientation">
       <enum>Qt::Orientation::Horizontal</enum>
@@ -62,22 +65,6 @@
       <enum>QSlider::TickPosition::NoTicks</enum>
      </property>
     </widget>
-   </item>
-   <item>
-    <spacer name="horizontalSpacer_2">
-     <property name="orientation">
-      <enum>Qt::Orientation::Horizontal</enum>
-     </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::Policy::Minimum</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>5</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
    </item>
    <item>
     <widget class="QToolButton" name="playButton">
@@ -123,22 +110,6 @@
     </widget>
    </item>
    <item>
-    <spacer name="horizontalSpacer">
-     <property name="orientation">
-      <enum>Qt::Orientation::Horizontal</enum>
-     </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::Policy::Minimum</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>5</width>
-       <height>20</height>
-      </size>
-     </property>
-    </spacer>
-   </item>
-   <item>
     <widget class="QToolButton" name="loopButton">
      <property name="maximumSize">
       <size>
@@ -180,22 +151,6 @@
       <enum>Qt::ToolButtonStyle::ToolButtonIconOnly</enum>
      </property>
     </widget>
-   </item>
-   <item>
-    <spacer name="horizontalSpacer_3">
-     <property name="orientation">
-      <enum>Qt::Orientation::Horizontal</enum>
-     </property>
-     <property name="sizeType">
-      <enum>QSizePolicy::Policy::Fixed</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>5</width>
-       <height>16</height>
-      </size>
-     </property>
-    </spacer>
    </item>
    <item>
     <widget class="QLabel" name="colorChooser">
