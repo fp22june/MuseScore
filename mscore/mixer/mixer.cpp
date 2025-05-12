@@ -23,16 +23,16 @@
 #include <qmessagebox.h>
 #include <accessibletoolbutton.h>
 
-#include "musescore.h"
+#include "../musescore.h"
 
-#include "libmscore/excerpt.h"
-#include "libmscore/score.h"
-#include "libmscore/part.h"
-#include "seq.h"
-#include "libmscore/undo.h"
-#include "synthcontrol.h"
-#include "audio/midi/msynthesizer.h"
-#include "preferences.h"
+#include "../libmscore/excerpt.h"
+#include "../libmscore/score.h"
+#include "../libmscore/part.h"
+#include "../seq.h"
+#include "../libmscore/undo.h"
+#include "../synthcontrol.h"
+#include "../audio/midi/msynthesizer.h"
+#include "../preferences.h"
 
 #include "mixerdetails.h"
 #include "mixertrackchannel.h"

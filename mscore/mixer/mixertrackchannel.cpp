@@ -19,14 +19,14 @@
 
 #include "mixertrackchannel.h"
 
-#include "libmscore/instrument.h"
-#include "musescore.h"
-#include "audio/midi/msynthesizer.h"     // required for MidiPatch
+#include "../libmscore/instrument.h"
+#include "../musescore.h"
+#include "../audio/midi/msynthesizer.h"     // required for MidiPatch
 
 #include "mixer.h"
 #include "mixertrackitem.h"
 #include "mixeroptions.h"
-#include "awl/colorlabel.h"
+#include "../awl/colorlabel.h"
 
 namespace Ms {
 

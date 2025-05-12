@@ -19,14 +19,14 @@
 
 #include "mixertrackitem.h"
 
-#include "musescore.h"                    // required for access to synti
-#include "audio/midi/msynthesizer.h"     // required for MidiPatch
-#include "seq.h"
+#include "../musescore.h"                    // required for access to synti
+#include "../audio/midi/msynthesizer.h"     // required for MidiPatch
+#include "../seq.h"
 
-#include "libmscore/score.h"
-#include "libmscore/part.h"
-#include "libmscore/undo.h"
-#include "preferences.h"
+#include "../libmscore/score.h"
+#include "../libmscore/part.h"
+#include "../libmscore/undo.h"
+#include "../preferences.h"
 
 #include "mixer.h"
 #include "mixeroptions.h"
