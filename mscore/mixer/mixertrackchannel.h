@@ -21,38 +21,28 @@
 #define __MIXERTRACKCHANNEL_H__
 
 #include "ui_mixertrackchannel.h"
-#include "mixertrackitem.h"
-#include "mixertreewidgetitem.h"
 #include "libmscore/instrument.h"
-
-
-// obq-note
-// This class has been re-purposed for the new mixer design.
-// This is the Widget that is included in the TreeView
-// It shows volume, mute, and solo controls.
-//
-// It is a ChannelListener for the channel represented by the
-// mixerTrackItem. So when the underlying channel changes this
-// object will receive a propertyChanged call.
+#include "mixertrackitem.h"
 
 namespace Ms {
 
 class MixerTrackItem;
-class MixerTreeWidgetItem;
 //---------------------------------------------------------
 //   MixerTrack
 //---------------------------------------------------------
 
-class MixerTrackChannel : public QWidget, public Ui::MixerTrackChannel, public ChannelListener
+class MixerTrackChannel:
+      public QWidget,
+      public Ui::MixerTrackChannel,
+      public ChannelListener
       {
       Q_OBJECT
 
-      MixerTreeWidgetItem * treeWidgetItem;   // to enable selecting item when user interacts with controls
+      MixerTrackItem* _item;   // to enable selecting item when user interacts with controls
 
       void setupAdditionalUi();
       void setupSlotsAndSignals();
       void update();
-      MixerTrackItem* mixerTrackItem() { return treeWidgetItem->mixerTrackItem(); };
       
 public slots:
       void stripMuteToggled(bool);
@@ -70,7 +60,7 @@ protected:
       void propertyChanged(Channel::Prop property) override;      // ChannelListener method
             
 public:
-      explicit MixerTrackChannel(MixerTreeWidgetItem*);
+      explicit MixerTrackChannel(MixerTrackItem*);
 
       };
 

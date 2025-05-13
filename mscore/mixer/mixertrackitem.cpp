@@ -33,27 +33,6 @@
 #include "mixertrackchannel.h"
 #include <QComboBox>
 
-/*
- A MixerTrackItem object:
- EITHER (1) represents a channel that is one sound source for an instrument that
- in turn belongs to a part. It provides a uniform / clean interface for
- interacting with the sound source in the mixer.
-
- OR (2) represents a collection of channels that form the variant sound sources for an
- instrument. Implements rules whereby changes to the top level (the collection level)
- are trickled down to the sub-levels (indidvidual channels).
- 
- TODO: Clarify my understanding - the enum cases are {PART, CHANNEL}, but, I think, that's
- at odds with how the terminology is used elsewhere. The TrackTypes are, I think, better
- described as:
- - Instrument (one or more channels as a sound source)
- - Channel (a sound source that belongs to an instrument)
- 
- The set methods, e.g. setVolume, setReverb etc. apply changes to the underlying channel.
- When thes changes are applied to the underlying channel, any listeners to that channel
- are notified by a propertyChanged() call.
- */
-
 namespace Ms {
 
 //---------------------------------------------------------
@@ -61,25 +40,13 @@ namespace Ms {
 //---------------------------------------------------------
 
 MixerTrackItem::MixerTrackItem(TrackType trackType, Part* part, Instrument* instr, Channel* chan)
+      : QTreeWidgetItem(0)
       {
       _trackType = trackType;
       _part = part;
       _instrument = instr;
       _channel = chan;
       }
-
-MixerTrackItem::MixerTrackItem(TrackType trackType, Part* part, Score* score)
-      {
-      _trackType = trackType;
-      _part = part;
-      const InstrumentList* instrumenList = part->instruments();
-      if (!instrumenList->empty()){
-            Instrument* i = instrumenList->begin()->second;
-            _instrument = i;
-            _channel = i->playbackChannel(0, score->masterScore());
-            }
-      }
-
 
 //---------------------------------------------------------
 //   midiMap
@@ -302,14 +269,14 @@ char MixerTrackItem::getVolume()
       }
 
 char MixerTrackItem::getChorus()
-{
+      {
       return channel()->chorus();
-}
+      }
 
 char MixerTrackItem::getReverb()
-{
+      {
       return channel()->reverb();
-}
+      }
 
 char MixerTrackItem::getPan()
       {

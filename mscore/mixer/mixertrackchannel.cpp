@@ -22,38 +22,25 @@
 #include "../libmscore/instrument.h"
 #include "../musescore.h"
 #include "../audio/midi/msynthesizer.h"     // required for MidiPatch
+#include "preferences.h"
 
 #include "mixer.h"
 #include "mixertrackitem.h"
 #include "mixeroptions.h"
 #include "../awl/colorlabel.h"
 
-#include "preferences.h"
-
 namespace Ms {
 
-//--------------------------------------------------------------
-//  MixerTrackChannel provides an widget that is displayed in a
-//  row of a QTreeWidget. The widget includes a slider (by default
-//  to control track volume) and Mute and Solo Buttons. The widget
-//  is a "listener" to the track that is controls. This means that
-//  when other parts of MuseScore change the track, the control
-//  will update itself.
-//--------------------------------------------------------------
-MixerTrackChannel::MixerTrackChannel(MixerTreeWidgetItem* treeWidgetItem) :
-      treeWidgetItem(treeWidgetItem)
+MixerTrackChannel::MixerTrackChannel(MixerTrackItem* item)
       {
+      _item = item;
+
       setupUi(this);
       setupAdditionalUi();
       updateUiControls();
       setupSlotsAndSignals();
       update();
-
-      Channel* channel = mixerTrackItem()->channel();
-      channel->addListener(this);
       }
-
-
 
 void MixerTrackChannel::setupSlotsAndSignals()
       {
@@ -62,13 +49,9 @@ void MixerTrackChannel::setupSlotsAndSignals()
       connect(trackSlider,    SIGNAL(valueChanged(int)),    SLOT(stripVolumeSliderMoved(int)));
       connect(trackSlider,    SIGNAL(sliderPressed()),      SLOT(takeSelection()));
       connect(colorChooser,   SIGNAL(colorChanged(QColor)), SLOT(trackColorEdited(QColor)));
-
       }
 
-void MixerTrackChannel::takeSelection()
-      {
-      treeWidgetItem->treeWidget()->setCurrentItem(treeWidgetItem);
-      }
+void MixerTrackChannel::takeSelection() { _item->treeWidget()->setCurrentItem(_item); }
 
 void MixerTrackChannel::setupAdditionalUi()
       {
@@ -113,21 +96,21 @@ void MixerTrackChannel::update()
       if (options->secondaryModeOn()) {
             switch (options->secondarySlider()) {
                   case MixerOptions::MixerSecondarySlider::Pan:
-                        value = mixerTrackItem()->getPan();
+                        value = _item->getPan();
                         tooltip = tr("Pan: %1");
                         break;
                   case MixerOptions::MixerSecondarySlider::Reverb:
-                        value = mixerTrackItem()->getReverb();
+                        value = _item->getReverb();
                         tooltip = tr("Reverb: %1");
                         break;
                   case MixerOptions::MixerSecondarySlider::Chorus:
-                        value = mixerTrackItem()->getChorus();
+                        value = _item->getChorus();
                         tooltip = tr("Chorus: %1");
                         break;
                   }
             }
       else {
-            value = mixerTrackItem()->getVolume();
+            value = _item->getVolume();
             tooltip = tr("Volume: %1");
             }
 
@@ -135,24 +118,19 @@ void MixerTrackChannel::update()
       trackSlider->setValue(value);
       trackSlider->setToolTip(tooltip.arg(QString::number(value)));
       
-      muteButton->setChecked(mixerTrackItem()->getMute());
-      soloButton->setChecked(mixerTrackItem()->getSolo());
+      muteButton->setChecked(_item->getMute());
+      soloButton->setChecked(_item->getSolo());
 
-      int channelColor = mixerTrackItem()->color();
+      int channelColor = _item->color();
       QColor tweakedColor = QColor(channelColor | 0xff000000);
       colorChooser->setColor(tweakedColor);
       //TODO: is it necesary to set the borders every time? and their color
       colorChooser->setStyleSheet(QString("QFrame{background: %1;padding-top: 2px; padding-bottom: 2px; border-radius: 3px;}").arg(tweakedColor.name()));
 
-      setToolTip(mixerTrackItem()->detailedToolTip());
+      setToolTip(_item->detailedToolTip());
       }
 
-
-void MixerTrackChannel::propertyChanged(Channel::Prop property)
-      {
-      update();
-      }
-
+void MixerTrackChannel::propertyChanged(Channel::Prop property) { update(); }
 
 void MixerTrackChannel::stripVolumeSliderMoved(int proposedValue)
       {
@@ -164,41 +142,39 @@ void MixerTrackChannel::stripVolumeSliderMoved(int proposedValue)
       if (options->secondaryModeOn()) {
             switch (options->secondarySlider()) {
                   case MixerOptions::MixerSecondarySlider::Pan:
-                        acceptedValue = mixerTrackItem()->setPan(proposedValue);
+                        acceptedValue = _item->setPan(proposedValue);
                         break;
                   case MixerOptions::MixerSecondarySlider::Reverb:
-                        acceptedValue = mixerTrackItem()->setReverb(proposedValue);
+                        acceptedValue = _item->setReverb(proposedValue);
                         break;
                   case MixerOptions::MixerSecondarySlider::Chorus:
-                        acceptedValue = mixerTrackItem()->setChorus(proposedValue);
+                        acceptedValue = _item->setChorus(proposedValue);
                         break;
             }
       }
       else {
-            acceptedValue = mixerTrackItem()->setVolume(proposedValue);
+            acceptedValue = _item->setVolume(proposedValue);
       }
 
       if (acceptedValue != proposedValue)
       trackSlider->setValue(acceptedValue);
       }
 
-
 void MixerTrackChannel::stripSoloToggled(bool val)
       {
-      mixerTrackItem()->setSolo(val);
+      _item->setSolo(val);
       takeSelection();
       }
 
-
 void MixerTrackChannel::stripMuteToggled(bool val)
       {
-      mixerTrackItem()->setMute(val);
+      _item->setMute(val);
       takeSelection();
       }
 
 void MixerTrackChannel::trackColorEdited(QColor color)
       {
-      mixerTrackItem()->setColor(color.rgb());
+      _item->setColor(color.rgb());
       }
 
 

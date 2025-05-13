@@ -20,8 +20,6 @@ set(MSCORE_MIXER_SRC
     ${CMAKE_CURRENT_LIST_DIR}/mixerslider.h
     ${CMAKE_CURRENT_LIST_DIR}/mixertreewidget.cpp
     ${CMAKE_CURRENT_LIST_DIR}/mixertreewidget.h
-    ${CMAKE_CURRENT_LIST_DIR}/mixertreewidgetitem.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/mixertreewidgetitem.h
     )
 
 

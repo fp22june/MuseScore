@@ -38,7 +38,6 @@
 #include "mixertrackchannel.h"
 #include "mixermasterchannel.h"
 #include "mixertrackitem.h"
-#include "mixertreewidgetitem.h"
 #include "mixeroptions.h"
 #include "mixeroptionsbutton.h"
 #include "mixertreewidget.h"
