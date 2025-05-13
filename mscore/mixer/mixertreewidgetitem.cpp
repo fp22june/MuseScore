@@ -42,20 +42,14 @@ MixerTreeWidgetItem::MixerTreeWidgetItem(Part* part, Score* score, QTreeWidget* 
       setText(0, part->partName());
       setToolTip(0, part->partName());
 
-      // make the row editable - but the tree itself will only allow editing in column 0
-
-      // note: use of QFlag constructor is required to avoid errrors when compiler is strict
-      Qt::ItemFlags itemFlags = QFlag(Qt::ItemIsEnabled | Qt::ItemIsSelectable);
+      Qt::ItemFlags itemFlags = QFlag(Qt::ItemIsEnabled | Qt::ItemIsSelectable); // avoid errrors when compiler is strict
       setFlags(itemFlags);
 
+      const InstrumentList* partInstrumentList = part->instruments(); // map<const int, Instrument*>
+      for (auto partInstrumentListItem : partInstrumentList) {
 
-      // check for secondary channels and add MixerTreeWidgetItem children if required
-      const InstrumentList* partInstrumentList = part->instruments(); //Add per channel tracks
-      
-      // partInstrumentList is of type: map<const int, Instrument*>
-      for (auto partInstrumentListItem = partInstrumentList->begin(); partInstrumentListItem != partInstrumentList->end(); ++partInstrumentListItem) {
-            
-            Instrument* instrument = partInstrumentListItem->second;
+            Instrument* instrument = partInstrumentListItem->second; 
+
             if (instrument->channel().size() <= 1)
                   continue;
             

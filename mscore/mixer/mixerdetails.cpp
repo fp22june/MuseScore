@@ -48,7 +48,7 @@ void MixerDetails::partNameChanged()
       {
       if (!selectedMixerTrackItem)
             return;
-      QString text = instrumentName->text();
+      QString text = partName->text();
       Part* part = selectedMixerTrackItem->part();
       if (part->partName() == text)
             return;
@@ -85,7 +85,7 @@ void MixerDetails::setupSlotsAndSignals()
       {
       connect(mixer->mixerTreeWidget, SIGNAL(selectedTrackChanged(MixerTrackItem*)), SLOT(updateDetails(MixerTrackItem*)));
 
-      connect(instrumentName,       SIGNAL(editingFinished()),    SLOT(partNameChanged()));
+      connect(partName,             SIGNAL(editingFinished()),    SLOT(partNameChanged()));
       connect(channelName,          SIGNAL(editingFinished()),    SLOT(channelNameChanged()));
       connect(drumkitCheck,         SIGNAL(toggled(bool)),        SLOT(drumsetCheckboxToggled(bool)));
       connect(patchCombo,           SIGNAL(activated(int)),       SLOT(patchComboEdited(int)));
@@ -204,7 +204,7 @@ void MixerDetails::propertyChanged(Channel::Prop property)
 
 void MixerDetails::updatePartName()
       {
-      instrumentName->setText(selectedMixerTrackItem->getName());
+      partName->setText(selectedMixerTrackItem->getName());
       }
 
 void MixerDetails::updateChannelName()
@@ -516,7 +516,7 @@ void MixerDetails::resetControls()
       {
       drumkitCheck->setChecked(false);
       patchCombo->clear();
-      instrumentName->setText("");
+      partName->setText("");
       channelName->setText("");
       volumeSlider->setValue(0);
       volumeSpinBox->setValue(0);
@@ -533,7 +533,7 @@ void MixerDetails::resetControls()
 
 void MixerDetails::blockSignals(bool block)
       {
-      instrumentName->blockSignals(block);
+      partName->blockSignals(block);
       channelName->blockSignals(block);
       volumeSlider->blockSignals(block);
       volumeSpinBox->blockSignals(block);

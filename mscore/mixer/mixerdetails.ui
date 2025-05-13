@@ -33,7 +33,7 @@
     <number>0</number>
    </property>
    <item row="0" column="0">
-    <widget class="QLabel" name="labelInstrument">
+    <widget class="QLabel" name="labelPart">
      <property name="sizePolicy">
       <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
        <horstretch>0</horstretch>
@@ -41,7 +41,7 @@
       </sizepolicy>
      </property>
      <property name="text">
-      <string>Instrument:</string>
+      <string>Name:</string>
      </property>
     </widget>
    </item>
@@ -54,9 +54,9 @@
       <number>0</number>
      </property>
      <item>
-      <widget class="QLineEdit" name="instrumentName">
+      <widget class="QLineEdit" name="partName">
        <property name="text">
-        <string>instrument</string>
+        <string>name</string>
        </property>
       </widget>
      </item>
@@ -690,7 +690,7 @@
       </sizepolicy>
      </property>
      <property name="text">
-      <string>Pan</string>
+      <string>Pan:</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>

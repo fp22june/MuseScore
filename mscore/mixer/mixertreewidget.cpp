@@ -35,7 +35,7 @@ MixerTreeWidget::MixerTreeWidget(QWidget *parent) :
       {
       setAlternatingRowColors(true);
       setColumnCount(2);
-      setHeaderLabels({tr("Instrument"), tr("Volume")});
+      setHeaderLabels({tr("Name"), tr("Volume")});
       // make all bar column 0, non-editable
       setItemDelegateForColumn(1, new NonEditableItemDelegate (this));
 
@@ -98,7 +98,7 @@ void MixerTreeWidget::selectedItemChanged()
 void MixerTreeWidget::updateHeaders() {
 
       if (!Mixer::getOptions()->secondaryModeOn()) {
-            setHeaderLabels({tr("Instrument"), tr("Volume")});
+            setHeaderLabels({tr("Name"), tr("Volume")});
             return;
             }
 
@@ -115,7 +115,7 @@ void MixerTreeWidget::updateHeaders() {
                   secondary = tr("Chorus");
             }
 
-      setHeaderLabels({tr("Instrument"), secondary});
+      setHeaderLabels({tr("Name"), secondary});
       }
 
 void MixerTreeWidget::setupSlotsAndSignals()
