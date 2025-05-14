@@ -21,6 +21,8 @@
 #include "mixertrackitem.h"
 #include "mixeroptions.h"
 #include "mixertreewidget.h"
+#include "../libmscore/part.h"
+#include "../libmscore/undo.h"
 
 namespace Ms {
 
@@ -41,11 +43,49 @@ MixerDetails::MixerDetails(Mixer *mixer) :
       updateDetails(selectedMixerTrackItem);    // when called with nullptr will reset and disable all controls
       }
 
+void MixerDetails::partNameChanged()
+      {
+      if (!selectedMixerTrackItem)
+            return;
+      QString text = partName->text();
+      Part* part = selectedMixerTrackItem->part();
+      if (part->partName() == text)
+            return;
+      Score* score = part->score();
+      score->startCmd();
+      score->undo(new ChangePart(part, part->instrument(), text));
+      score->endCmd();
+      }
+
+void MixerDetails::channelNameChanged()
+      {
+      // if (!selectedMixerTrackItem)
+      //       return;
+      // Instrument* instrument = selectedMixerTrackItem->instrument();
+      // const InstrumentList* instrumenList = part->instruments();
+      // if (instrumenList->empty()) 
+      //       return;
+      // Score* score = part->score();
+      // Instrument* j = instrumenList->begin()->second;
+      // QStringList cs;
+      // for (int i = 0; i < j->channel().size(); ++i)
+      //       cs.append( j->playbackChannel(i, score->masterScore())->name() );
+      // QString text = channelName->text();
+      // if (cs.contains(text))
+      //       return;
+
+//       score->startCmd();
+//       score->undo(new ChangePart(part, part->instrument(), text));
+//       score->endCmd();
+
+      }
 
 void MixerDetails::setupSlotsAndSignals()
       {
       connect(mixer->mixerTreeWidget, SIGNAL(selectedTrackChanged(MixerTrackItem*)), SLOT(updateDetails(MixerTrackItem*)));
 
+      connect(partName,             SIGNAL(editingFinished()),    SLOT(partNameChanged()));
+      connect(channelName,          SIGNAL(editingFinished()),    SLOT(channelNameChanged()));
       connect(drumkitCheck,         SIGNAL(toggled(bool)),        SLOT(drumsetCheckboxToggled(bool)));
       connect(patchCombo,           SIGNAL(activated(int)),       SLOT(patchComboEdited(int)));
       connect(volumeSlider,         SIGNAL(valueChanged(int)),    SLOT(volumeSliderMoved(int)));
@@ -102,7 +142,8 @@ void MixerDetails::updateDetails(MixerTrackItem* mixerTrackItem)
 
       blockSignals(true);
 
-      updateName();
+      updatePartName();
+      updateChannelName();
       updatePatch();
       updateMutePerVoice();
       updateVolume();
@@ -145,7 +186,7 @@ void MixerDetails::propertyChanged(Channel::Prop property)
                   break;
                   }
             case Channel::Prop::NAME: {
-                  updateName();
+                  updateChannelName();
                   break;
                   }
             default:
@@ -160,9 +201,14 @@ void MixerDetails::propertyChanged(Channel::Prop property)
 // be updated outwith the mixer - and if it is are we listening
 // for that change? - not clear that we are
 
-void MixerDetails::updateName()
+void MixerDetails::updatePartName()
       {
-      channelLabel->setText(selectedMixerTrackItem->getChannelName());
+      partName->setText(selectedMixerTrackItem->getName());
+      }
+
+void MixerDetails::updateChannelName()
+      {
+      channelName->setText(selectedMixerTrackItem->getChannelName());
       }
 
 
@@ -469,7 +515,8 @@ void MixerDetails::resetControls()
       {
       drumkitCheck->setChecked(false);
       patchCombo->clear();
-      channelLabel->setText("");
+      partName->setText("");
+      channelName->setText("");
       volumeSlider->setValue(0);
       volumeSpinBox->setValue(0);
       panSlider->setValue(0);
@@ -485,6 +532,8 @@ void MixerDetails::resetControls()
 
 void MixerDetails::blockSignals(bool block)
       {
+      partName->blockSignals(block);
+      channelName->blockSignals(block);
       volumeSlider->blockSignals(block);
       volumeSpinBox->blockSignals(block);
       panSlider->blockSignals(block);

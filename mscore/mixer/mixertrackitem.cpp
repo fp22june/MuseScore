@@ -19,40 +19,19 @@
 
 #include "mixertrackitem.h"
 
-#include "musescore.h"                    // required for access to synti
-#include "audio/midi/msynthesizer.h"     // required for MidiPatch
-#include "seq.h"
+#include "../musescore.h"                    // required for access to synti
+#include "../audio/midi/msynthesizer.h"     // required for MidiPatch
+#include "../seq.h"
 
-#include "libmscore/score.h"
-#include "libmscore/part.h"
-#include "libmscore/undo.h"
-#include "preferences.h"
+#include "../libmscore/score.h"
+#include "../libmscore/part.h"
+#include "../libmscore/undo.h"
+#include "../preferences.h"
 
 #include "mixer.h"
 #include "mixeroptions.h"
 #include "mixertrackchannel.h"
 #include <QComboBox>
-
-/*
- A MixerTrackItem object:
- EITHER (1) represents a channel that is one sound source for an instrument that
- in turn belongs to a part. It provides a uniform / clean interface for
- interacting with the sound source in the mixer.
-
- OR (2) represents a collection of channels that form the variant sound sources for an
- instrument. Implements rules whereby changes to the top level (the collection level)
- are trickled down to the sub-levels (indidvidual channels).
- 
- TODO: Clarify my understanding - the enum cases are {PART, CHANNEL}, but, I think, that's
- at odds with how the terminology is used elsewhere. The TrackTypes are, I think, better
- described as:
- - Instrument (one or more channels as a sound source)
- - Channel (a sound source that belongs to an instrument)
- 
- The set methods, e.g. setVolume, setReverb etc. apply changes to the underlying channel.
- When thes changes are applied to the underlying channel, any listeners to that channel
- are notified by a propertyChanged() call.
- */
 
 namespace Ms {
 
@@ -60,28 +39,13 @@ namespace Ms {
 //   MixerTrackItem
 //---------------------------------------------------------
 
-// General purpose constructor
-MixerTrackItem::MixerTrackItem(TrackType trackType, Part* part, Instrument* instr, Channel *chan)
-      :_trackType(trackType), _part(part), _instrument(instr), _channel(chan)
+MixerTrackItem::MixerTrackItem(TrackType trackType, Part* part, Instrument* instr, Channel* chan)
+      : QTreeWidgetItem()
       {
-      }
-      
-
-MixerTrackItem::MixerTrackItem(Part* part, Score* score)
-      {
-      _trackType = TrackType::PART;
+      _trackType = trackType;
       _part = part;
-      _instrument = nullptr;
-      _channel = nullptr;
-      
-      const InstrumentList* instrumenList = part->instruments();
-
-      if (instrumenList->empty())
-            return;
-
-      instrumenList->begin();
-      _instrument = instrumenList->begin()->second;
-      _channel = _instrument->playbackChannel(0, score->masterScore());
+      _instrument = instr;
+      _channel = chan;
       }
 
 //---------------------------------------------------------
@@ -271,19 +235,27 @@ QString MixerTrackItem::getChannelName()
       }
 
 
-void MixerTrackItem::setName(QString newName)
-{
-      if (part()->partName() == newName) {
-            return;
+void MixerTrackItem::setName(QString newName){
+      switch (_trackType) {
+            case TrackType::PART:
+                  if (part()->partName() == newName) {
+                        return;
+                        }
+
+                  Score* score = part()->score();
+                  if (score) {
+                        score->startCmd();
+                        score->undo(new ChangePart(part(), part()->instrument(), newName));
+                        score->endCmd();
+                        }
+                  break;
+            //case TrackType::CHANNEL:
+            //      
+            //      break;
+            }
+
       }
 
-      Score* score = part()->score();
-      if (score) {
-            score->startCmd();
-            score->undo(new ChangePart(part(), part()->instrument(), newName));
-            score->endCmd();
-      }
-}
 
 int MixerTrackItem::color()
       {
@@ -297,14 +269,14 @@ char MixerTrackItem::getVolume()
       }
 
 char MixerTrackItem::getChorus()
-{
+      {
       return channel()->chorus();
-}
+      }
 
 char MixerTrackItem::getReverb()
-{
+      {
       return channel()->reverb();
-}
+      }
 
 char MixerTrackItem::getPan()
       {
@@ -624,14 +596,6 @@ int MixerTrackItem::relativeAdjust(int mainSliderDelta, ChannelReader reader, Ch
                   }
             }
       return deltaAdjust;
-      }
-
-
-
-
-bool MixerTrackItem::isPart()
-      {
-      return _trackType == TrackType::PART;
       }
 
 

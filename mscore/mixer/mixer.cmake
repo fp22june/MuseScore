@@ -8,20 +8,18 @@ set(MSCORE_MIXER_SRC
     ${CMAKE_CURRENT_LIST_DIR}/mixertrackchannel.h
     ${CMAKE_CURRENT_LIST_DIR}/mixertrackitem.cpp
     ${CMAKE_CURRENT_LIST_DIR}/mixertrackitem.h
-    gainslider.cpp
-    gainslider.h
-    mixermasterchannel.cpp
-    mixermasterchannel.h
-    mixeroptions.cpp
-    mixeroptions.h
-    mixeroptionsbutton.cpp
-    mixeroptionsbutton.h
-    mixerslider.cpp
-    mixerslider.h
-    mixertreewidget.cpp
-    mixertreewidget.h
-    mixertreewidgetitem.cpp
-    mixertreewidgetitem.h
+    ${CMAKE_CURRENT_LIST_DIR}/gainslider.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/gainslider.h
+    ${CMAKE_CURRENT_LIST_DIR}/mixermasterchannel.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/mixermasterchannel.h
+    ${CMAKE_CURRENT_LIST_DIR}/mixeroptions.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/mixeroptions.h
+    ${CMAKE_CURRENT_LIST_DIR}/mixeroptionsbutton.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/mixeroptionsbutton.h
+    ${CMAKE_CURRENT_LIST_DIR}/mixerslider.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/mixerslider.h
+    ${CMAKE_CURRENT_LIST_DIR}/mixertreewidget.cpp
+    ${CMAKE_CURRENT_LIST_DIR}/mixertreewidget.h
     )
 
 
@@ -29,5 +27,5 @@ set(MSCORE_MIXER_UI
     ${CMAKE_CURRENT_LIST_DIR}/mixer.ui
     ${CMAKE_CURRENT_LIST_DIR}/mixerdetails.ui
     ${CMAKE_CURRENT_LIST_DIR}/mixertrackchannel.ui
-    mixermasterchannel.ui
+    ${CMAKE_CURRENT_LIST_DIR}/mixermasterchannel.ui
     )

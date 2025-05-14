@@ -23,22 +23,21 @@
 #include <qmessagebox.h>
 #include <accessibletoolbutton.h>
 
-#include "musescore.h"
+#include "../musescore.h"
 
-#include "libmscore/excerpt.h"
-#include "libmscore/score.h"
-#include "libmscore/part.h"
-#include "seq.h"
-#include "libmscore/undo.h"
-#include "synthcontrol.h"
-#include "audio/midi/msynthesizer.h"
-#include "preferences.h"
+#include "../libmscore/excerpt.h"
+#include "../libmscore/score.h"
+#include "../libmscore/part.h"
+#include "../seq.h"
+#include "../libmscore/undo.h"
+#include "../synthcontrol.h"
+#include "../audio/midi/msynthesizer.h"
+#include "../preferences.h"
 
 #include "mixerdetails.h"
 #include "mixertrackchannel.h"
 #include "mixermasterchannel.h"
 #include "mixertrackitem.h"
-#include "mixertreewidgetitem.h"
 #include "mixeroptions.h"
 #include "mixeroptionsbutton.h"
 #include "mixertreewidget.h"
@@ -74,7 +73,6 @@ Mixer::Mixer(QWidget* parent)
 
       setupAdditionalUi();
 
-      gridLayout = new QGridLayout(dockWidgetContents);
       mixerDetails = new MixerDetails(this);
 
       showDetails(options->showingDetails());
@@ -301,42 +299,13 @@ void Mixer::updateUiOptions()
 
       bool showMasterVol = options->showMasterVolume();
 
+      masterVolumeTreeWidget->setVisible(showMasterVol);
+
       if (options->showDetailsOnTheSide()) {
-            // show TO THE SIDE case
-
-            // addWidget(row, column, rowSpan, columnSpan, [Qt::Alignment])
-            gridLayout->addWidget(partOnlyCheckBox, 0, 1, 1, 1, Qt::AlignRight);
-            gridLayout->addWidget(showDetailsButton, 0, 0, 1, 1);
-            gridLayout->addWidget(mixerTreeWidget, 1, 0, 1, 2);
-            if (showMasterVol) {
-                  gridLayout->addWidget(masterVolumeTreeWidget, 2, 0, 1, 2);
-                  masterVolumeTreeWidget->setVisible(true);
+            h1->addWidget(mixerDetails, 0, Qt::AlignTop);
+      } else {
+            v1->addWidget(mixerDetails, 0, Qt::AlignTop);
             }
-            else {
-                  masterVolumeTreeWidget->setVisible(false);
-            }
-
-            gridLayout->addWidget(mixerDetails, 0, 2, showMasterVol ? 3 : 2, 1, Qt::AlignTop);
-      }
-      else {
-            // show BELOW case
-
-            // addWidget(row, column, rowSpan, columnSpan, [Qt::Alignment])
-            gridLayout->addWidget(partOnlyCheckBox, 0, 1, 1, 1, Qt::AlignRight);
-            gridLayout->addWidget(showDetailsButton, 0, 0, 1, 1);
-            gridLayout->addWidget(mixerTreeWidget, 1, 0, 1, 2);
-            if (showMasterVol) {
-                  gridLayout->addWidget(masterVolumeTreeWidget, 2, 0, 1, 2);
-                  masterVolumeTreeWidget->setVisible(true);
-            }
-            else {
-                  masterVolumeTreeWidget->setVisible(false);
-            }
-
-            gridLayout->addWidget(mixerDetails, showMasterVol ? 3 : 2, 0, 1 , 2, Qt::AlignTop);
-
-            gridLayout->setRowStretch(1,10);
-      }
 
       // cover case where the LOCK has changed (but there's no change in SHIFT key)
       enterSecondarySliderMode(options->secondaryModeOn());
