@@ -66,7 +66,7 @@ class Mixer : public QDockWidget, public Ui::Mixer
 
       void enterSecondarySliderMode(bool enter);
 
-      QTimer* shiftKeyMonitorTimer;
+      QTimer* altKeyMonitorTimer;
       MixerKeyboardControlFilter* keyboardFilter;     // process key presses for the mixer AND the details panel
       virtual void closeEvent(QCloseEvent*) override;
       virtual void showEvent(QShowEvent*) override;
@@ -76,7 +76,7 @@ class Mixer : public QDockWidget, public Ui::Mixer
 
    private slots:
       void partOnlyCheckBoxToggled(bool checked);
-      void shiftKeyMonitor();
+      void altKeyMonitor();
 
    public slots:
       void updateTracks();

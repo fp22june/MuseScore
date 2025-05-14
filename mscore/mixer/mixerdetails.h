@@ -37,7 +37,6 @@ class MixerDetails : public QWidget, public Ui::MixerDetails, public ChannelList
       QGridLayout* mutePerVoiceGrid;
       QList<QWidget*> voiceButtons; // used for dynamically updating tabOrder
 
-
       void updatePartName();
       void updateChannelName();
       void updatePatch();

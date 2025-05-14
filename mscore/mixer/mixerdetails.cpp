@@ -238,8 +238,10 @@ QPushButton* MixerDetails::makeMuteButton(int staff, int voice) {
       QPushButton* muteButton = new QPushButton;
       muteButton->setStyleSheet(QString("QPushButton{padding: 2px 4px 2px 4px;}QPushButton:checked{background-color:%1; color: white;}")
                                 .arg(MScore::selectColor[voice].name()));
-      muteButton->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
-      muteButton->setMaximumWidth(20);
+      muteButton->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+      muteButton->setMinimumWidth (20);
+      muteButton->setMinimumHeight(20);
+      muteButton->setMaximumWidth (20);
       muteButton->setMaximumHeight(20);
       muteButton->setText(QString("%1").arg(voice + 1));
       muteButton->setCheckable(true);
@@ -273,8 +275,7 @@ void MixerDetails::updateMutePerVoice()
                   QPushButton* muteButton = makeMuteButton(staffIndex, voice);
                   muteButton->setChecked(mutedVoices[voice]);
 
-                  int column = !(staffIndex % 2) ? voice : voice + 4 + 1;
-                  mutePerVoiceGridLayout->addWidget(muteButton, staffIndex / 2, column);
+                  mutePerVoiceGridLayout->addWidget(muteButton, staffIndex, voice);
 
                   MixerVoiceMuteButtonHandler* handler = new MixerVoiceMuteButtonHandler(this, staffIndex, voice, muteButton);
                   connect(muteButton, SIGNAL(toggled(bool)), handler, SLOT(buttonToggled(bool)));

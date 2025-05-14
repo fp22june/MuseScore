@@ -53,10 +53,10 @@ void MixerTrackItem::setCol1AndChannelBind(MixerTrackChannel* col1)
       }
 
 MixerTrackItem::~MixerTrackItem()
-      {
-      if(_col1AndChannelBind) _col1AndChannelBind->setNotifier(nullptr);
-      // need not delete _col1AndChannelBind, its ownership changed after setItemWidget
-      }
+     {
+     if(_col1AndChannelBind) _col1AndChannelBind->setNotifier(nullptr);
+     // need not delete _col1AndChannelBind, its ownership changed after setItemWidget
+     }
 
 //---------------------------------------------------------
 //   midiMap

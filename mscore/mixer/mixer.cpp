@@ -89,9 +89,9 @@ Mixer::Mixer(QWidget* parent)
       updateUiOptions();
       retranslate(true);
 
-      shiftKeyMonitorTimer = new QTimer(this);
-      connect(shiftKeyMonitorTimer, SIGNAL(timeout()), this, SLOT(shiftKeyMonitor()));
-      shiftKeyMonitorTimer->start(100);
+      altKeyMonitorTimer = new QTimer(this);
+      connect(altKeyMonitorTimer, SIGNAL(timeout()), this, SLOT(shiftKeyMonitor()));
+      altKeyMonitorTimer->start(100);
       }
 
 
@@ -206,8 +206,6 @@ void Mixer::showDetails(bool visible)
       mixerTreeWidget->setMaximumSize(maxTreeWidgetSize);
       }
 
-
-
 void Mixer::enterSecondarySliderMode(bool secondaryMode)
       {
       options->setSecondaryModeOn(secondaryMode);
@@ -249,35 +247,26 @@ void Mixer::partOnlyCheckBoxToggled(bool checked)
             MixerTrackItem* trackItem = mixerDetails->getSelectedMixerTrackItem();
 
             int proposedValue;
+            int acceptedValue;
 
             switch (options->secondarySlider()) {
                   case MixerOptions::MixerSecondarySlider::Pan:
                         proposedValue = nudge(trackItem->getPan(), direction, -63, 63);
-                        break;
-                  case MixerOptions::MixerSecondarySlider::Reverb:
-                        proposedValue = nudge(trackItem->getReverb(), direction, 0, 127);
-                        break;
-                  case MixerOptions::MixerSecondarySlider::Chorus:
-                        proposedValue = nudge(trackItem->getChorus(), direction, 0, 127);
-                        break;
-            }
-
-            int acceptedValue;
-            switch (options->secondarySlider()) {
-                  case MixerOptions::MixerSecondarySlider::Pan:
                         acceptedValue = trackItem->setPan(proposedValue);
                         break;
                   case MixerOptions::MixerSecondarySlider::Reverb:
+                        proposedValue = nudge(trackItem->getReverb(), direction, 0, 127);
                         acceptedValue = trackItem->setReverb(proposedValue);
                         break;
                   case MixerOptions::MixerSecondarySlider::Chorus:
+                        proposedValue = nudge(trackItem->getChorus(), direction, 0, 127);
                         acceptedValue = trackItem->setChorus(proposedValue);
                         break;
             }
 
-            if (proposedValue != acceptedValue) {
-                  QApplication::beep();
-            }
+            //if (proposedValue != acceptedValue) {
+            //      QApplication::beep();
+            //}
 
       }
 
@@ -436,8 +425,7 @@ void Mixer::keyPressEvent(QKeyEvent* ev) {
       QDockWidget::keyPressEvent(ev);
       }
 
-
-void Mixer::shiftKeyMonitor() {
+void Mixer::altKeyMonitor() {
 
       // check if we or any children have the focus
       bool focus = hasFocus();
@@ -468,18 +456,17 @@ void Mixer::shiftKeyMonitor() {
 
       // if shift key is down enter secondary mode (if not in it already)
       // BUT swap this logic if secondaryModeLock() is true
-      bool shiftedModeActive = options->secondaryModeLock() ? !options->secondaryModeOn() : options->secondaryModeOn();
+      bool modeActive = options->secondaryModeLock() ? !options->secondaryModeOn() : options->secondaryModeOn();
 
-      if (QApplication::queryKeyboardModifiers() & Qt::KeyboardModifier::ShiftModifier) {
-            if (!shiftedModeActive)
+      if (QApplication::queryKeyboardModifiers() & Qt::KeyboardModifier::AltModifier) {
+            if (!modeActive)
                   enterSecondarySliderMode(true);
             return;
       }
 
-      if (shiftedModeActive)
+      if (modeActive)
             enterSecondarySliderMode(false);
 }
-
 //---------------------------------------------------------
 //   changeEvent
 //---------------------------------------------------------

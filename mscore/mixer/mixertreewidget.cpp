@@ -28,34 +28,21 @@
 
 #include <QTreeWidget>
 
-// from deleted mixerTreeWidgetItem 
-      #include "../musescore.h"                    // required for access to synti
-      #include "../audio/midi/msynthesizer.h"     // required for MidiPatch
-      #include "../seq.h"
-
 #define MIXERTREE_INVALID_INDEX -1
 
 namespace Ms {
-
-NonEditableItemDelegate::NonEditableItemDelegate(QObject* parent) : QStyledItemDelegate(parent)
-      {
-      }
-
-QWidget* NonEditableItemDelegate::createEditor(QWidget*, const QStyleOptionViewItem&, const QModelIndex&) const
-      {
-      return nullptr;
-      }
 
 MixerTreeWidget::MixerTreeWidget(QWidget *parent) :
       QTreeWidget(parent), savedSelectionTopLevelIndex (MIXERTREE_INVALID_INDEX), savedSelectionChildIndex(MIXERTREE_INVALID_INDEX), masterChannelTreeWidget(nullptr)
       {
       Score* _score = nullptr;
 
+      setSelectionMode(QAbstractItemView::ExtendedSelection);
       setAlternatingRowColors(true);
       setColumnCount(2);
       updateHeaders();
 
-      // setItemDelegateForColumn(1, new NonEditableItemDelegate (this));// column 1 non-editable
+      // setItemDelegateForColumn(1, new NonEditableItemDelegate (this));// col1 non-editable, so that col0 editable only (itemChanged) 
 
       header()->setSectionResizeMode(0, QHeaderView::Interactive);
       header()->setSectionResizeMode(1, QHeaderView::Fixed);
@@ -216,7 +203,7 @@ void MixerTreeWidget::setupSlotsAndSignals()
       connect(header(), &QHeaderView::sectionResized, this, &MixerTreeWidget::adjustHeaderWidths);
       connect(this, SIGNAL(itemExpanded(MixerTrackItem*)), SLOT(itemCollapsedOrExpanded(MixerTrackItem*)));
       connect(this, SIGNAL(itemCollapsed(MixerTrackItem*)), SLOT(itemCollapsedOrExpanded(MixerTrackItem*)));
-      connect(this, SIGNAL(itemChanged(MixerTrackItem*, int)), SLOT(itemChanged(MixerTrackItem*, int)));
+      // connect(this, SIGNAL(itemChanged(MixerTrackItem*, int)), SLOT(itemChanged(MixerTrackItem*, int)));
 
       }
 
@@ -254,17 +241,6 @@ void MixerTreeWidget::setMasterChannelTreeWidget(QTreeWidget* masterChannelTreeW
       {
       this->masterChannelTreeWidget = masterChannelTreeWidget;
       }
-
-// TODO remove. edit part name by double clicking first column 
-void MixerTreeWidget::itemChanged(MixerTrackItem* item, int column)
-      {
-      saveTreeSelection();
-      if (column == 0) {
-            item->setName(item->text(column));
-            }
-      restoreTreeSelection();
-      }
-
       
 void MixerTreeWidget::resetAll()
       {
