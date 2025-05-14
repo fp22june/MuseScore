@@ -27,8 +27,9 @@ class Part;
 class Instrument;
 class Channel;
 class MidiMapping;
-class MixerTrackItem;
 struct MidiPatch;
+
+class MixerTrackChannel;
 
 enum class MixerItemLevel { PART, INSTRUMENT, CHANNEL };
 enum class MixerItemPartCat {
@@ -41,9 +42,8 @@ enum class MixerItemPartCat {
 //   MixerTrackItem
 //---------------------------------------------------------
 
-class MixerTrackItem : public QObject , public QTreeWidgetItem
+class MixerTrackItem : public QTreeWidgetItem
       {
-      Q_OBJECT
       
 public:
       enum class TrackType { PART, CHANNEL };
@@ -53,6 +53,7 @@ private:
       Part* _part;
       Instrument* _instrument;
       Channel* _channel;
+      MixerTrackChannel* _col1AndChannelBind;
 
       Channel* playbackChannel(const Channel* channel);
 
@@ -69,8 +70,11 @@ private:
       bool isCurrentPatch(const MidiPatch* patch);
       QString adjustedPatchName(const MidiPatch* patch, std::vector<QString> usedNames);
 
+      ~MixerTrackItem();
 public:
-      MixerTrackItem(TrackType trackType, Part* part, Instrument* instr, Channel* chan);
+      MixerTrackItem(TrackType trackType, Part* part, Instrument* instrument, Channel* channel);
+
+      void setCol1AndChannelBind(MixerTrackChannel* col1);
 
       TrackType trackType() { return _trackType; }
       Part* part() { return _part; }

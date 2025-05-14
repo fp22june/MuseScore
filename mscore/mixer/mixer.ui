@@ -141,9 +141,6 @@
               </property>
               <item>
                <widget class="Ms::MixerTreeWidget" name="mixerTreeWidget">
-                <property name="accessibleName">
-                 <string>Mixer Track List</string>
-                </property>
                 <property name="horizontalScrollBarPolicy">
                  <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
                 </property>

@@ -26,6 +26,26 @@
 
 namespace Ms {
 
+/*
+NonEditableItemDelegate
+
+Allow some columns to be non-editable in the tree view by means of a delegate.
+
+Usage
+treeWidget->setItemDelegateForColumn(column, new  NonEditableItemDelegate(treeWidget));
+This will turn editing OFF for the selected column when editing is ON for the item.
+*/
+
+class NonEditableItemDelegate : public QStyledItemDelegate
+      {
+public:
+      NonEditableItemDelegate(QObject* parent = nullptr);
+      virtual QWidget* createEditor(QWidget*, const QStyleOptionViewItem&, const QModelIndex&) const;
+
+      };
+
+// MixerTreeWidget
+      
 class MixerTreeWidget : public QTreeWidget
       {
       Q_OBJECT
@@ -38,14 +58,17 @@ class MixerTreeWidget : public QTreeWidget
       
       MixerTrackItem* addTrackItem(MixerItemLevel level, MixerItemPartCat category, Channel* channel, Instrument* instrument, Part* part, MixerTrackItem* parentItem);
       void populateTree(Score* score);
-      
+
+      bool anyToExpand();     // used to turn on / off expand all menu
+      bool anyToCollapse();   // used to turn on / off collapse all menu
+
       void resetAll();
       void resetAllSettingVolume(int volume);
       void resetItem(int volume);
 
 private slots:
       void adjustHeaderWidths();
-      // void itemChanged(MixerTrackItem* treeWidgetItem, int column);
+      void itemChanged(MixerTrackItem* treeWidgetItem, int column);
       void itemCollapsedOrExpanded(MixerTrackItem* item);
       void selectedItemChanged();
 
@@ -67,24 +90,6 @@ signals:
       void headersResized();
 
       };
-
-/*
-NonEditableItemDelegate
-
-Allow some columns to be non-editable in the tree view by means of a delegate.
-
-Usage
-treeWidget->setItemDelegateForColumn(column, new  NonEditableItemDelegate(treeWidget));
-This will turn editing OFF for the selected column when editing is ON for the item.
-*/
-
-// class NonEditableItemDelegate : public QStyledItemDelegate
-//       {
-// public:
-//       NonEditableItemDelegate(QObject* parent = nullptr);
-//       virtual QWidget* createEditor(QWidget*, const QStyleOptionViewItem&, const QModelIndex&) const;
-
-//       };
 
 } // namespace Ms
 #endif /* __MIXERTREEWIDGET__ */

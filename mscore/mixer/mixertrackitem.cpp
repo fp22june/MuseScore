@@ -39,13 +39,23 @@ namespace Ms {
 //   MixerTrackItem
 //---------------------------------------------------------
 
-MixerTrackItem::MixerTrackItem(TrackType trackType, Part* part, Instrument* instr, Channel* chan)
-      : QTreeWidgetItem()
+MixerTrackItem::MixerTrackItem(TrackType trackType, Part* part, Instrument* instrument, Channel* channel)
       {
       _trackType = trackType;
       _part = part;
-      _instrument = instr;
-      _channel = chan;
+      _instrument = instrument;
+      _channel = channel;
+      }
+
+void MixerTrackItem::setCol1AndChannelBind(MixerTrackChannel* col1)
+      {
+      _col1AndChannelBind = col1;
+      }
+
+MixerTrackItem::~MixerTrackItem()
+      {
+      if(_col1AndChannelBind) _col1AndChannelBind->setNotifier(nullptr);
+      // need not delete _col1AndChannelBind, its ownership changed after setItemWidget
       }
 
 //---------------------------------------------------------

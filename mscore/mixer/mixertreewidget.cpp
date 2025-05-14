@@ -37,14 +37,14 @@
 
 namespace Ms {
 
-// NonEditableItemDelegate::NonEditableItemDelegate(QObject* parent) : QStyledItemDelegate(parent)
-//       {
-//       }
+NonEditableItemDelegate::NonEditableItemDelegate(QObject* parent) : QStyledItemDelegate(parent)
+      {
+      }
 
-// QWidget* NonEditableItemDelegate::createEditor(QWidget*, const QStyleOptionViewItem&, const QModelIndex&) const
-//       {
-//       return nullptr;
-//       }
+QWidget* NonEditableItemDelegate::createEditor(QWidget*, const QStyleOptionViewItem&, const QModelIndex&) const
+      {
+      return nullptr;
+      }
 
 MixerTreeWidget::MixerTreeWidget(QWidget *parent) :
       QTreeWidget(parent), savedSelectionTopLevelIndex (MIXERTREE_INVALID_INDEX), savedSelectionChildIndex(MIXERTREE_INVALID_INDEX), masterChannelTreeWidget(nullptr)
@@ -86,7 +86,6 @@ void MixerTreeWidget::setScore(Score* score)
 //       PICC => CC
 //       PICIC => ICIC
 //       PICCICC => ICCICC
-
 MixerTrackItem* MixerTreeWidget::addTrackItem(MixerItemLevel level, MixerItemPartCat category, Channel* channel, Instrument* instrument, Part* part, MixerTrackItem* parentItem)
       {
       MixerTrackItem* item = nullptr;
@@ -101,8 +100,9 @@ MixerTrackItem* MixerTreeWidget::addTrackItem(MixerItemLevel level, MixerItemPar
                               item->setToolTip(0, part->partName());
 
                               col1 = new MixerTrackChannel(item);
+                              item->setCol1AndChannelBind(col1);
                               channel->addListener(col1); // channel change triggers propertyChanged
-                              setItemWidget(item, 1, col1);
+                              setItemWidget(item, 1, col1); // ownership
                               break;
                         }
                   break;
@@ -116,8 +116,9 @@ MixerTrackItem* MixerTreeWidget::addTrackItem(MixerItemLevel level, MixerItemPar
                               item->setToolTip(0, part->partName());
 
                               col1 = new MixerTrackChannel(item);
+                              item->setCol1AndChannelBind(col1);
                               channel->addListener(col1); // channel change triggers propertyChanged
-                              setItemWidget(item, 1, col1);
+                              setItemWidget(item, 1, col1); // ownership
                               break;
                         case MixerItemLevel::CHANNEL:
                               item = new MixerTrackItem(MixerTrackItem::TrackType::CHANNEL, part, instrument, channel);
@@ -126,8 +127,9 @@ MixerTrackItem* MixerTreeWidget::addTrackItem(MixerItemLevel level, MixerItemPar
                               item->setToolTip(0, QString("%1 - %2").arg(part->partName()).arg(channel->name()));
 
                               col1 = new MixerTrackChannel(item);
+                              item->setCol1AndChannelBind(col1);
                               channel->addListener(col1); // channel change triggers propertyChanged
-                              setItemWidget(item, 1, col1);
+                              setItemWidget(item, 1, col1); // ownership
                               break;
                         }
                   break;
@@ -141,7 +143,7 @@ void MixerTreeWidget::populateTree(Score* score) {
             Part* part = localPart->masterPart();
             // no addTrackItem ( MixerItemLevel::PART
             const InstrumentList* ils = part->instruments();
-            for (auto il : *ils) {
+            for (auto &il : *ils) {
                   Instrument* instrument = il.second;
                   MixerTrackItem* widgetInstrument = addTrackItem(
                         MixerItemLevel::INSTRUMENT,
@@ -163,7 +165,8 @@ void MixerTreeWidget::populateTree(Score* score) {
                               part,
                               widgetInstrument);
                         }
-                  }
+                  // widgetInstrument->setExpanded(part->isExpanded()); //TODO part.h  instrument not part
+                  };
             }
       }
 
@@ -207,7 +210,7 @@ void MixerTreeWidget::updateHeaders() {
 
 void MixerTreeWidget::setupSlotsAndSignals()
       {
-      connect(this, SIGNAL(currentItemChanged(MixerTrackItem*, MixerTrackItem*)), SLOT(selectedItemChanged()));
+      connect(this, SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)), SLOT(selectedItemChanged()));
 
       connect(header(), SIGNAL(geometriesChanged()), SLOT(adjustHeaderWidths()));
       connect(header(), &QHeaderView::sectionResized, this, &MixerTreeWidget::adjustHeaderWidths);
@@ -252,16 +255,15 @@ void MixerTreeWidget::setMasterChannelTreeWidget(QTreeWidget* masterChannelTreeW
       this->masterChannelTreeWidget = masterChannelTreeWidget;
       }
 
-// obsolete, edit part name by double clicking first column 
-// void MixerTreeWidget::itemChanged(MixerTrackItem* treeWidgetItem, int column)
-//       {
-//       MixerTreeWidgetItem* item = static_cast<MixerTreeWidgetItem*>(treeWidgetItem);
-//       saveTreeSelection();
-//       if (column == 0) {
-//             item->mixerTrackItem()->setName(item->text(column));
-//             }
-//       restoreTreeSelection();
-//       }
+// TODO remove. edit part name by double clicking first column 
+void MixerTreeWidget::itemChanged(MixerTrackItem* item, int column)
+      {
+      saveTreeSelection();
+      if (column == 0) {
+            item->setName(item->text(column));
+            }
+      restoreTreeSelection();
+      }
 
       
 void MixerTreeWidget::resetAll()
