@@ -20,19 +20,15 @@
 #ifndef __MIXERTRACKITEM_H__
 #define __MIXERTRACKITEM_H__
 
-#include "libmscore/instrument.h"
-#include <memory>
-
 namespace Ms {
 
+class Score;
 class Part;
 class Instrument;
 class Channel;
 class MidiMapping;
 class MixerTrackItem;
-
-typedef std::shared_ptr<MixerTrackItem> MixerTrackItemPtr;
-//typedef MixerTrackItem* MixerTrackItemPtr;
+struct MidiPatch;
 
 //---------------------------------------------------------
 //   MixerTrackItem
@@ -47,31 +43,76 @@ private:
       TrackType _trackType;
       Part* _part;
 
-      Instrument* _instr;
-      Channel* _chan;
+      Instrument* _instrument;
+      Channel* _channel;
 
       Channel* playbackChannel(const Channel* channel);
 
-public:
-      MixerTrackItem(TrackType tt, Part* part, Instrument* _instr, Channel* _chan);
+      QList<Channel*> secondaryPlaybackChannels();
+      QList<Channel*> playbackChannels(Part* part);
+      QList<Channel*> playbackChannels();
 
+      template <class ChannelWriter, class ChannelReader>
+      int adjustValue(int proposedValue, ChannelReader reader, ChannelWriter writer);
+      template <class ChannelWriter, class ChannelReader>
+      int relativeAdjust(int mainSliderDelta, ChannelReader reader, ChannelWriter writer);
+      const int panAdjustment();
+
+      bool isCurrentPatch(const MidiPatch* patch);
+      QString adjustedPatchName(const MidiPatch* patch, std::vector<QString> usedNames);
+
+public:
+      MixerTrackItem(TrackType trackType, Part* part, Instrument* _instr, Channel* _chan);
+
+      MixerTrackItem(Part* part, Score* score);
       TrackType trackType() { return _trackType; }
       Part* part() { return _part; }
-      Instrument* instrument() { return _instr; }
-      Channel* chan() { return _chan; }
-      Channel* focusedChan();
+      Instrument* instrument() { return _instrument; }
+      Channel* channel() { return _channel; }
       MidiMapping *midiMap();
       int color();
+      bool isPart();
+
+      QString detailedToolTip();
 
       void setColor(int valueRgb);
-      void setVolume(char value);
-      void setPan(char value);
-      void setChorus(char value);
-      void setReverb(char value);
+
+      int setVolume(int value);    // returns the value actually used (which may differ from value passed)
+      int setPan(int value);       // returns the value actually used (which may differ from value passed)
+      int setChorus(int value);    // returns the value actually used (which may differ from value passed)
+      int setReverb(int value);    // returns the value actually used (which may differ from value passed)
+
+      void setName(QString string);
+      QString getName();
+
+      QString getChannelName();    // no setting - the user can't alter this
 
       void setMute(bool value);
       void setSolo(bool value);
-      };
-}
 
+      char getVolume();
+      char getChorus();
+      char getReverb();
+
+      bool getMute();
+      bool getSolo();
+      char getPan();
+
+      void setMidiChannelAndPort(int channel, int port);
+      int getMidiChannel();
+      int getMidiPort();
+
+      void toggleMutedVoice(int staffIndex, int voiceIndex, bool shouldMute);
+      QList<QList<bool>> getMutedVoices();
+
+      void populatePatchCombo(QComboBox* patchCombo);
+      void changePatch(int itemIndex, QComboBox* patchCombo);
+      bool getUseDrumset();
+      void setUseDrumset(bool useDrumset);
+      
+      void resetWithVolume(int volume);
+            
+      };
+
+}
 #endif // __MIXERTRACKITEM_H__

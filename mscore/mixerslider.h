@@ -17,26 +17,35 @@
 //  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //=============================================================================
 
-#ifndef __MIXERTRACK_H__
-#define __MIXERTRACK_H__
 
-#include "mixertrackitem.h"
-#include <QWidget>
-
-class MixerTrackGroup;
+#ifndef __MIXERSLIDER_H__
+#define __MIXERSLIDER_H__
 
 namespace Ms {
 
-class MixerTrack {
+class MixerSlider : public QSlider
+      {
+      Q_OBJECT
+
+      bool panning = false;         // used for pan-style where filling does not make sense
+      bool secondary = false;       // visual indicator when the slider is in its "secondary" mode
+
+      QColor grooveFillColor();
+      QColor grooveOutlineColor();
+      QColor grooveBackgroundColor();
+
 public:
-      virtual ~MixerTrack() {}
-      virtual QWidget* getWidget() = 0;
-      virtual MixerTrackGroup* group() = 0;
-      virtual MixerTrackItemPtr mti() = 0;
-      virtual bool selected() = 0;
-      virtual void setSelected(bool) = 0;
+      explicit MixerSlider(QWidget *parent = nullptr);
+
+      void paintEvent(QPaintEvent *ev);
+
+      void setPanMode(bool on);                       // will alter minimum and maximum
+      bool panMode() { return panning; }
+      void setSecondaryMode (bool on);                // will force a repaint
+      bool secondaryMode() { return secondary; }
+
+      void mouseDoubleClickEvent(QMouseEvent* mouseEvent);
       };
 
-}
-
-#endif // MIXERTRACK_H
+} // namespace Ms
+#endif /* __MIXEROPTIONS_H__ */
