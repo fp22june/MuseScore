@@ -50,7 +50,6 @@ class Mixer : public QDockWidget, public Ui::Mixer
 
       Score* _score = nullptr;                        // playback score
       Score* _activeScore = nullptr;                  // may be a _score itself or its excerpt;
-      QGridLayout* gridLayout;                        // main layout - used to show/hide & position details panel
       MixerMasterChannel* masterChannelWidget;        // master volume + play / loop widget
 
       static MixerOptions* options;                   // UI options, e.g. show/hide track colors, slider modes
@@ -67,7 +66,7 @@ class Mixer : public QDockWidget, public Ui::Mixer
 
       void enterSecondarySliderMode(bool enter);
 
-      QTimer* shiftKeyMonitorTimer;
+      QTimer* altKeyMonitorTimer;
       MixerKeyboardControlFilter* keyboardFilter;     // process key presses for the mixer AND the details panel
       virtual void closeEvent(QCloseEvent*) override;
       virtual void showEvent(QShowEvent*) override;
@@ -77,7 +76,7 @@ class Mixer : public QDockWidget, public Ui::Mixer
 
    private slots:
       void partOnlyCheckBoxToggled(bool checked);
-      void shiftKeyMonitor();
+      void altKeyMonitor();
 
    public slots:
       void updateTracks();

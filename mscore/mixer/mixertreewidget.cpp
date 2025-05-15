@@ -18,11 +18,13 @@
 //=============================================================================
 
 #include "mixertreewidget.h"
-#include "mixer/mixertrackitem.h"
-#include "mixer/mixertrackchannel.h"
-#include "mixer/mixer.h"
+#include "mixertrackitem.h"
+#include "mixertrackchannel.h"
+#include "mixer.h"
 #include "mixeroptions.h"
-#include "libmscore/part.h"
+
+#include "../libmscore/score.h"
+#include "../libmscore/part.h"
 
 #include <QTreeWidget>
 
@@ -33,13 +35,16 @@ namespace Ms {
 MixerTreeWidget::MixerTreeWidget(QWidget *parent) :
       QTreeWidget(parent), savedSelectionTopLevelIndex (MIXERTREE_INVALID_INDEX), savedSelectionChildIndex(MIXERTREE_INVALID_INDEX), masterChannelTreeWidget(nullptr)
       {
+      Score* _score = nullptr;
+
+      setSelectionMode(QAbstractItemView::ExtendedSelection);
       setAlternatingRowColors(true);
       setColumnCount(2);
-      setHeaderLabels({tr("Instrument"), tr("Volume")});
-      // make all bar column 0, non-editable
-      setItemDelegateForColumn(1, new NonEditableItemDelegate (this));
+      updateHeaders();
 
-      header()->setSectionResizeMode(0, QHeaderView::Fixed);
+      // setItemDelegateForColumn(1, new NonEditableItemDelegate (this));// col1 non-editable, so that col0 editable only (itemChanged) 
+
+      header()->setSectionResizeMode(0, QHeaderView::Interactive);
       header()->setSectionResizeMode(1, QHeaderView::Fixed);
 
       setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -48,11 +53,10 @@ MixerTreeWidget::MixerTreeWidget(QWidget *parent) :
       setupSlotsAndSignals();
       }
 
-
-
 void MixerTreeWidget::setScore(Score* score)
       {
       clear();
+      _score = score;
 
       if (score)
             populateTree(score);
@@ -64,20 +68,98 @@ void MixerTreeWidget::setScore(Score* score)
      restoreTreeSelection();
       }
 
-
-
-void MixerTreeWidget::populateTree(Score* score)
+// Part(not MusescorePart), Instrument(>1 if score contains InstrumentChange items), Channel
+//       PIC => C
+//       PICC => CC
+//       PICIC => ICIC
+//       PICCICC => ICCICC
+MixerTrackItem* MixerTreeWidget::addTrackItem(MixerItemLevel level, MixerItemPartCat category, Channel* channel, Instrument* instrument, Part* part, MixerTrackItem* parentItem)
       {
+      MixerTrackItem* item = nullptr;
+      MixerTrackChannel* col1 = nullptr;
+      switch (category) {
+            case MixerItemPartCat::SINGLE_INSTRUMENT_SINGLE_CHANNEL:
+                  switch (level) {
+                        case MixerItemLevel::CHANNEL:
+                              item = new MixerTrackItem(MixerTrackItem::TrackType::CHANNEL, part, instrument, channel);
+                              addTopLevelItem(item);
+                              item->setText(0, part->partName());
+                              item->setToolTip(0, part->partName());
+
+                              col1 = new MixerTrackChannel(item);
+                              item->setCol1AndChannelBind(col1);
+                              channel->addListener(col1); // channel change triggers propertyChanged
+                              setItemWidget(item, 1, col1); // ownership
+                              break;
+                        }
+                  break;
+            case MixerItemPartCat::SINGLE_INSTRUMENT_MULTIPLE_CHANNEL:
+            case MixerItemPartCat::MULTIPLE_INSTRUMENT:
+                  switch (level) {
+                        case MixerItemLevel::INSTRUMENT:
+                              item = new MixerTrackItem(MixerTrackItem::TrackType::PART, part, instrument, channel); //TODO
+                              addTopLevelItem(item);
+                              item->setText(0, part->partName());
+                              item->setToolTip(0, part->partName());
+
+                              col1 = new MixerTrackChannel(item);
+                              item->setCol1AndChannelBind(col1);
+                              channel->addListener(col1); // channel change triggers propertyChanged
+                              setItemWidget(item, 1, col1); // ownership
+                              break;
+                        case MixerItemLevel::CHANNEL:
+                              item = new MixerTrackItem(MixerTrackItem::TrackType::CHANNEL, part, instrument, channel);
+                              parentItem->addChild(item);
+                              item->setText(0, channel->name());
+                              item->setToolTip(0, QString("%1 - %2").arg(part->partName()).arg(channel->name()));
+
+                              col1 = new MixerTrackChannel(item);
+                              item->setCol1AndChannelBind(col1);
+                              channel->addListener(col1); // channel change triggers propertyChanged
+                              setItemWidget(item, 1, col1); // ownership
+                              break;
+                        }
+                  break;
+            }
+      if (item) item->setFlags(QFlag(Qt::ItemIsEnabled | Qt::ItemIsSelectable));
+      return item;
+      }
+
+void MixerTreeWidget::populateTree(Score* score) {
       for (Part* localPart : score->parts()) {
             Part* part = localPart->masterPart();
-            // When it's created the item will also create any children and setup their widgets
-            MixerTreeWidgetItem* item = new MixerTreeWidgetItem(part, score, this);
-            addTopLevelItem(item);
-            setItemWidget(item, 1, item->mixerTrackChannel());
-            item->setExpanded(part->isExpanded());
+            // no addTrackItem ( MixerItemLevel::PART
+            const InstrumentList* ils = part->instruments();
+            for (auto &il : *ils) {
+                  Instrument* instrument = il.second;
+                  MixerTrackItem* widgetInstrument = addTrackItem(
+                        MixerItemLevel::INSTRUMENT,
+                          1 < ils->size()                   ? MixerItemPartCat::MULTIPLE_INSTRUMENT
+                        : instrument->channel().size() <= 1 ? MixerItemPartCat::SINGLE_INSTRUMENT_SINGLE_CHANNEL
+                        :                                     MixerItemPartCat::SINGLE_INSTRUMENT_MULTIPLE_CHANNEL,
+                        instrument->playbackChannel(0, score->masterScore()),
+                        instrument,
+                        part,
+                        nullptr);
+                  for (int i = 0; i < instrument->channel().size(); ++i) {
+                        addTrackItem(
+                              MixerItemLevel::CHANNEL,
+                                1 < ils->size()                   ? MixerItemPartCat::MULTIPLE_INSTRUMENT
+                              : instrument->channel().size() <= 1 ? MixerItemPartCat::SINGLE_INSTRUMENT_SINGLE_CHANNEL
+                              :                                     MixerItemPartCat::SINGLE_INSTRUMENT_MULTIPLE_CHANNEL,
+                              instrument->playbackChannel(i, score->masterScore()),
+                              instrument,
+                              part,
+                              widgetInstrument);
+                        }
+                  // widgetInstrument->setExpanded(part->isExpanded()); //TODO part.h  instrument not part
+                  };
             }
       }
 
+void MixerTreeWidget::selectTreeItem(MixerTrackItem* item) {
+      setCurrentItem(item);
+      }
 
 // - listen for changes to current item so that the details view can be updated
 // also called directly by updateTracks (while signals are disabled)
@@ -87,18 +169,13 @@ void MixerTreeWidget::selectedItemChanged()
             emit selectedTrackChanged(nullptr);
             return;
             }
-
-      MixerTreeWidgetItem* item = static_cast<MixerTreeWidgetItem*>(currentItem());
-
-      emit selectedTrackChanged(item->mixerTrackItem());
+      emit selectedTrackChanged(static_cast<MixerTrackItem*>(currentItem()));
       }
-
-
 
 void MixerTreeWidget::updateHeaders() {
 
       if (!Mixer::getOptions()->secondaryModeOn()) {
-            setHeaderLabels({tr("Instrument"), tr("Volume")});
+            setHeaderLabels({tr("Name"), tr("Volume")});
             return;
             }
 
@@ -115,7 +192,7 @@ void MixerTreeWidget::updateHeaders() {
                   secondary = tr("Chorus");
             }
 
-      setHeaderLabels({tr("Instrument"), secondary});
+      setHeaderLabels({tr("Name"), secondary});
       }
 
 void MixerTreeWidget::setupSlotsAndSignals()
@@ -123,9 +200,10 @@ void MixerTreeWidget::setupSlotsAndSignals()
       connect(this, SIGNAL(currentItemChanged(QTreeWidgetItem*, QTreeWidgetItem*)), SLOT(selectedItemChanged()));
 
       connect(header(), SIGNAL(geometriesChanged()), SLOT(adjustHeaderWidths()));
-      connect(this, SIGNAL(itemExpanded(QTreeWidgetItem*)), SLOT(itemCollapsedOrExpanded(QTreeWidgetItem*)));
-      connect(this, SIGNAL(itemCollapsed(QTreeWidgetItem*)), SLOT(itemCollapsedOrExpanded(QTreeWidgetItem*)));
-      connect(this, SIGNAL(itemChanged(QTreeWidgetItem*, int)), SLOT(itemChanged(QTreeWidgetItem*, int)));
+      connect(header(), &QHeaderView::sectionResized, this, &MixerTreeWidget::adjustHeaderWidths);
+      connect(this, SIGNAL(itemExpanded(MixerTrackItem*)), SLOT(itemCollapsedOrExpanded(MixerTrackItem*)));
+      connect(this, SIGNAL(itemCollapsed(MixerTrackItem*)), SLOT(itemCollapsedOrExpanded(MixerTrackItem*)));
+      // connect(this, SIGNAL(itemChanged(MixerTrackItem*, int)), SLOT(itemChanged(MixerTrackItem*, int)));
 
       }
 
@@ -133,51 +211,29 @@ void MixerTreeWidget::setSecondaryMode(bool secondaryMode)
       {
       updateSliders();
       updateHeaders();
-      
-      
-      
-      
       }
 
 void MixerTreeWidget::updateSliders()
       {
       // secondary slider style and track colors in the main mixer
       for (int topLevelIndex = 0; topLevelIndex < topLevelItemCount(); topLevelIndex++) {
-            QTreeWidgetItem* topLevelItem = this->topLevelItem(topLevelIndex);
+            MixerTrackItem* topLevelItem = static_cast<MixerTrackItem*>(this->topLevelItem(topLevelIndex));
             MixerTrackChannel* itemWidget = static_cast<MixerTrackChannel*>(this->itemWidget(topLevelItem, 1));
             itemWidget->updateUiControls();
 
             for (int childIndex = 0; childIndex < topLevelItem->childCount(); childIndex++) {
-                  QTreeWidgetItem* childItem = topLevelItem->child(childIndex);
+                  MixerTrackItem* childItem = static_cast<MixerTrackItem*>(topLevelItem->child(childIndex));
                   MixerTrackChannel* itemWidget = static_cast<MixerTrackChannel*>(this->itemWidget(childItem, 1));
                   itemWidget->updateUiControls();
                   }
             }
       }
 
-
 void MixerTreeWidget::adjustHeaderWidths()
       {
-      int width = this->width();
-
-      int firstColumnMaximumWidth = 300;
-      double ratio = 0.4; // instrument names take up 2/5 and controls 3/5
-      int margin = 2;   // factor to avoid triggering horizontal scrolling
-
-      int column0 = int(double(width) * ratio);
-      int column1 = int(double(width) * (1-ratio) - margin);
-
-      if (column0 > firstColumnMaximumWidth) {
-            column0 = firstColumnMaximumWidth;
-            column1 = (width - firstColumnMaximumWidth) - margin;
-            }
-
-      header()->resizeSection(0, column0);
-      header()->resizeSection(1, column1);
-
       if (masterChannelTreeWidget) {
-            masterChannelTreeWidget->header()->resizeSection(0, column0);
-            masterChannelTreeWidget->header()->resizeSection(1, column1);
+            masterChannelTreeWidget->header()->resizeSection(0, header()->sectionSize(0));
+            masterChannelTreeWidget->header()->resizeSection(1, header()->sectionSize(1));
             }
       }
 
@@ -185,17 +241,6 @@ void MixerTreeWidget::setMasterChannelTreeWidget(QTreeWidget* masterChannelTreeW
       {
       this->masterChannelTreeWidget = masterChannelTreeWidget;
       }
-
-//MARK:- tree changes
-//called when an item is edited
-void MixerTreeWidget::itemChanged(QTreeWidgetItem* treeWidgetItem, int column)
-      {
-      MixerTreeWidgetItem* item = static_cast<MixerTreeWidgetItem*>(treeWidgetItem);
-      saveTreeSelection();
-      item->mixerTrackItem()->setName(item->text(column));
-      restoreTreeSelection();
-      }
-
       
 void MixerTreeWidget::resetAll()
       {
@@ -213,16 +258,14 @@ void MixerTreeWidget::resetAllSettingVolume(int volume)
       // but THIS may be the only case, in which cas, it's OK
       
       for (int itemIndex = 0; itemIndex < topLevelItemCount(); itemIndex++) {
-            MixerTreeWidgetItem* item = static_cast<MixerTreeWidgetItem*>(topLevelItem(itemIndex));
-            item->mixerTrackItem()->resetWithVolume(volume);
+            MixerTrackItem* item = static_cast<MixerTrackItem*>(topLevelItem(itemIndex));
+            item->resetWithVolume(volume);
             for (int itemIndex = 0; itemIndex < item->childCount(); itemIndex++) {
-                  MixerTreeWidgetItem* item = static_cast<MixerTreeWidgetItem*>(topLevelItem(itemIndex));
-                  item->mixerTrackItem()->resetWithVolume(volume);
+                  item->resetWithVolume(volume);
                   }
             }
       }
 
-      
 bool MixerTreeWidget::anyToExpand()
       {
       // if any item has children and is not expanded
@@ -246,13 +289,10 @@ bool MixerTreeWidget::anyToCollapse()
       return false;
       }
 
+void MixerTreeWidget::itemCollapsedOrExpanded(MixerTrackItem* item) {
 
-void MixerTreeWidget::itemCollapsedOrExpanded(QTreeWidgetItem* item) {
-
-      MixerTreeWidgetItem* mixerTreeWidgetItem = static_cast<MixerTreeWidgetItem*>(item);
-      MixerTrackItem* mixerTrackItem = mixerTreeWidgetItem->mixerTrackItem();
-      if (mixerTrackItem && mixerTrackItem->isPart()) {
-            mixerTrackItem->part()->setExpanded(item->isExpanded());
+      if (item && item->isPart()) {
+            item->part()->setExpanded(item->isExpanded());
             }
       }
 
@@ -283,7 +323,7 @@ void MixerTreeWidget::restoreTreeSelection()
             }
       else {
 
-            QTreeWidgetItem* itemOrItsParent = topLevelItem(topLevel);
+            MixerTrackItem* itemOrItsParent = static_cast<MixerTrackItem*>(topLevelItem(topLevel));
 
             if (!itemOrItsParent) {
                   // the saved row is out of range - go to the top of the tree
@@ -301,17 +341,16 @@ void MixerTreeWidget::restoreTreeSelection()
                         }
                   }
             }
-      MixerTrackItem* newMixerTrackItem = static_cast<MixerTreeWidgetItem*>(currentItem())->mixerTrackItem();
 
       blockSignals(false);
-      emit selectedTrackChanged(newMixerTrackItem);
+      emit selectedTrackChanged(static_cast<MixerTrackItem*>(currentItem()));
       }
 
 
 
 void MixerTreeWidget::saveTreeSelection()
       {
-      QTreeWidgetItem* item = currentItem();
+      MixerTrackItem* item = static_cast<MixerTrackItem*>(currentItem());
 
       if (!item) {
             savedSelectionTopLevelIndex = MIXERTREE_INVALID_INDEX;
@@ -325,8 +364,7 @@ void MixerTreeWidget::saveTreeSelection()
             return;
             }
 
-      QTreeWidgetItem* parentOfCurrentItem = item->parent();
-
+      MixerTrackItem* parentOfCurrentItem = static_cast<MixerTrackItem*>(currentItem()->parent());
       savedSelectionTopLevelIndex = indexOfTopLevelItem(parentOfCurrentItem);
       savedSelectionChildIndex = parentOfCurrentItem->indexOfChild(item);
       }

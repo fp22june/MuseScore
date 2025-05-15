@@ -21,33 +21,38 @@
 #ifndef __MIXERTREEWIDGET__
 #define __MIXERTREEWIDGET__
 
-
 #include "libmscore/score.h"
-#include "mixer/mixertrackitem.h"
+#include "mixertrackitem.h"
 
 namespace Ms {
-
+      
 class MixerTreeWidget : public QTreeWidget
       {
       Q_OBJECT
+      Score* _score;
 
       int savedSelectionTopLevelIndex;
       int savedSelectionChildIndex;
       void setupSlotsAndSignals();
       QTreeWidget* masterChannelTreeWidget;
-      void populateTree(Score* score);
       
+      MixerTrackItem* addTrackItem(MixerItemLevel level, MixerItemPartCat category, Channel* channel, Instrument* instrument, Part* part, MixerTrackItem* parentItem);
+      void populateTree(Score* score);
+
       bool anyToExpand();     // used to turn on / off expand all menu
       bool anyToCollapse();   // used to turn on / off collapse all menu
+
       void resetAll();
       void resetAllSettingVolume(int volume);
       void resetItem(int volume);
 
 private slots:
       void adjustHeaderWidths();
-      void itemChanged(QTreeWidgetItem* treeWidgetItem, int column);
-      void itemCollapsedOrExpanded(QTreeWidgetItem* item);
+      void itemCollapsedOrExpanded(MixerTrackItem* item);
       void selectedItemChanged();
+
+public slots:
+      void selectTreeItem(MixerTrackItem* item);
 
 public:
       explicit MixerTreeWidget(QWidget *parent = nullptr);

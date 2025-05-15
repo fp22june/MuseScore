@@ -19,7 +19,7 @@
 
 #include "mixeroptionsbutton.h"
 #include "mixeroptions.h"
-#include "mixer/mixer.h"
+#include "mixer.h"
 
 namespace Ms {
       MixerOptionsButton::MixerOptionsButton(QWidget* parent) : QToolButton (parent)

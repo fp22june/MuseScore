@@ -19,40 +19,19 @@
 
 #include "mixertrackitem.h"
 
-#include "musescore.h"                    // required for access to synti
-#include "audio/midi/msynthesizer.h"     // required for MidiPatch
-#include "seq.h"
+#include "../musescore.h"                    // required for access to synti
+#include "../audio/midi/msynthesizer.h"     // required for MidiPatch
+#include "../seq.h"
 
-#include "libmscore/score.h"
-#include "libmscore/part.h"
-#include "libmscore/undo.h"
-#include "preferences.h"
+#include "../libmscore/score.h"
+#include "../libmscore/part.h"
+#include "../libmscore/undo.h"
+#include "../preferences.h"
 
 #include "mixer.h"
 #include "mixeroptions.h"
 #include "mixertrackchannel.h"
 #include <QComboBox>
-
-/*
- A MixerTrackItem object:
- EITHER (1) represents a channel that is one sound source for an instrument that
- in turn belongs to a part. It provides a uniform / clean interface for
- interacting with the sound source in the mixer.
-
- OR (2) represents a collection of channels that form the variant sound sources for an
- instrument. Implements rules whereby changes to the top level (the collection level)
- are trickled down to the sub-levels (indidvidual channels).
- 
- TODO: Clarify my understanding - the enum cases are {PART, CHANNEL}, but, I think, that's
- at odds with how the terminology is used elsewhere. The TrackTypes are, I think, better
- described as:
- - Instrument (one or more channels as a sound source)
- - Channel (a sound source that belongs to an instrument)
- 
- The set methods, e.g. setVolume, setReverb etc. apply changes to the underlying channel.
- When thes changes are applied to the underlying channel, any listeners to that channel
- are notified by a propertyChanged() call.
- */
 
 namespace Ms {
 
@@ -60,29 +39,24 @@ namespace Ms {
 //   MixerTrackItem
 //---------------------------------------------------------
 
-// General purpose constructor
-MixerTrackItem::MixerTrackItem(TrackType trackType, Part* part, Instrument* instr, Channel *chan)
-      :_trackType(trackType), _part(part), _instrument(instr), _channel(chan)
+MixerTrackItem::MixerTrackItem(TrackType trackType, Part* part, Instrument* instrument, Channel* channel)
       {
-      }
-      
-
-MixerTrackItem::MixerTrackItem(Part* part, Score* score)
-      {
-      _trackType = TrackType::PART;
+      _trackType = trackType;
       _part = part;
-      _instrument = nullptr;
-      _channel = nullptr;
-      
-      const InstrumentList* instrumenList = part->instruments();
-
-      if (instrumenList->empty())
-            return;
-
-      instrumenList->begin();
-      _instrument = instrumenList->begin()->second;
-      _channel = _instrument->playbackChannel(0, score->masterScore());
+      _instrument = instrument;
+      _channel = channel;
       }
+
+void MixerTrackItem::setCol1AndChannelBind(MixerTrackChannel* col1)
+      {
+      _col1AndChannelBind = col1;
+      }
+
+MixerTrackItem::~MixerTrackItem()
+     {
+     if(_col1AndChannelBind) _col1AndChannelBind->setNotifier(nullptr);
+     // need not delete _col1AndChannelBind, its ownership changed after setItemWidget
+     }
 
 //---------------------------------------------------------
 //   midiMap
@@ -228,7 +202,16 @@ void MixerTrackItem::changePatch(int itemIndex, QComboBox* patchCombo)
 
 void MixerTrackItem::setUseDrumset(bool useDrumset)
       {
-      Instrument* instr = isPart() ? part()->instrument(Fraction(0,1)) : instrument();
+      Instrument* instr = nullptr;
+      switch (_trackType)
+            {
+            case TrackType::PART:
+                  instr = part()->instrument(Fraction(0,1));
+                  break;
+            case TrackType::CHANNEL:
+                  instr = instrument();
+                  break;
+            }
 
       if (instr->useDrumset() == useDrumset)
             return;
@@ -272,22 +255,40 @@ QString MixerTrackItem::getChannelName()
 
 
 void MixerTrackItem::setName(QString newName)
-{
-      if (part()->partName() == newName) {
-            return;
+      {
+      switch (_trackType)
+            {
+            case TrackType::PART:
+                  if (part()->partName() == newName) {
+                        return;
+                        }
+
+                  Score* score = part()->score();
+                  if (score) {
+                        score->startCmd();
+                        score->undo(new ChangePart(part(), part()->instrument(), newName));
+                        score->endCmd();
+                        }
+                  break;
+            //case TrackType::CHANNEL:
+            //      
+            //      break;
+            }
+
       }
 
-      Score* score = part()->score();
-      if (score) {
-            score->startCmd();
-            score->undo(new ChangePart(part(), part()->instrument(), newName));
-            score->endCmd();
-      }
-}
 
 int MixerTrackItem::color()
       {
-      return isPart() ? _part->color() : _channel->color();
+      switch (_trackType)
+            {
+            case TrackType::PART:
+                  _part->color();
+                  break;
+            case TrackType::CHANNEL:
+                  _channel->color();
+                  break;
+            }
       }
 
 
@@ -297,14 +298,14 @@ char MixerTrackItem::getVolume()
       }
 
 char MixerTrackItem::getChorus()
-{
+      {
       return channel()->chorus();
-}
+      }
 
 char MixerTrackItem::getReverb()
-{
+      {
       return channel()->reverb();
-}
+      }
 
 char MixerTrackItem::getPan()
       {
@@ -419,6 +420,14 @@ void MixerTrackItem::setMidiChannelAndPort(int midiChannel, int midiPort)
 
 void MixerTrackItem::setColor(int valueRgb)
       {
+      switch (_trackType)
+            {
+            case TrackType::PART:
+                  break;
+            case TrackType::CHANNEL:
+                  break;
+            }
+
       if (!isPart()) {
             channel()->setColor(valueRgb);
             return;
@@ -435,6 +444,13 @@ void MixerTrackItem::setColor(int valueRgb)
 
 void MixerTrackItem::setMute(bool muteOn)
       {
+      switch (_trackType)
+            {
+            case TrackType::PART:
+                  break;
+            case TrackType::CHANNEL:
+                  break;
+            }
       if (!isPart()) {
             if (muteOn)
                   seq->stopNotes(_channel->channel());
@@ -453,19 +469,21 @@ void MixerTrackItem::setMute(bool muteOn)
 
 void MixerTrackItem::setSolo(bool soloOn)
       {
-      if (!isPart()) {
-            if (soloOn)
-                  seq->stopNotes(_channel->channel());
-            channel()->setSolo(soloOn);
-            }
-      else {
-            for (Channel* channel: playbackChannels()) {
+      switch (_trackType)
+            {
+            case TrackType::PART:
+                  for (Channel* channel: playbackChannels()) {
+                        if (soloOn)
+                              seq->stopNotes(channel->channel());
+                        channel->setSolo(soloOn);
+                        }
+                  break;
+            case TrackType::CHANNEL:
                   if (soloOn)
-                        seq->stopNotes(channel->channel());
-                  channel->setSolo(soloOn);
-                  }
+                        seq->stopNotes(_channel->channel());
+                  channel()->setSolo(soloOn);
+                  break;
             }
-
 
       //Go through all channels so that all not being soloed get
       // the soloMute property set
@@ -550,10 +568,15 @@ QList<QList<bool>> MixerTrackItem::getMutedVoices()
 template <class ChannelWriter, class ChannelReader>
 int MixerTrackItem:: adjustValue(int proposedValue, ChannelReader reader, ChannelWriter writer)
       {
-      if (!isPart()) {
-            // only one channel, the easy case - just make a direct adjustment
-            writer(proposedValue, _channel);
-            return proposedValue;
+      switch (_trackType)
+            {
+            case TrackType::PART:
+                  break;
+            case TrackType::CHANNEL:
+                  // only one channel, the easy case - just make a direct adjustment
+                  writer(proposedValue, _channel);
+                  return proposedValue;
+                  break;
             }
 
       // multiple channels and the OVERALL value has been changed
@@ -627,14 +650,6 @@ int MixerTrackItem::relativeAdjust(int mainSliderDelta, ChannelReader reader, Ch
       }
 
 
-
-
-bool MixerTrackItem::isPart()
-      {
-      return _trackType == TrackType::PART;
-      }
-
-
 //TODO: opportunity for reducing code duplication
 //NOTE: the OUTER LOOP:
 //      for (Part* p : _part->score()->parts()) {
@@ -648,16 +663,20 @@ bool MixerTrackItem::isPart()
 //    is now.
 
 QList<Channel*> MixerTrackItem::secondaryPlaybackChannels() {
-      if (!isPart()) {
-            return QList<Channel*> {};
-      }
+      switch (_trackType)
+            {
+            case TrackType::PART:
+                  QList<Channel*> allChannels = playbackChannels(_part);
+                  if (allChannels.isEmpty())
+                        return allChannels;
 
-      QList<Channel*> allChannels = playbackChannels(_part);
-      if (allChannels.isEmpty())
-            return allChannels;
-
-      allChannels.removeFirst();
-      return allChannels;
+                  allChannels.removeFirst();
+                  return allChannels;
+                  break;
+            case TrackType::CHANNEL:
+                  return QList<Channel*> {};
+                  break;
+            }
 }
 
 QList<Channel*> MixerTrackItem::playbackChannels()

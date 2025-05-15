@@ -23,22 +23,21 @@
 #include <qmessagebox.h>
 #include <accessibletoolbutton.h>
 
-#include "musescore.h"
+#include "../musescore.h"
 
-#include "libmscore/excerpt.h"
-#include "libmscore/score.h"
-#include "libmscore/part.h"
-#include "seq.h"
-#include "libmscore/undo.h"
-#include "synthcontrol.h"
-#include "audio/midi/msynthesizer.h"
-#include "preferences.h"
+#include "../libmscore/excerpt.h"
+#include "../libmscore/score.h"
+#include "../libmscore/part.h"
+#include "../seq.h"
+#include "../libmscore/undo.h"
+#include "../synthcontrol.h"
+#include "../audio/midi/msynthesizer.h"
+#include "../preferences.h"
 
 #include "mixerdetails.h"
 #include "mixertrackchannel.h"
 #include "mixermasterchannel.h"
 #include "mixertrackitem.h"
-#include "mixertreewidgetitem.h"
 #include "mixeroptions.h"
 #include "mixeroptionsbutton.h"
 #include "mixertreewidget.h"
@@ -74,7 +73,6 @@ Mixer::Mixer(QWidget* parent)
 
       setupAdditionalUi();
 
-      gridLayout = new QGridLayout(dockWidgetContents);
       mixerDetails = new MixerDetails(this);
 
       showDetails(options->showingDetails());
@@ -91,9 +89,9 @@ Mixer::Mixer(QWidget* parent)
       updateUiOptions();
       retranslate(true);
 
-      shiftKeyMonitorTimer = new QTimer(this);
-      connect(shiftKeyMonitorTimer, SIGNAL(timeout()), this, SLOT(shiftKeyMonitor()));
-      shiftKeyMonitorTimer->start(100);
+      altKeyMonitorTimer = new QTimer(this);
+      connect(altKeyMonitorTimer, SIGNAL(timeout()), this, SLOT(shiftKeyMonitor()));
+      altKeyMonitorTimer->start(100);
       }
 
 
@@ -208,8 +206,6 @@ void Mixer::showDetails(bool visible)
       mixerTreeWidget->setMaximumSize(maxTreeWidgetSize);
       }
 
-
-
 void Mixer::enterSecondarySliderMode(bool secondaryMode)
       {
       options->setSecondaryModeOn(secondaryMode);
@@ -251,35 +247,26 @@ void Mixer::partOnlyCheckBoxToggled(bool checked)
             MixerTrackItem* trackItem = mixerDetails->getSelectedMixerTrackItem();
 
             int proposedValue;
+            int acceptedValue;
 
             switch (options->secondarySlider()) {
                   case MixerOptions::MixerSecondarySlider::Pan:
                         proposedValue = nudge(trackItem->getPan(), direction, -63, 63);
-                        break;
-                  case MixerOptions::MixerSecondarySlider::Reverb:
-                        proposedValue = nudge(trackItem->getReverb(), direction, 0, 127);
-                        break;
-                  case MixerOptions::MixerSecondarySlider::Chorus:
-                        proposedValue = nudge(trackItem->getChorus(), direction, 0, 127);
-                        break;
-            }
-
-            int acceptedValue;
-            switch (options->secondarySlider()) {
-                  case MixerOptions::MixerSecondarySlider::Pan:
                         acceptedValue = trackItem->setPan(proposedValue);
                         break;
                   case MixerOptions::MixerSecondarySlider::Reverb:
+                        proposedValue = nudge(trackItem->getReverb(), direction, 0, 127);
                         acceptedValue = trackItem->setReverb(proposedValue);
                         break;
                   case MixerOptions::MixerSecondarySlider::Chorus:
+                        proposedValue = nudge(trackItem->getChorus(), direction, 0, 127);
                         acceptedValue = trackItem->setChorus(proposedValue);
                         break;
             }
 
-            if (proposedValue != acceptedValue) {
-                  QApplication::beep();
-            }
+            //if (proposedValue != acceptedValue) {
+            //      QApplication::beep();
+            //}
 
       }
 
@@ -301,42 +288,13 @@ void Mixer::updateUiOptions()
 
       bool showMasterVol = options->showMasterVolume();
 
+      masterVolumeTreeWidget->setVisible(showMasterVol);
+
       if (options->showDetailsOnTheSide()) {
-            // show TO THE SIDE case
-
-            // addWidget(row, column, rowSpan, columnSpan, [Qt::Alignment])
-            gridLayout->addWidget(partOnlyCheckBox, 0, 1, 1, 1, Qt::AlignRight);
-            gridLayout->addWidget(showDetailsButton, 0, 0, 1, 1);
-            gridLayout->addWidget(mixerTreeWidget, 1, 0, 1, 2);
-            if (showMasterVol) {
-                  gridLayout->addWidget(masterVolumeTreeWidget, 2, 0, 1, 2);
-                  masterVolumeTreeWidget->setVisible(true);
+            h1->addWidget(mixerDetails, 0, Qt::AlignTop);
+      } else {
+            v1->addWidget(mixerDetails, 0, Qt::AlignTop);
             }
-            else {
-                  masterVolumeTreeWidget->setVisible(false);
-            }
-
-            gridLayout->addWidget(mixerDetails, 0, 2, showMasterVol ? 3 : 2, 1, Qt::AlignTop);
-      }
-      else {
-            // show BELOW case
-
-            // addWidget(row, column, rowSpan, columnSpan, [Qt::Alignment])
-            gridLayout->addWidget(partOnlyCheckBox, 0, 1, 1, 1, Qt::AlignRight);
-            gridLayout->addWidget(showDetailsButton, 0, 0, 1, 1);
-            gridLayout->addWidget(mixerTreeWidget, 1, 0, 1, 2);
-            if (showMasterVol) {
-                  gridLayout->addWidget(masterVolumeTreeWidget, 2, 0, 1, 2);
-                  masterVolumeTreeWidget->setVisible(true);
-            }
-            else {
-                  masterVolumeTreeWidget->setVisible(false);
-            }
-
-            gridLayout->addWidget(mixerDetails, showMasterVol ? 3 : 2, 0, 1 , 2, Qt::AlignTop);
-
-            gridLayout->setRowStretch(1,10);
-      }
 
       // cover case where the LOCK has changed (but there's no change in SHIFT key)
       enterSecondarySliderMode(options->secondaryModeOn());
@@ -467,8 +425,7 @@ void Mixer::keyPressEvent(QKeyEvent* ev) {
       QDockWidget::keyPressEvent(ev);
       }
 
-
-void Mixer::shiftKeyMonitor() {
+void Mixer::altKeyMonitor() {
 
       // check if we or any children have the focus
       bool focus = hasFocus();
@@ -499,18 +456,17 @@ void Mixer::shiftKeyMonitor() {
 
       // if shift key is down enter secondary mode (if not in it already)
       // BUT swap this logic if secondaryModeLock() is true
-      bool shiftedModeActive = options->secondaryModeLock() ? !options->secondaryModeOn() : options->secondaryModeOn();
+      bool modeActive = options->secondaryModeLock() ? !options->secondaryModeOn() : options->secondaryModeOn();
 
-      if (QApplication::queryKeyboardModifiers() & Qt::KeyboardModifier::ShiftModifier) {
-            if (!shiftedModeActive)
+      if (QApplication::queryKeyboardModifiers() & Qt::KeyboardModifier::AltModifier) {
+            if (!modeActive)
                   enterSecondarySliderMode(true);
             return;
       }
 
-      if (shiftedModeActive)
+      if (modeActive)
             enterSecondarySliderMode(false);
 }
-
 //---------------------------------------------------------
 //   changeEvent
 //---------------------------------------------------------

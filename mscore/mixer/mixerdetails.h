@@ -25,10 +25,7 @@
 #include "mixertrackitem.h"
 #include "mixer.h"
 
-
-
 namespace Ms {
-
 
 class MixerDetails : public QWidget, public Ui::MixerDetails, public ChannelListener
       {
@@ -40,7 +37,8 @@ class MixerDetails : public QWidget, public Ui::MixerDetails, public ChannelList
       QGridLayout* mutePerVoiceGrid;
       QList<QWidget*> voiceButtons; // used for dynamically updating tabOrder
 
-      void updateName();
+      void updatePartName();
+      void updateChannelName();
       void updatePatch();
       void updateVolume();
       void updatePan();
@@ -54,6 +52,9 @@ class MixerDetails : public QWidget, public Ui::MixerDetails, public ChannelList
       void updateTabOrder();
             
    public slots:
+      void partNameChanged();
+      void channelNameChanged();
+      
       void drumsetCheckboxToggled(bool);
       void patchComboEdited(int);
       void volumeSliderMoved(int);
