@@ -202,7 +202,16 @@ void MixerTrackItem::changePatch(int itemIndex, QComboBox* patchCombo)
 
 void MixerTrackItem::setUseDrumset(bool useDrumset)
       {
-      Instrument* instr = isPart() ? part()->instrument(Fraction(0,1)) : instrument();
+      Instrument* instr = nullptr;
+      switch (_trackType)
+            {
+            case TrackType::PART:
+                  instr = part()->instrument(Fraction(0,1));
+                  break;
+            case TrackType::CHANNEL:
+                  instr = instrument();
+                  break;
+            }
 
       if (instr->useDrumset() == useDrumset)
             return;
@@ -245,8 +254,10 @@ QString MixerTrackItem::getChannelName()
       }
 
 
-void MixerTrackItem::setName(QString newName){
-      switch (_trackType) {
+void MixerTrackItem::setName(QString newName)
+      {
+      switch (_trackType)
+            {
             case TrackType::PART:
                   if (part()->partName() == newName) {
                         return;
@@ -269,7 +280,15 @@ void MixerTrackItem::setName(QString newName){
 
 int MixerTrackItem::color()
       {
-      return isPart() ? _part->color() : _channel->color();
+      switch (_trackType)
+            {
+            case TrackType::PART:
+                  _part->color();
+                  break;
+            case TrackType::CHANNEL:
+                  _channel->color();
+                  break;
+            }
       }
 
 
@@ -401,6 +420,14 @@ void MixerTrackItem::setMidiChannelAndPort(int midiChannel, int midiPort)
 
 void MixerTrackItem::setColor(int valueRgb)
       {
+      switch (_trackType)
+            {
+            case TrackType::PART:
+                  break;
+            case TrackType::CHANNEL:
+                  break;
+            }
+
       if (!isPart()) {
             channel()->setColor(valueRgb);
             return;
@@ -417,6 +444,13 @@ void MixerTrackItem::setColor(int valueRgb)
 
 void MixerTrackItem::setMute(bool muteOn)
       {
+      switch (_trackType)
+            {
+            case TrackType::PART:
+                  break;
+            case TrackType::CHANNEL:
+                  break;
+            }
       if (!isPart()) {
             if (muteOn)
                   seq->stopNotes(_channel->channel());
@@ -435,19 +469,21 @@ void MixerTrackItem::setMute(bool muteOn)
 
 void MixerTrackItem::setSolo(bool soloOn)
       {
-      if (!isPart()) {
-            if (soloOn)
-                  seq->stopNotes(_channel->channel());
-            channel()->setSolo(soloOn);
-            }
-      else {
-            for (Channel* channel: playbackChannels()) {
+      switch (_trackType)
+            {
+            case TrackType::PART:
+                  for (Channel* channel: playbackChannels()) {
+                        if (soloOn)
+                              seq->stopNotes(channel->channel());
+                        channel->setSolo(soloOn);
+                        }
+                  break;
+            case TrackType::CHANNEL:
                   if (soloOn)
-                        seq->stopNotes(channel->channel());
-                  channel->setSolo(soloOn);
-                  }
+                        seq->stopNotes(_channel->channel());
+                  channel()->setSolo(soloOn);
+                  break;
             }
-
 
       //Go through all channels so that all not being soloed get
       // the soloMute property set
@@ -532,10 +568,15 @@ QList<QList<bool>> MixerTrackItem::getMutedVoices()
 template <class ChannelWriter, class ChannelReader>
 int MixerTrackItem:: adjustValue(int proposedValue, ChannelReader reader, ChannelWriter writer)
       {
-      if (!isPart()) {
-            // only one channel, the easy case - just make a direct adjustment
-            writer(proposedValue, _channel);
-            return proposedValue;
+      switch (_trackType)
+            {
+            case TrackType::PART:
+                  break;
+            case TrackType::CHANNEL:
+                  // only one channel, the easy case - just make a direct adjustment
+                  writer(proposedValue, _channel);
+                  return proposedValue;
+                  break;
             }
 
       // multiple channels and the OVERALL value has been changed
@@ -622,16 +663,20 @@ int MixerTrackItem::relativeAdjust(int mainSliderDelta, ChannelReader reader, Ch
 //    is now.
 
 QList<Channel*> MixerTrackItem::secondaryPlaybackChannels() {
-      if (!isPart()) {
-            return QList<Channel*> {};
-      }
+      switch (_trackType)
+            {
+            case TrackType::PART:
+                  QList<Channel*> allChannels = playbackChannels(_part);
+                  if (allChannels.isEmpty())
+                        return allChannels;
 
-      QList<Channel*> allChannels = playbackChannels(_part);
-      if (allChannels.isEmpty())
-            return allChannels;
-
-      allChannels.removeFirst();
-      return allChannels;
+                  allChannels.removeFirst();
+                  return allChannels;
+                  break;
+            case TrackType::CHANNEL:
+                  return QList<Channel*> {};
+                  break;
+            }
 }
 
 QList<Channel*> MixerTrackItem::playbackChannels()

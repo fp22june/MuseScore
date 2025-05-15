@@ -25,22 +25,6 @@
 #include "mixertrackitem.h"
 
 namespace Ms {
-
-/*
-NonEditableItemDelegate
-Allow some columns to be non-editable in the tree view by means of a delegate.
-Usage
-treeWidget->setItemDelegateForColumn(column, new  NonEditableItemDelegate(treeWidget));
-This will turn editing OFF for the selected column when editing is ON for the item.
-*/
-// class NonEditableItemDelegate : public QStyledItemDelegate
-//       {
-// public:
-//       NonEditableItemDelegate(QObject* parent = nullptr);
-//       virtual QWidget* createEditor(QWidget*, const QStyleOptionViewItem&, const QModelIndex&) const;
-//       };
-
-// MixerTreeWidget
       
 class MixerTreeWidget : public QTreeWidget
       {

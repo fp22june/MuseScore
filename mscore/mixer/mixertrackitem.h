@@ -80,8 +80,6 @@ public:
       Part* part() { return _part; }
       Instrument* instrument() { return _instrument; }
       Channel* channel() { return _channel; }
-
-      bool isPart() { return _trackType == TrackType::PART; }
       
       MidiMapping *midiMap();
       int color();
