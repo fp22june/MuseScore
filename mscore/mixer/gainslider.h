@@ -21,7 +21,7 @@
 #define __GAINSLIDER_H__
 
 
-#include "awl/fastlog.h"
+#include "../awl/fastlog.h"
 
 namespace Ms {
 

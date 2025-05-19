@@ -21,9 +21,9 @@
 #define __MIXERMASTERCHANNEL_H__
 
 #include "ui_mixermasterchannel.h"
-#include "mixer/mixertrackitem.h"
-#include "libmscore/instrument.h"
 
+#include "mixertrackitem.h"
+#include "../libmscore/instrument.h"
 
 namespace Ms {
 

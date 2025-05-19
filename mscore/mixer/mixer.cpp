@@ -19,12 +19,18 @@
 
 #include "mixer.h"
 
+#include "mixerdetails.h"
+#include "mixertrackchannel.h"
+#include "mixermasterchannel.h"
+#include "mixertrackitem.h"
+#include "mixeroptions.h"
+#include "mixeroptionsbutton.h"
+#include "mixertreewidget.h"
+
 #include <QtGlobal>
 #include <qmessagebox.h>
 #include <accessibletoolbutton.h>
-
 #include "../musescore.h"
-
 #include "../libmscore/excerpt.h"
 #include "../libmscore/score.h"
 #include "../libmscore/part.h"
@@ -33,14 +39,6 @@
 #include "../synthcontrol.h"
 #include "../audio/midi/msynthesizer.h"
 #include "../preferences.h"
-
-#include "mixerdetails.h"
-#include "mixertrackchannel.h"
-#include "mixermasterchannel.h"
-#include "mixertrackitem.h"
-#include "mixeroptions.h"
-#include "mixeroptionsbutton.h"
-#include "mixertreewidget.h"
 
 namespace Ms {
 
@@ -53,7 +51,6 @@ namespace Ms {
       __x->blockSignals(true); \
       __x->setChecked(__y); \
       __x->blockSignals(false);
-
 
 // initialise the static
 MixerOptions* Mixer::options = new MixerOptions(); // will read from settings
@@ -94,13 +91,11 @@ Mixer::Mixer(QWidget* parent)
       altKeyMonitorTimer->start(100);
       }
 
-
 void Mixer::setupSlotsAndSignals()
       {
       connect(synti,SIGNAL(gainChanged(float)),SLOT(synthGainChanged(float)));
       connect(partOnlyCheckBox, SIGNAL(toggled(bool)), SLOT(partOnlyCheckBoxToggled(bool)));
       }
-
 
 void Mixer::setupAdditionalUi()
       {
@@ -122,8 +117,6 @@ void Mixer::setupAdditionalUi()
 
       showDetailsButton->setTarget(this);
       }
-
-
 
 //MARK:- main interface
 
@@ -173,8 +166,6 @@ void Mixer::setPlaybackScore(Score* score)
       updateTracks();
       }
 
-
-
 void Mixer::showDetails(bool visible)
       {
       QSize currentTreeWidgetSize = mixerTreeWidget->size();
@@ -212,7 +203,6 @@ void Mixer::enterSecondarySliderMode(bool secondaryMode)
       mixerTreeWidget->setSecondaryMode(secondaryMode);
       }
 
-
 void Mixer::partOnlyCheckBoxToggled(bool checked)
       {
 
@@ -229,7 +219,6 @@ void Mixer::partOnlyCheckBoxToggled(bool checked)
                   seq->stopNotes(ch->channel());
             }
       }
-
 
       void Mixer::nudgeMainSlider(NudgeDirection direction)
       {
@@ -270,9 +259,6 @@ void Mixer::partOnlyCheckBoxToggled(bool checked)
 
       }
 
-
-
-
 //MARK:- update ui
 
 void Mixer::updateUiOptions()
@@ -300,9 +286,6 @@ void Mixer::updateUiOptions()
       enterSecondarySliderMode(options->secondaryModeOn());
 }
 
-
-
-
 //---------------------------------------------------------
 //   retranslate
 //---------------------------------------------------------
@@ -318,7 +301,6 @@ void Mixer::retranslate(bool firstTime)
       mixerTreeWidget->updateHeaders();
       //TODO: retranslate instrument names (but do they have translations?)
       }
-
 
 //MARK:- listen to changes from elsewhere
 //---------------------------------------------------------
@@ -340,7 +322,6 @@ void Mixer::masterVolumeChanged(double decibels)
       synti->setGain(gain);
       }
 
-
 //---------------------------------------------------------
 //   midiPrefsChanged
 //---------------------------------------------------------
@@ -355,7 +336,6 @@ void Mixer::midiPrefsChanged(bool)
       {
       updateTracks();
       }
-
 
 //MARK:- window events
 
@@ -385,7 +365,6 @@ void Mixer::showEvent(QShowEvent* e)
             getAction("toggle-mixer")->setChecked(true);
       }
 
-
 //---------------------------------------------------------
 //   hideEvent
 //---------------------------------------------------------
@@ -410,8 +389,6 @@ bool Mixer::eventFilter(QObject* object, QEvent* event)
 
       return QWidget::eventFilter(object, event);
       }
-
-
 
 //---------------------------------------------------------
 //   keyPressEvent
@@ -478,10 +455,6 @@ void Mixer::changeEvent(QEvent *event)
             retranslate();
       }
 
-
-
-
-
 //MARK:- manage the mixer tree
 
 //---------------------------------------------------------
@@ -492,7 +465,6 @@ void Mixer::updateTracks()
       qDebug()<<"Mixer::updateTracks()";
       mixerTreeWidget->setScore(_score);
       }
-
 
 //MARK:- support classes
 
@@ -524,7 +496,6 @@ bool MixerKeyboardControlFilter::eventFilter(QObject *obj, QEvent *event)
             Qt::Key secondaryDown = !secondaryLock ? Qt::Key_Less : Qt::Key_Comma;
             Qt::Key secondaryUp = !secondaryLock ? Qt::Key_Greater : Qt::Key_Period;
 
-
             if (keyEvent->key() == primaryDown && !modified) {
                   mixer->nudgeMainSlider(Mixer::NudgeDirection::Down);
                   return true;
@@ -533,7 +504,6 @@ bool MixerKeyboardControlFilter::eventFilter(QObject *obj, QEvent *event)
                   mixer->nudgeMainSlider(Mixer::NudgeDirection::Up);
                   return true;
             }
-
 
             if (keyEvent->key() == secondaryDown && modified) {
                   mixer->nudgeSecondarySlider(Mixer::NudgeDirection::Down);
@@ -574,6 +544,5 @@ bool MixerKeyboardControlFilter::eventFilter(QObject *obj, QEvent *event)
 
             return proposedValue;
       }
-
 
 } // namespace Ms

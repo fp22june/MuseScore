@@ -19,25 +19,19 @@
 
 #include "mixertrackitem.h"
 
-#include "../musescore.h"                    // required for access to synti
-#include "../audio/midi/msynthesizer.h"     // required for MidiPatch
+#include "mixer.h"
+#include "mixeroptions.h"
+#include "mixertrackchannel.h"
+#include <QComboBox>
+#include "../musescore.h"                    // synti
+#include "../audio/midi/msynthesizer.h"     // MidiPatch
 #include "../seq.h"
-
 #include "../libmscore/score.h"
 #include "../libmscore/part.h"
 #include "../libmscore/undo.h"
 #include "../preferences.h"
 
-#include "mixer.h"
-#include "mixeroptions.h"
-#include "mixertrackchannel.h"
-#include <QComboBox>
-
 namespace Ms {
-
-//---------------------------------------------------------
-//   MixerTrackItem
-//---------------------------------------------------------
 
 MixerTrackItem::MixerTrackItem(TrackType trackType, Part* part, Instrument* instrument, Channel* channel)
       {
@@ -55,29 +49,18 @@ void MixerTrackItem::setCol1AndChannelBind(MixerTrackChannel* col1)
 MixerTrackItem::~MixerTrackItem()
      {
      if(_col1AndChannelBind) _col1AndChannelBind->setNotifier(nullptr);
-     // need not delete _col1AndChannelBind, its ownership changed after setItemWidget
+     // need not delete _col1AndChannelBind after setItemWidget
      }
-
-//---------------------------------------------------------
-//   midiMap
-//---------------------------------------------------------
 
 MidiMapping *MixerTrackItem::midiMap()
       {
-      return _part->masterScore()->midiMapping(channel()->channel());
+      return _part->masterScore()->midiMapping(_channel->channel());
       }
 
-//---------------------------------------------------------
-//   playbackChannel
-//---------------------------------------------------------
 Channel* MixerTrackItem::playbackChannel(const Channel* channel)
       {
       return _part->masterScore()->playbackChannel(channel);
       }
-
-//---------------------------------------------------------
-//   color
-//---------------------------------------------------------
 
 QString MixerTrackItem::detailedToolTip()
       {
@@ -99,9 +82,7 @@ QString MixerTrackItem::detailedToolTip()
 
       }
 
-
 //MARK:- patch
-
 bool  MixerTrackItem::getUseDrumset() {
 
       //Check if drumkit
@@ -110,9 +91,9 @@ bool  MixerTrackItem::getUseDrumset() {
 
 bool MixerTrackItem::isCurrentPatch(const MidiPatch* patch)
       {
-         return patch->synti == channel()->synti() &&
-            patch->bank == channel()->bank() &&
-            patch->prog == channel()->program();
+         return patch->synti == _channel->synti() &&
+            patch->bank == _channel->bank() &&
+            patch->prog == _channel->program();
       }
 
 QString MixerTrackItem::adjustedPatchName(const MidiPatch* patch, std::vector<QString> usedNames)
@@ -140,7 +121,6 @@ QString MixerTrackItem::adjustedPatchName(const MidiPatch* patch, std::vector<QS
 
       return patchName;
       }
-
 
 void MixerTrackItem::populatePatchCombo(QComboBox* patchCombo)
 {
@@ -176,7 +156,6 @@ void MixerTrackItem::populatePatchCombo(QComboBox* patchCombo)
       patchCombo->setCurrentIndex(patchIndex);
 }
 
-
 void MixerTrackItem::changePatch(int itemIndex, QComboBox* patchCombo)
 {
       const MidiPatch* patch = (MidiPatch*)patchCombo->itemData(itemIndex, Qt::UserRole).value<void*>();
@@ -186,10 +165,8 @@ void MixerTrackItem::changePatch(int itemIndex, QComboBox* patchCombo)
             return;
       }
 
-      Part* part = midiMap()->part();
+      Score* score = midiMap()->part()->score();
       Channel* channel = midiMap()->articulation();
-
-      Score* score = part->score();
       if (score) {
             score->startCmd();
             score->undo(new ChangePatch(score, channel, patch));
@@ -199,17 +176,16 @@ void MixerTrackItem::changePatch(int itemIndex, QComboBox* patchCombo)
       }
 }
 
-
 void MixerTrackItem::setUseDrumset(bool useDrumset)
       {
       Instrument* instr = nullptr;
       switch (_trackType)
             {
             case TrackType::PART:
-                  instr = part()->instrument(Fraction(0,1));
+                  instr = _part->instrument(Fraction(0,1));
                   break;
             case TrackType::CHANNEL:
-                  instr = instrument();
+                  instr = _instrument;
                   break;
             }
 
@@ -228,100 +204,95 @@ void MixerTrackItem::setUseDrumset(bool useDrumset)
       if (newPatch)
             QString name = newPatch->name;
 
-      Score* score = part()->score();
+      Score* score = _part->score();
       if (newPatch) {
             score->startCmd();
-            part()->undoChangeProperty(Pid::USE_DRUMSET, useDrumset);
-            score->undo(new ChangePatch(score, channel(), newPatch));
+            _part->undoChangeProperty(Pid::USE_DRUMSET, useDrumset);
+            score->undo(new ChangePatch(score, _channel, newPatch));
             score->setLayoutAll();
             score->endCmd();
             }
       }
 
-
 //MARK:- part and channel name
 QString MixerTrackItem::getName()
       {
-      return part()->partName();
+      return _part->partName();
       }
 
 QString MixerTrackItem::getChannelName()
       {
-      if (channel()->name().isEmpty())
+      if (_channel->name().isEmpty())
             return "";
 
-      return qApp->translate("InstrumentsXML", channel()->name().toUtf8().data());
+      return qApp->translate("InstrumentsXML", _channel->name().toUtf8().data());
       }
-
 
 void MixerTrackItem::setName(QString newName)
       {
       switch (_trackType)
             {
             case TrackType::PART:
-                  if (part()->partName() == newName) {
+                  if (_part->partName() == newName) {
                         return;
                         }
 
-                  Score* score = part()->score();
+                  Score* score = _part->score();
                   if (score) {
                         score->startCmd();
-                        score->undo(new ChangePart(part(), part()->instrument(), newName));
+                        score->undo(new ChangePart(_part, _instrument, newName));
                         score->endCmd();
                         }
                   break;
             //case TrackType::CHANNEL:
-            //      
+            //
             //      break;
             }
 
       }
-
 
 int MixerTrackItem::color()
       {
       switch (_trackType)
             {
             case TrackType::PART:
-                  _part->color();
+                  return _part->color();
                   break;
             case TrackType::CHANNEL:
-                  _channel->color();
+                  return _channel->color();
                   break;
             }
       }
 
-
 char MixerTrackItem::getVolume()
       {
-      return channel()->volume();
+      return _channel->volume();
       }
 
 char MixerTrackItem::getChorus()
       {
-      return channel()->chorus();
+      return _channel->chorus();
       }
 
 char MixerTrackItem::getReverb()
       {
-      return channel()->reverb();
+      return _channel->reverb();
       }
 
 char MixerTrackItem::getPan()
       {
-      return channel()->pan() - panAdjustment();
+      return _channel->pan() - panAdjustment();
       }
 
 bool MixerTrackItem::getMute()
       {
-      return channel()->mute();
+      return _channel->mute();
       }
 
 bool MixerTrackItem::getSolo()
       {
-      return channel()->solo();
+      return _channel->solo();
       }
-
 
 // MixerTrackItem settters - when a change is made to underlying channel a propertyChange()
 // will be sent to any registered listeners
@@ -338,16 +309,14 @@ int MixerTrackItem::setVolume(int proposedValue)
       return adjustValue(proposedValue, reader, writer);
       }
 
-
 const int MixerTrackItem::panAdjustment() {
       return 63;
 }
 
-
 int MixerTrackItem::setPan(int proposedValue)
       {
       proposedValue = proposedValue + panAdjustment();
-      
+
       auto writer = [](int value, Channel* channel){
             channel->setPan(value);
             seq->setController(channel->channel(), CTRL_PANPOT, channel->pan()); };
@@ -357,7 +326,6 @@ int MixerTrackItem::setPan(int proposedValue)
 
       return adjustValue(proposedValue, reader, writer) - panAdjustment();
       }
-
 
 int MixerTrackItem::setChorus(int value)
       {
@@ -371,7 +339,6 @@ int MixerTrackItem::setChorus(int value)
       return adjustValue(value, reader, writer);
       }
 
-
 int MixerTrackItem::setReverb(int value)
       {
       auto writer = [](int value, Channel* channel){
@@ -384,88 +351,71 @@ int MixerTrackItem::setReverb(int value)
       return adjustValue(value, reader, writer);
       }
 
-
 int MixerTrackItem::getMidiChannel()
       {
-      return part()->masterScore()->midiMapping(channel()->channel())->channel() + 1;
+      return _part->masterScore()->midiMapping(_channel->channel())->channel() + 1;
       }
-
 
 int MixerTrackItem::getMidiPort()
       {
-      return part()->masterScore()->midiMapping(channel()->channel())->port() + 1;
+      return _part->masterScore()->midiMapping(_channel->channel())->port() + 1;
       }
-
 
 void MixerTrackItem::setMidiChannelAndPort(int midiChannel, int midiPort)
       {
-      seq->stopNotes(channel()->channel());
+      seq->stopNotes(_channel->channel());
       midiPort = midiPort - 1;
       midiChannel = midiChannel - 1;
 
-      part()->masterScore()->updateMidiMapping(midiMap()->articulation(), part(), midiPort, midiChannel);
+      _part->masterScore()->updateMidiMapping(midiMap()->articulation(), _part, midiPort, midiChannel);
 
-      part()->score()->setInstrumentsChanged(true);
-      part()->score()->setLayoutAll();
+      _part->score()->setInstrumentsChanged(true);
+      _part->score()->setLayoutAll();
       seq->initInstruments();
 
       // Update MIDI Out ports
-      int maxPort = std::max(midiPort, part()->score()->masterScore()->midiPortCount());
-      part()->score()->masterScore()->setMidiPortCount(maxPort);
+      int maxPort = std::max(midiPort, _part->score()->masterScore()->midiPortCount());
+      _part->score()->masterScore()->setMidiPortCount(maxPort);
       if (seq->driver() && (preferences.getBool(PREF_IO_JACK_USEJACKMIDI) || preferences.getBool(PREF_IO_ALSA_USEALSAAUDIO)))
             seq->driver()->updateOutPortCount(maxPort + 1);
 }
-
-
 
 void MixerTrackItem::setColor(int valueRgb)
       {
       switch (_trackType)
             {
             case TrackType::PART:
+                  // note: does not attempt to respect the relative / override / first channel mode
+                  _part->setColor(valueRgb);
+                  for (Channel* channel: playbackChannels())
+                        {
+                        channel->setColor(valueRgb);
+                        }
                   break;
             case TrackType::CHANNEL:
+                  _channel->setColor(valueRgb);
                   break;
             }
-
-      if (!isPart()) {
-            channel()->setColor(valueRgb);
-            return;
-            }
-
-      // note: does not attempt to respect the relative / override / first channel mode
-      _part->setColor(valueRgb);
-      for (Channel* channel: playbackChannels()) {
-            channel->setColor(valueRgb);
-            }
       }
-
-
 
 void MixerTrackItem::setMute(bool muteOn)
       {
       switch (_trackType)
             {
             case TrackType::PART:
+                  for (Channel* channel: playbackChannels()) {
+                        if (muteOn)
+                              seq->stopNotes(channel->channel());
+                        channel->setMute(muteOn);
+                        }
                   break;
             case TrackType::CHANNEL:
+                  if (muteOn)
+                        seq->stopNotes(_channel->channel());
+                  _channel->setMute(muteOn);
                   break;
             }
-      if (!isPart()) {
-            if (muteOn)
-                  seq->stopNotes(_channel->channel());
-            channel()->setMute(muteOn);
-            return;
-            }
-
-      for (Channel* channel: playbackChannels()) {
-            if (muteOn)
-                  seq->stopNotes(channel->channel());
-            channel->setMute(muteOn);
-            }
       }
-
-
 
 void MixerTrackItem::setSolo(bool soloOn)
       {
@@ -481,7 +431,7 @@ void MixerTrackItem::setSolo(bool soloOn)
             case TrackType::CHANNEL:
                   if (soloOn)
                         seq->stopNotes(_channel->channel());
-                  channel()->setSolo(soloOn);
+                  _channel->setSolo(soloOn);
                   break;
             }
 
@@ -514,9 +464,7 @@ void MixerTrackItem::setSolo(bool soloOn)
             }
       }
 
-      
 //MARK:: - reset
-      
 void MixerTrackItem::resetWithVolume(int volume)
       {
       setVolume(volume);
@@ -530,7 +478,7 @@ void MixerTrackItem::resetWithVolume(int volume)
 //MARK:- voice muting
 void MixerTrackItem::toggleMutedVoice(int staffIndex, int voiceIndex, bool shouldMute)
       {
-      Staff* staff = part()->staff(staffIndex);
+      Staff* staff = _part->staff(staffIndex);
       switch (voiceIndex) {
             case 0:
                   staff->undoChangeProperty(Pid::PLAYBACK_VOICE1, !shouldMute);
@@ -547,12 +495,11 @@ void MixerTrackItem::toggleMutedVoice(int staffIndex, int voiceIndex, bool shoul
             }
       }
 
-
 QList<QList<bool>> MixerTrackItem::getMutedVoices()
       {
       QList<QList<bool>> mutedStaves;
-      for (int staffIndex = 0; staffIndex < (*part()->staves()).length(); ++staffIndex) {
-            Staff* staff = (*part()->staves())[staffIndex];
+      for (int staffIndex = 0; staffIndex < (*_part->staves()).length(); ++staffIndex) {
+            Staff* staff = (*_part->staves())[staffIndex];
             QList<bool> mutedVoices;
             for (int voice = 0; voice < VOICES; ++voice) {
                   bool checked = !staff->playbackVoice(voice);
@@ -564,7 +511,6 @@ QList<QList<bool>> MixerTrackItem::getMutedVoices()
 }
 
 //MARK:- helper methods
-
 template <class ChannelWriter, class ChannelReader>
 int MixerTrackItem:: adjustValue(int proposedValue, ChannelReader reader, ChannelWriter writer)
       {
@@ -584,21 +530,21 @@ int MixerTrackItem:: adjustValue(int proposedValue, ChannelReader reader, Channe
 
       MixerOptions::MixerVolumeMode mode = Mixer::getOptions()->mode();
 
-      int currentValue = reader(channel());
+      int currentValue = reader(_channel);
       int deltaAdjust = 0;
 
       switch (mode) {
             case MixerOptions::MixerVolumeMode::PrimaryInstrument:
                   // secondary channels are not touched
                   break;
-                  
+
             case MixerOptions::MixerVolumeMode::Override:
                   for (Channel* channel: secondaryPlaybackChannels()) {
                         // all secondary channels just get newValue
                         writer(proposedValue, channel);
                         }
                   break;
-                  
+
             case MixerOptions::MixerVolumeMode::Ratio:
                   deltaAdjust = relativeAdjust(proposedValue - currentValue, reader, writer);
                   break;
@@ -607,11 +553,10 @@ int MixerTrackItem:: adjustValue(int proposedValue, ChannelReader reader, Channe
       int acceptedValue = proposedValue + deltaAdjust;
 
       if (acceptedValue != currentValue)
-            writer(acceptedValue, channel());
+            writer(acceptedValue, _channel);
 
       return acceptedValue;
       }
-
 
 template <class ChannelWriter, class ChannelReader>
 int MixerTrackItem::relativeAdjust(int mainSliderDelta, ChannelReader reader, ChannelWriter writer)
@@ -649,7 +594,6 @@ int MixerTrackItem::relativeAdjust(int mainSliderDelta, ChannelReader reader, Ch
       return deltaAdjust;
       }
 
-
 //TODO: opportunity for reducing code duplication
 //NOTE: the OUTER LOOP:
 //      for (Part* p : _part->score()->parts()) {
@@ -663,18 +607,18 @@ int MixerTrackItem::relativeAdjust(int mainSliderDelta, ChannelReader reader, Ch
 //    is now.
 
 QList<Channel*> MixerTrackItem::secondaryPlaybackChannels() {
+      QList<Channel*> allChannels = {};
       switch (_trackType)
             {
             case TrackType::PART:
-                  QList<Channel*> allChannels = playbackChannels(_part);
+                  allChannels = playbackChannels(_part);
                   if (allChannels.isEmpty())
                         return allChannels;
-
                   allChannels.removeFirst();
                   return allChannels;
                   break;
             case TrackType::CHANNEL:
-                  return QList<Channel*> {};
+                  return allChannels;
                   break;
             }
 }
@@ -683,7 +627,6 @@ QList<Channel*> MixerTrackItem::playbackChannels()
       {
       return playbackChannels(_part);
       }
-
 
 QList<Channel*> MixerTrackItem::playbackChannels(Part* part)
       {
@@ -704,6 +647,4 @@ QList<Channel*> MixerTrackItem::playbackChannels(Part* part)
             }
       return channels;
       }
-
 }
-

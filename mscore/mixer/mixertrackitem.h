@@ -58,8 +58,8 @@ private:
       Channel* playbackChannel(const Channel* channel);
 
       QList<Channel*> secondaryPlaybackChannels();
-      QList<Channel*> playbackChannels(Part* part);
       QList<Channel*> playbackChannels();
+      QList<Channel*> playbackChannels(Part* part);
 
       template <class ChannelWriter, class ChannelReader>
       int adjustValue(int proposedValue, ChannelReader reader, ChannelWriter writer);

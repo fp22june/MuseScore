@@ -17,19 +17,17 @@
 //  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //=============================================================================
 
-
 #ifndef __MIXERTREEWIDGET__
 #define __MIXERTREEWIDGET__
 
-#include "libmscore/score.h"
 #include "mixertrackitem.h"
+#include "../libmscore/score.h"
 
 namespace Ms {
       
 class MixerTreeWidget : public QTreeWidget
       {
       Q_OBJECT
-      Score* _score;
 
       int savedSelectionTopLevelIndex;
       int savedSelectionChildIndex;
@@ -38,9 +36,6 @@ class MixerTreeWidget : public QTreeWidget
       
       MixerTrackItem* addTrackItem(MixerItemLevel level, MixerItemPartCat category, Channel* channel, Instrument* instrument, Part* part, MixerTrackItem* parentItem);
       void populateTree(Score* score);
-
-      bool anyToExpand();     // used to turn on / off expand all menu
-      bool anyToCollapse();   // used to turn on / off collapse all menu
 
       void resetAll();
       void resetAllSettingVolume(int volume);

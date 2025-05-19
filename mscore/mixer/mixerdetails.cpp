@@ -18,6 +18,7 @@
 //=============================================================================
 
 #include "mixerdetails.h"
+
 #include "mixertrackitem.h"
 #include "mixeroptions.h"
 #include "mixertreewidget.h"
@@ -120,7 +121,6 @@ void MixerDetails::updateUiOptions()
       adjustSize();
       }
 
-
 //MARK:- Main interface
 void MixerDetails::updateDetails(MixerTrackItem* mixerTrackItem)
       {
@@ -155,12 +155,7 @@ void MixerDetails::updateDetails(MixerTrackItem* mixerTrackItem)
       blockSignals(false);
       }
 
-
-
-// propertyChanged - we're listening to changes to the channel
-// When they occur, this method is called so that we can update
-// the UI. Signals sent by the UI control are blocked during the
-// update to prevent getting caught in an update loop.
+// MixerTreeWidget::addTrackItem channel->addListener
 void MixerDetails::propertyChanged(Channel::Prop property)
       {
       if (!selectedMixerTrackItem)
@@ -211,13 +206,11 @@ void MixerDetails::updateChannelName()
       channelName->setText(selectedMixerTrackItem->getChannelName());
       }
 
-
 void MixerDetails::updatePatch()
       {
       drumkitCheck->setChecked(selectedMixerTrackItem->getUseDrumset());
       selectedMixerTrackItem->populatePatchCombo(patchCombo);
       }
-
 
 void MixerDetails::updateVolume()
       {
@@ -231,7 +224,6 @@ void MixerDetails::updatePan()
       panSlider->setValue(pan);
       panSpinBox->setValue(pan);
       }
-
 
 QPushButton* MixerDetails::makeMuteButton(int staff, int voice) {
 
@@ -286,7 +278,6 @@ void MixerDetails::updateMutePerVoice()
       }
 
 
-
 void MixerDetails::updateMidiChannelAndPort()
       {
       //TODO: midi code moved - needs more testing
@@ -298,20 +289,17 @@ void MixerDetails::updateMidiChannelAndPort()
 //      channelSpinBox->setValue(part->masterScore()->midiMapping(channel->channel())->channel() + 1);
       }
 
-
 void MixerDetails::updateReverb()
       {
       reverbSlider->setValue(selectedMixerTrackItem->getReverb());
       reverbSpinBox->setValue(selectedMixerTrackItem->getReverb());
       }
 
-
 void MixerDetails::updateChorus()
       {
       chorusSlider->setValue(selectedMixerTrackItem->getChorus());
       chorusSpinBox->setValue(selectedMixerTrackItem->getChorus());
       }
-
 
 //MARK:- Methods to respond to user initiated changes
 
@@ -339,7 +327,6 @@ void MixerDetails::drumsetCheckboxToggled(bool useDrumset)
       blockSignals(false);
       }
 
-
 // volumeChanged - process signal from volumeSlider
 void MixerDetails::volumeSpinBoxEdited(int proposedValue)
       {
@@ -363,7 +350,6 @@ void MixerDetails::volumeSliderMoved(int proposedValue)
       if (acceptedValue != proposedValue)
             volumeSlider->setValue(acceptedValue);
       }
-
 
 // panChanged - process signal from panSlider
 void MixerDetails::panSpinBoxEdited(int proposedValue)
@@ -389,7 +375,6 @@ void MixerDetails::panSliderMoved(int proposedValue)
             panSlider->setValue(acceptedValue);
       }
 
-
 // reverbChanged - process signal from reverbSlider
 void MixerDetails::reverbSliderMoved(int proposedValue)
       {
@@ -402,7 +387,6 @@ void MixerDetails::reverbSliderMoved(int proposedValue)
             reverbSlider->setValue(acceptedValue);
       }
 
-
 void MixerDetails::reverbSpinBoxEdited(int proposedValue)
       {
       if (!selectedMixerTrackItem)
@@ -413,7 +397,6 @@ void MixerDetails::reverbSpinBoxEdited(int proposedValue)
       if (acceptedValue != proposedValue)
             reverbSpinBox->setValue(acceptedValue);
       }
-
 
 //  chorusChanged - process signal from chorusSlider
 void MixerDetails::chorusSliderMoved(int proposedValue)
@@ -426,7 +409,6 @@ void MixerDetails::chorusSliderMoved(int proposedValue)
             chorusSlider->setValue(acceptedValue);
       }
 
-
 void MixerDetails::chorusSpinBoxEdited(int proposedValue)
       {
       if (!selectedMixerTrackItem)
@@ -438,13 +420,11 @@ void MixerDetails::chorusSpinBoxEdited(int proposedValue)
             chorusSpinBox->setValue(acceptedValue);
       }
 
-
 // voiceMuteButtonToggled - process button toggled (received via MixerVoiceMuteButtonHandler object)
 void MixerDetails::voiceMuteButtonToggled(int staffIndex, int voiceIndex, bool shouldMute)
       {
       selectedMixerTrackItem->toggleMutedVoice(staffIndex, voiceIndex, shouldMute);
       }
-
 
 // midiChannelChanged - process signal from either portSpinBox
 // or channelSpinBox, i.e. MIDI port or channel change
@@ -474,7 +454,6 @@ void MixerDetails::midiChannelOrPortEdited(int)
 //      if (seq->driver() && (preferences.getBool(PREF_IO_JACK_USEJACKMIDI) || preferences.getBool(PREF_IO_ALSA_USEALSAAUDIO)))
 //            seq->driver()->updateOutPortCount(maxPort + 1);
       }
-
 
 
 //MARK:- Helper methods
@@ -511,7 +490,6 @@ void MixerDetails::updateTabOrder()
             }
       }
 
-
 void MixerDetails::resetControls()
       {
       drumkitCheck->setChecked(false);
@@ -530,7 +508,6 @@ void MixerDetails::resetControls()
       channelSpinBox->setValue(0);
       }
 
-
 void MixerDetails::blockSignals(bool block)
       {
       partName->blockSignals(block);
@@ -547,5 +524,4 @@ void MixerDetails::blockSignals(bool block)
       channelSpinBox->blockSignals(block);
       }
 }
-
 

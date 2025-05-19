@@ -18,14 +18,13 @@
 //=============================================================================
 
 #include "mixertreewidget.h"
-#include "mixertrackitem.h"
-#include "mixertrackchannel.h"
+
 #include "mixer.h"
 #include "mixeroptions.h"
-
+#include "mixertrackitem.h"
+#include "mixertrackchannel.h"
 #include "../libmscore/score.h"
 #include "../libmscore/part.h"
-
 #include <QTreeWidget>
 
 #define MIXERTREE_INVALID_INDEX -1
@@ -35,14 +34,12 @@ namespace Ms {
 MixerTreeWidget::MixerTreeWidget(QWidget *parent) :
       QTreeWidget(parent), savedSelectionTopLevelIndex (MIXERTREE_INVALID_INDEX), savedSelectionChildIndex(MIXERTREE_INVALID_INDEX), masterChannelTreeWidget(nullptr)
       {
-      Score* _score = nullptr;
-
       setSelectionMode(QAbstractItemView::ExtendedSelection);
       setAlternatingRowColors(true);
       setColumnCount(2);
       updateHeaders();
 
-      // setItemDelegateForColumn(1, new NonEditableItemDelegate (this));// col1 non-editable, so that col0 editable only (itemChanged) 
+      // setItemDelegateForColumn(1, new NonEditableItemDelegate (this));// col1 non-editable, so that col0 editable only (itemChanged)
 
       header()->setSectionResizeMode(0, QHeaderView::Interactive);
       header()->setSectionResizeMode(1, QHeaderView::Fixed);
@@ -56,15 +53,12 @@ MixerTreeWidget::MixerTreeWidget(QWidget *parent) :
 void MixerTreeWidget::setScore(Score* score)
       {
       clear();
-      _score = score;
-
       if (score)
             populateTree(score);
 
       if (savedSelectionTopLevelIndex == MIXERTREE_INVALID_INDEX && topLevelItemCount() > 0) {
             setCurrentItem(this->itemAt(0,0));
             }
-
      restoreTreeSelection();
       }
 
@@ -152,8 +146,8 @@ void MixerTreeWidget::populateTree(Score* score) {
                               part,
                               widgetInstrument);
                         }
-                  // widgetInstrument->setExpanded(part->isExpanded()); //TODO part.h  instrument not part
-                  };
+                  if(widgetInstrument) widgetInstrument->setExpanded(part->isExpanded()); //TODO part.h  instrument expanded
+                  }
             }
       }
 
@@ -173,14 +167,11 @@ void MixerTreeWidget::selectedItemChanged()
       }
 
 void MixerTreeWidget::updateHeaders() {
-
       if (!Mixer::getOptions()->secondaryModeOn()) {
             setHeaderLabels({tr("Name"), tr("Volume")});
             return;
             }
-
       QString secondary;
-
       switch (Mixer::getOptions()->secondarySlider()) {
             case MixerOptions::MixerSecondarySlider::Pan:
                   secondary = tr("Pan");
@@ -241,12 +232,11 @@ void MixerTreeWidget::setMasterChannelTreeWidget(QTreeWidget* masterChannelTreeW
       {
       this->masterChannelTreeWidget = masterChannelTreeWidget;
       }
-      
+
 void MixerTreeWidget::resetAll()
       {
       resetAllSettingVolume(64);
       }
- 
 
 // a different approach would be to ask the SCORE/EXCERPT to do this
 // or to build a model, rather than relying on the TreeWidget's default
@@ -256,7 +246,6 @@ void MixerTreeWidget::resetAllSettingVolume(int volume)
       //TODO: write the traverse the tree code once and then
       // get the traverse as an array to which we apply operations
       // but THIS may be the only case, in which cas, it's OK
-      
       for (int itemIndex = 0; itemIndex < topLevelItemCount(); itemIndex++) {
             MixerTrackItem* item = static_cast<MixerTrackItem*>(topLevelItem(itemIndex));
             item->resetWithVolume(volume);
@@ -266,69 +255,34 @@ void MixerTreeWidget::resetAllSettingVolume(int volume)
             }
       }
 
-bool MixerTreeWidget::anyToExpand()
-      {
-      // if any item has children and is not expanded
-      for (int itemIndex = 0; itemIndex < topLevelItemCount(); itemIndex++) {
-            QTreeWidgetItem* item = topLevelItem(itemIndex);
-            if (item->childCount() > 0 && !item->isExpanded())
-                  return true;
-            }
-      return false;
-      }
-      
-      
-bool MixerTreeWidget::anyToCollapse()
-      {
-      // if any items have children and are expanded
-      for (int itemIndex = 0; itemIndex < topLevelItemCount(); itemIndex++) {
-            QTreeWidgetItem* item = topLevelItem(itemIndex);
-            if (item->childCount() > 0 && item->isExpanded())
-                  return true;
-            }
-      return false;
-      }
-
 void MixerTreeWidget::itemCollapsedOrExpanded(MixerTrackItem* item) {
-
-      if (item && item->isPart()) {
+      if (item->trackType() == MixerTrackItem::TrackType::PART) {
             item->part()->setExpanded(item->isExpanded());
             }
       }
 
-// Used to save the item currently selected in the tree when performing operations
-// such as changing the patch. The way changing patches is implemented is that it
-// triggers a new setScore() method on the mixer which, in turn, and of necessity,
-// forces the channel strips to be built again from scratch. Not clear patch changes
-// have to do this, but, currently, they do. This works around that.
-
-
+//TODO rebase jojo 3.x mixer
 
 void MixerTreeWidget::restoreTreeSelection()
       {
       int topLevel = savedSelectionTopLevelIndex;
       savedSelectionTopLevelIndex = MIXERTREE_INVALID_INDEX;   // indicates no selection currently saved
-
       // there are no items, so we can't select one
       if (topLevelItemCount() == 0) {
             emit selectedTrackChanged(nullptr);
             return;
       }
-
       blockSignals(true);
-
       if (topLevel == MIXERTREE_INVALID_INDEX || topLevel < 0 || topLevel >=  topLevelItemCount()) {
             // nothing saved or the saved row is out of range - go to the top of the tree
             setCurrentItem(this->itemAt(0,0));
             }
       else {
-
             MixerTrackItem* itemOrItsParent = static_cast<MixerTrackItem*>(topLevelItem(topLevel));
-
             if (!itemOrItsParent) {
                   // the saved row is out of range - go to the top of the tree
                   setCurrentItem(this->itemAt(0,0));
-;                 }
+                 }
             else {
                   if (savedSelectionChildIndex == MIXERTREE_INVALID_INDEX
                       || savedSelectionChildIndex >= itemOrItsParent->childCount()) {
@@ -341,33 +295,26 @@ void MixerTreeWidget::restoreTreeSelection()
                         }
                   }
             }
-
       blockSignals(false);
       emit selectedTrackChanged(static_cast<MixerTrackItem*>(currentItem()));
       }
 
-
-
 void MixerTreeWidget::saveTreeSelection()
       {
       MixerTrackItem* item = static_cast<MixerTrackItem*>(currentItem());
-
       if (!item) {
             savedSelectionTopLevelIndex = MIXERTREE_INVALID_INDEX;
             return;
             }
-
       savedSelectionTopLevelIndex = indexOfTopLevelItem(item);
       if (savedSelectionTopLevelIndex != MIXERTREE_INVALID_INDEX) {
             // current selection is a top level item
             savedSelectionChildIndex = MIXERTREE_INVALID_INDEX;
             return;
             }
-
       MixerTrackItem* parentOfCurrentItem = static_cast<MixerTrackItem*>(currentItem()->parent());
       savedSelectionTopLevelIndex = indexOfTopLevelItem(parentOfCurrentItem);
       savedSelectionChildIndex = parentOfCurrentItem->indexOfChild(item);
       }
-
 
 } // namespace Ms
