@@ -275,6 +275,8 @@ class Instrument {
 
       bool _singleNoteDynamics;
 
+      QString _mixerFolder;
+
    public:
       Instrument(QString id="");
       Instrument(const Instrument&);
@@ -363,6 +365,8 @@ class Instrument {
       void switchExpressive(MasterScore* score, Synthesizer* synth, bool expressive, bool force = false);
       QColor getNameColor() const                     { return _nameColor; }
       void setNameColor(const QColor &nameColor)      { _nameColor = nameColor; }
+
+      QString mixerFolder() const { return _mixerFolder; }
       };
 
 //---------------------------------------------------------

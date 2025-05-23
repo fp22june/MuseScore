@@ -21,56 +21,44 @@
 #define __MIXERTRACKCHANNEL_H__
 
 #include "ui_mixertrackchannel.h"
-#include "mixertrackitem.h"
-#include "mixertreewidgetitem.h"
-#include "libmscore/instrument.h"
 
-
-// obq-note
-// This class has been re-purposed for the new mixer design.
-// This is the Widget that is included in the TreeView
-// It shows volume, mute, and solo controls.
-//
-// It is a ChannelListener for the channel represented by the
-// mixerTrackItem. So when the underlying channel changes this
-// object will receive a propertyChanged call.
+#include "libmscore/instrument.h"   // ChannelListener
 
 namespace Ms {
-
 class MixerTrackItem;
-class MixerTreeWidgetItem;
-//---------------------------------------------------------
-//   MixerTrack
-//---------------------------------------------------------
+class MixerTreeWidget;
 
-class MixerTrackChannel : public QWidget, public Ui::MixerTrackChannel, public ChannelListener
+class MixerTrackChannel
+      : public QWidget,
+        public Ui::MixerTrackChannel,
+        public ChannelListener
       {
       Q_OBJECT
 
-      MixerTreeWidgetItem * treeWidgetItem;   // to enable selecting item when user interacts with controls
+      MixerTrackItem* _item;
+      MixerTreeWidget* _tree;
 
-      void setupAdditionalUi();
-      void setupSlotsAndSignals();
+      // void setupAdditionalUi();
+      // void setupSlotsAndSignals();
       void update();
-      MixerTrackItem* mixerTrackItem() { return treeWidgetItem->mixerTrackItem(); };
       
-public slots:
+  public slots:
       void stripMuteToggled(bool);
       void stripSoloToggled(bool);
       void stripVolumeSliderMoved(int);
       void trackColorEdited(QColor color);
-      void takeSelection();
+      // void takeSelection();
 
       void updateUiControls(); // for showing/hiding color and panning
 
-      signals:
-      void userInteraction(QTreeWidgetItem*);
+  // signals:
+  //     void selectTreeItem(MixerTrackItem*);
 
-protected:
+  protected:
       void propertyChanged(Channel::Prop property) override;      // ChannelListener method
             
-public:
-      explicit MixerTrackChannel(MixerTreeWidgetItem*);
+  public:
+      MixerTrackChannel(MixerTrackItem*);
 
       };
 

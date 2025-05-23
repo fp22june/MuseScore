@@ -21,26 +21,28 @@
 #define __MIXERDETAILS_H__
 
 #include "ui_mixerdetails.h"
-#include "libmscore/instrument.h"   // needed for ChannelListener
-#include "mixertrackitem.h"
-#include "mixer.h"
 
-
+#include "libmscore/instrument.h"   // ChannelListener
 
 namespace Ms {
+class Mixer;
+class MixerTrackItem;
 
-
-class MixerDetails : public QWidget, public Ui::MixerDetails, public ChannelListener
+class MixerDetails
+      : public QWidget,
+        public Ui::MixerDetails,
+        public ChannelListener
       {
       Q_OBJECT
 
-      Mixer* mixer;
+      Mixer* _mixer;
       MixerTrackItem* selectedMixerTrackItem = nullptr;
       void setupSlotsAndSignals();
       QGridLayout* mutePerVoiceGrid;
       QList<QWidget*> voiceButtons; // used for dynamically updating tabOrder
 
-      void updateName();
+      void updatePartName();
+      void updateChannelName();
       void updatePatch();
       void updateVolume();
       void updatePan();
@@ -54,11 +56,14 @@ class MixerDetails : public QWidget, public Ui::MixerDetails, public ChannelList
       void updateTabOrder();
             
    public slots:
+      void partNameChanged();
+      void channelNameChanged();
+      
       void drumsetCheckboxToggled(bool);
       void patchComboEdited(int);
-      void volumeSliderMoved(int);
+      // void volumeSliderMoved(int);
       void volumeSpinBoxEdited(int);
-      void panSliderMoved(int);
+      // void panSliderMoved(int);
       void panSpinBoxEdited(int);
       void midiChannelOrPortEdited(int);
       void reverbSliderMoved(int);
@@ -77,7 +82,6 @@ class MixerDetails : public QWidget, public Ui::MixerDetails, public ChannelList
 
       MixerTrackItem* getSelectedMixerTrackItem() { return selectedMixerTrackItem; };
       };
-
 
 class MixerDetails;
 

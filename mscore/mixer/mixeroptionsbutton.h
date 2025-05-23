@@ -24,12 +24,13 @@ namespace Ms {
 
 class Mixer;
       
-class MixerOptionsButton : public QToolButton
+class MixerOptionsButton : public QPushButton
       {
       Q_OBJECT
 
       QMenu* menu;
 
+      QAction* showDetails;
       QAction* showDetailsToTheSide;
       QAction* showMidiOptions;
       QAction* showTrackColors;

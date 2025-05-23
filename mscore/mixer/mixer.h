@@ -36,38 +36,29 @@ class MixerContextMenu;
 class MixerOptions;
 class MixerMasterChannel;
 
-//---------------------------------------------------------
-//   Mixer
-//---------------------------------------------------------
-
-
 class Mixer : public QDockWidget, public Ui::Mixer
       {
       Q_OBJECT
 
-      public:
-            enum class NudgeDirection : int { Up, Down };
+  public:
+      enum class NudgeDirection : int { Up, Down };
+      static MixerOptions* options;
+      static MixerOptions* getOptions() {return options;};   // UI options, e.g. show/hide track colors, slider modes
 
-      Score* _score = nullptr;                        // playback score
-      Score* _activeScore = nullptr;                  // may be a _score itself or its excerpt;
-      QGridLayout* gridLayout;                        // main layout - used to show/hide & position details panel
-      MixerMasterChannel* masterChannelWidget;        // master volume + play / loop widget
-
-      static MixerOptions* options;                   // UI options, e.g. show/hide track colors, slider modes
-
+  private:
+      Score* _score;                            // playback score
+      Score* _activeScore;                      // may be a _score itself or its excerpt;
+      MixerMasterChannel* _masterChannelWidget; // master volume + play / loop widget
+          
       EnablePlayForWidget* enablePlay;
 
-      int savedSelectionTopLevelIndex;
-      int savedSelectionChildIndex;
-
       void setupSlotsAndSignals();
-      void setupAdditionalUi();
       void showDetails(bool);
       void setPlaybackScore(Score*);
 
       void enterSecondarySliderMode(bool enter);
 
-      QTimer* shiftKeyMonitorTimer;
+      QTimer* ctrlKeyMonitorTimer;
       MixerKeyboardControlFilter* keyboardFilter;     // process key presses for the mixer AND the details panel
       virtual void closeEvent(QCloseEvent*) override;
       virtual void showEvent(QShowEvent*) override;
@@ -77,7 +68,7 @@ class Mixer : public QDockWidget, public Ui::Mixer
 
    private slots:
       void partOnlyCheckBoxToggled(bool checked);
-      void shiftKeyMonitor();
+      void ctrlKeyMonitor();
 
    public slots:
       void updateTracks();
@@ -85,7 +76,6 @@ class Mixer : public QDockWidget, public Ui::Mixer
       void masterVolumeChanged(double val);
       void synthGainChanged(float val);
      
-
    signals:
       void closed(bool);
 
@@ -95,6 +85,7 @@ class Mixer : public QDockWidget, public Ui::Mixer
 
    public:
       Mixer(QWidget* parent);
+      void adjustMasterVolumeTreeWidgetHeaderWidth(QHeaderView*);
       void setScore(Score*);
 
       MixerDetails* mixerDetails;                                 // TODO: mixerDetails - does it NEED to be public?
@@ -103,24 +94,17 @@ class Mixer : public QDockWidget, public Ui::Mixer
       void nudgeMainSlider(NudgeDirection direction);
       int nudge(int currentValue, NudgeDirection direction, int lowerLimit, int upperLimit);
 
-
-      static MixerOptions* getOptions() { return options; };
-            
       };
-
-//MARK:- Class MixkerKeyboardControlFilter
 
 class MixerKeyboardControlFilter : public QObject
       {
       Q_OBJECT
-      Mixer* mixer;
+      Mixer* _mixer;
    protected:
       bool eventFilter(QObject *obj, QEvent *event) override;
-      
    public:
-      MixerKeyboardControlFilter(Mixer* mixer);
+      MixerKeyboardControlFilter(Mixer*);
       };
-
 
 } // namespace Ms
 #endif

@@ -19,11 +19,13 @@
 
 #include "mixermasterchannel.h"
 
-#include "musescore.h"                    // required for getAction()
-#include "audio/midi/msynthesizer.h"     // required for synti->gain() / setGain()
+#include "musescore.h"                    // getAction()
+#include "audio/midi/msynthesizer.h"     // synti->gain() / setGain()
+#include "libmscore/instrument.h"
 
-#include "mixer/mixer.h"
+#include "mixer.h"
 #include "mixeroptions.h"
+#include "mixertrackitem.h"
 
 namespace Ms {
 
@@ -48,7 +50,6 @@ MixerMasterChannel::MixerMasterChannel()
       setupAdditionalUi();
       setupSlotsAndSignals();
       }
-
 
 void MixerMasterChannel::setupSlotsAndSignals()
       {

@@ -21,13 +21,12 @@
 #define __MIXERMASTERCHANNEL_H__
 
 #include "ui_mixermasterchannel.h"
-#include "mixer/mixertrackitem.h"
-#include "libmscore/instrument.h"
-
 
 namespace Ms {
 
-class MixerMasterChannel : public QWidget, public Ui::MixerMasterChannel
+class MixerMasterChannel
+      : public QWidget,
+        public Ui::MixerMasterChannel
       {
       Q_OBJECT
 
@@ -35,12 +34,12 @@ class MixerMasterChannel : public QWidget, public Ui::MixerMasterChannel
       void setupSlotsAndSignals();
       void update();
 
-      public slots:
+  public slots:
       void masterVolumeSliderMoved(int);
       void updateUiControls(); // for showing/hiding color
 
-      public:
-      explicit MixerMasterChannel();
+  public:
+      MixerMasterChannel();
       void volumeChanged(float);
       };
 

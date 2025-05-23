@@ -48,7 +48,7 @@ void GainSlider::setDoubleValue(double newValue)
       if (newValue == 0.0f)
             positionValue = _minValue;
       else {
-            positionValue = fast_log10(newValue) * 20.0f;
+            positionValue = fast_log10(newValue) * 20.0f; // db -1000->-60, -100->-40, -10->-20, 1->0, 10->20, 100->40
             if (positionValue < _minValue)
                   positionValue = _minValue;
       }
@@ -61,7 +61,7 @@ void GainSlider::setDoubleValue(double newValue)
             }
 }
 
-double GainSlider::doubleValue() const
+double GainSlider::doubleValue() const //gain
       {
       return pow(10.0, double(value())*0.05f);
       }

@@ -17,51 +17,69 @@
 //  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //=============================================================================
 
-
 #ifndef __MIXERTREEWIDGET__
 #define __MIXERTREEWIDGET__
 
-
-#include "libmscore/score.h"
-#include "mixer/mixertrackitem.h"
+#include "mixertrackitem.h" //enums
 
 namespace Ms {
+class Score;
+class Part;
+class Instrument;
+class Channel;
+class MixerTrackItem;
 
 class MixerTreeWidget : public QTreeWidget
       {
       Q_OBJECT
 
-      int savedSelectionTopLevelIndex;
-      int savedSelectionChildIndex;
-      void setupSlotsAndSignals();
-      QTreeWidget* masterChannelTreeWidget;
+      int _savedSelectionTopLevelIndex;
+      int _savedSelectionChildIndex;
+      QTreeWidgetItem* _draggedItem;
+      Score* _score;
+
+      void addCol1(MixerTrackItem*, Channel*);
+      MixerTrackItem* trackItemFolder(QString foldername, MixerTrackItem* parentItem, int sortOrder, QList<MixerTrackItem*> folders);
+      MixerTrackItem* trackItem(
+            MixerItemLevel,
+            MixerItemPartCat,
+            Channel*,
+            Instrument*,
+            Part*,
+            MixerTrackItem*,
+            int,
+            QList<MixerTrackItem*>);
       void populateTree(Score* score);
-      
-      bool anyToExpand();     // used to turn on / off expand all menu
-      bool anyToCollapse();   // used to turn on / off collapse all menu
+
       void resetAll();
       void resetAllSettingVolume(int volume);
-      void resetItem(int volume);
 
-private slots:
-      void adjustHeaderWidths();
-      void itemChanged(QTreeWidgetItem* treeWidgetItem, int column);
-      void itemCollapsedOrExpanded(QTreeWidgetItem* item);
+      void dragEnterEvent(QDragEnterEvent* event) override;
+      void dragMoveEvent(QDragMoveEvent* event) override;
+      void dropEvent(QDropEvent* event) override;
+
+  private slots:
+      void itemCollapsedOrExpanded(MixerTrackItem* item);
       void selectedItemChanged();
 
-public:
-      explicit MixerTreeWidget(QWidget *parent = nullptr);
+  public slots:
+      void selectTreeItem(MixerTrackItem* item);
+
+  public:
+      MixerTreeWidget(QWidget* parent);
+      void emitHeaderWidthChange();
       void saveTreeSelection();
       void restoreTreeSelection();
       void setSecondaryMode(bool secondaryMode);
       void updateSliders();
       void updateHeaders();
       void setScore(Score* score);
-      void setMasterChannelTreeWidget(QTreeWidget* masterChannelTreeWidget);
 
-signals:
+      void updateTree();
+
+  signals:
       void selectedTrackChanged(MixerTrackItem* trackItem);
-      void headersResized();
+      void headerWidthChanged(QHeaderView*);
 
       };
 

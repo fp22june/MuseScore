@@ -22,9 +22,7 @@
 #include <QtGlobal>
 #include <qmessagebox.h>
 #include <accessibletoolbutton.h>
-
 #include "musescore.h"
-
 #include "libmscore/excerpt.h"
 #include "libmscore/score.h"
 #include "libmscore/part.h"
@@ -33,15 +31,15 @@
 #include "synthcontrol.h"
 #include "audio/midi/msynthesizer.h"
 #include "preferences.h"
+#include "enableplayforwidget.h"
 
 #include "mixerdetails.h"
+#include "mixertreewidget.h"
 #include "mixertrackchannel.h"
 #include "mixermasterchannel.h"
 #include "mixertrackitem.h"
-#include "mixertreewidgetitem.h"
 #include "mixeroptions.h"
 #include "mixeroptionsbutton.h"
-#include "mixertreewidget.h"
 
 namespace Ms {
 
@@ -55,82 +53,63 @@ namespace Ms {
       __x->setChecked(__y); \
       __x->blockSignals(false);
 
+MixerOptions* Mixer::options = new MixerOptions();
 
-// initialise the static
-MixerOptions* Mixer::options = new MixerOptions(); // will read from settings
-
-//---------------------------------------------------------
-//   Mixer
-//---------------------------------------------------------
-//MARK:- create and setup
 Mixer::Mixer(QWidget* parent)
       : QDockWidget("Mixer", parent)
       {
+      _score = nullptr;
+      _activeScore = nullptr;
+      _masterChannelWidget = nullptr;
 
       setupUi(this);
 
       setWindowFlags(Qt::Tool);
       setWindowFlags(this->windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
-      setupAdditionalUi();
+      //setupAdditionalUi
+      masterVolumeTreeWidget->clear();
+      masterVolumeTreeWidget->setColumnCount(2);
+      masterVolumeTreeWidget->header()->setSectionResizeMode(0, QHeaderView::Fixed);
+      masterVolumeTreeWidget->header()->setSectionResizeMode(1, QHeaderView::Fixed);
+      masterVolumeTreeWidget->setSelectionMode(QAbstractItemView::NoSelection);
+      QTreeWidgetItem* masterVolumeItem = new QTreeWidgetItem(masterVolumeTreeWidget);
+      masterVolumeItem->setText(0, tr("Master"));
+      masterVolumeTreeWidget->addTopLevelItem(masterVolumeItem);
+      _masterChannelWidget = new MixerMasterChannel();
+      masterVolumeTreeWidget->setItemWidget(masterVolumeItem, 1, _masterChannelWidget);
 
-      gridLayout = new QGridLayout(dockWidgetContents);
+      showDetailsButton->setTarget(this);
+
       mixerDetails = new MixerDetails(this);
-
       showDetails(options->showingDetails());
 
       keyboardFilter = new MixerKeyboardControlFilter(this);
       this->installEventFilter(keyboardFilter);
       mixerTreeWidget->installEventFilter(keyboardFilter);
 
-      savedSelectionTopLevelIndex = -1;   // no saved selection (bit of a magic number :( )
-
+      connect(mixerTreeWidget, &MixerTreeWidget::headerWidthChanged, this, &Mixer::adjustMasterVolumeTreeWidgetHeaderWidth);
+      
       enablePlay = new EnablePlayForWidget(this);
-      setupSlotsAndSignals();
+      
+      connect(synti,SIGNAL(gainChanged(float)),SLOT(synthGainChanged(float)));
+      connect(partOnlyCheckBox, SIGNAL(toggled(bool)), SLOT(partOnlyCheckBoxToggled(bool)));
+
       updateTracks();
       updateUiOptions();
       retranslate(true);
 
-      shiftKeyMonitorTimer = new QTimer(this);
-      connect(shiftKeyMonitorTimer, SIGNAL(timeout()), this, SLOT(shiftKeyMonitor()));
-      shiftKeyMonitorTimer->start(100);
+      ctrlKeyMonitorTimer = new QTimer(this);
+      connect(ctrlKeyMonitorTimer, SIGNAL(timeout()), this, SLOT(ctrlKeyMonitor()));
+      ctrlKeyMonitorTimer->start(100);
       }
 
-
-void Mixer::setupSlotsAndSignals()
-      {
-      connect(synti,SIGNAL(gainChanged(float)),SLOT(synthGainChanged(float)));
-      connect(partOnlyCheckBox, SIGNAL(toggled(bool)), SLOT(partOnlyCheckBoxToggled(bool)));
+void Mixer::adjustMasterVolumeTreeWidgetHeaderWidth(QHeaderView* header) {
+      masterVolumeTreeWidget->header()->resizeSection(0, header->sectionSize(0));
+      masterVolumeTreeWidget->header()->resizeSection(1, header->sectionSize(1));
       }
 
-
-void Mixer::setupAdditionalUi()
-      {
-      //setup the master channel widget (volume control and Play and Loop button)
-
-      masterChannelWidget = new MixerMasterChannel();
-      masterVolumeTreeWidget->clear();
-      QTreeWidgetItem* masterVolumeItem = new QTreeWidgetItem(masterVolumeTreeWidget);
-      masterVolumeItem->setText(0, tr("Master"));
-      masterVolumeTreeWidget->addTopLevelItem(masterVolumeItem);
-      masterVolumeTreeWidget->setItemWidget(masterVolumeItem, 1, masterChannelWidget);
-
-      masterVolumeTreeWidget->setColumnCount(2);
-      masterVolumeTreeWidget->header()->setSectionResizeMode(0, QHeaderView::Fixed);
-      masterVolumeTreeWidget->header()->setSectionResizeMode(1, QHeaderView::Fixed);
-      masterVolumeTreeWidget->setSelectionMode(QAbstractItemView::NoSelection);
-
-      mixerTreeWidget->setMasterChannelTreeWidget(masterVolumeTreeWidget);
-
-      showDetailsButton->setTarget(this);
-      }
-
-
-
-//MARK:- main interface
-
-void MuseScore::showMixer(bool visible)
-      {
+void MuseScore::showMixer(bool visible) {
       QAction* toggleMixerAction = getAction("toggle-mixer");
       if (mixer == 0) {
             mixer = new Mixer(this);
@@ -147,14 +126,7 @@ void MuseScore::showMixer(bool visible)
       mixer->setScore(cs);
       }
 
-//---------------------------------------------------------
-//   setScore
-//---------------------------------------------------------
-
-void Mixer::setScore(Score* score)
-      {
-      // No equality check, this function seems to need to cause
-      // mixer update every time it gets called.
+void Mixer::setScore(Score* score) {
       _activeScore = score;
       setPlaybackScore(_activeScore ? _activeScore->masterScore()->playbackScore() : nullptr);
 
@@ -162,12 +134,7 @@ void Mixer::setScore(Score* score)
       partOnlyCheckBox->setEnabled(_activeScore && !_activeScore->isMaster());
       }
 
-//---------------------------------------------------------
-//   setPlaybackScore
-//---------------------------------------------------------
-
-void Mixer::setPlaybackScore(Score* score)
-      {
+void Mixer::setPlaybackScore(Score* score) {
       if (_score != score) {
             _score = score;
             //mixerDetails->setTrack(0);
@@ -175,10 +142,7 @@ void Mixer::setPlaybackScore(Score* score)
       updateTracks();
       }
 
-
-
-void Mixer::showDetails(bool visible)
-      {
+void Mixer::showDetails(bool visible) {
       QSize currentTreeWidgetSize = mixerTreeWidget->size();
       QSize minTreeWidgetSize = mixerTreeWidget->minimumSize();   // respect settings from QT Creator / QT Designer
       QSize maxTreeWidgetSize = mixerTreeWidget->maximumSize();   // respect settings from QT Creator / QT Designer
@@ -208,18 +172,12 @@ void Mixer::showDetails(bool visible)
       mixerTreeWidget->setMaximumSize(maxTreeWidgetSize);
       }
 
-
-
-void Mixer::enterSecondarySliderMode(bool secondaryMode)
-      {
+void Mixer::enterSecondarySliderMode(bool secondaryMode) {
       options->setSecondaryModeOn(secondaryMode);
       mixerTreeWidget->setSecondaryMode(secondaryMode);
       }
 
-
-void Mixer::partOnlyCheckBoxToggled(bool checked)
-      {
-
+void Mixer::partOnlyCheckBoxToggled(bool checked) {
       if (!_activeScore || !_activeScore->excerpt())
             return;
 
@@ -234,9 +192,7 @@ void Mixer::partOnlyCheckBoxToggled(bool checked)
             }
       }
 
-
-      void Mixer::nudgeMainSlider(NudgeDirection direction)
-      {
+      void Mixer::nudgeMainSlider(NudgeDirection direction) {
             MixerTrackItem* trackItem = mixerDetails->getSelectedMixerTrackItem();
             int proposedValue = nudge(trackItem->getVolume(), direction, 0, 127);
             int acceptedValue = trackItem->setVolume(proposedValue);
@@ -246,146 +202,75 @@ void Mixer::partOnlyCheckBoxToggled(bool checked)
             }
       }
 
-      void Mixer::nudgeSecondarySlider(NudgeDirection direction)
-      {
+      void Mixer::nudgeSecondarySlider(NudgeDirection direction) {
             MixerTrackItem* trackItem = mixerDetails->getSelectedMixerTrackItem();
-
             int proposedValue;
-
-            switch (options->secondarySlider()) {
-                  case MixerOptions::MixerSecondarySlider::Pan:
-                        proposedValue = nudge(trackItem->getPan(), direction, -63, 63);
-                        break;
-                  case MixerOptions::MixerSecondarySlider::Reverb:
-                        proposedValue = nudge(trackItem->getReverb(), direction, 0, 127);
-                        break;
-                  case MixerOptions::MixerSecondarySlider::Chorus:
-                        proposedValue = nudge(trackItem->getChorus(), direction, 0, 127);
-                        break;
-            }
-
             int acceptedValue;
             switch (options->secondarySlider()) {
                   case MixerOptions::MixerSecondarySlider::Pan:
+                        proposedValue = nudge(trackItem->getPan(), direction, -63, 63);
                         acceptedValue = trackItem->setPan(proposedValue);
                         break;
                   case MixerOptions::MixerSecondarySlider::Reverb:
+                        proposedValue = nudge(trackItem->getReverb(), direction, 0, 127);
                         acceptedValue = trackItem->setReverb(proposedValue);
                         break;
                   case MixerOptions::MixerSecondarySlider::Chorus:
+                        proposedValue = nudge(trackItem->getChorus(), direction, 0, 127);
                         acceptedValue = trackItem->setChorus(proposedValue);
                         break;
             }
-
-            if (proposedValue != acceptedValue) {
-                  QApplication::beep();
-            }
-
+            //if (proposedValue != acceptedValue) {
+            //      QApplication::beep();
+            //}
       }
-
-
-
 
 //MARK:- update ui
 
-void Mixer::updateUiOptions()
-{
+void Mixer::updateUiOptions() {
       // track colors and what is shown in the details list
       mixerTreeWidget->updateSliders();
       mixerDetails->updateUiOptions();
 
       // layout of master volume (is affected by presence or absence or track color
-      masterChannelWidget->updateUiControls();
+      _masterChannelWidget->updateUiControls();
 
       showDetails(options->showingDetails());
 
       bool showMasterVol = options->showMasterVolume();
 
+      masterVolumeTreeWidget->setVisible(showMasterVol);
+
       if (options->showDetailsOnTheSide()) {
-            // show TO THE SIDE case
-
-            // addWidget(row, column, rowSpan, columnSpan, [Qt::Alignment])
-            gridLayout->addWidget(partOnlyCheckBox, 0, 1, 1, 1, Qt::AlignRight);
-            gridLayout->addWidget(showDetailsButton, 0, 0, 1, 1);
-            gridLayout->addWidget(mixerTreeWidget, 1, 0, 1, 2);
-            if (showMasterVol) {
-                  gridLayout->addWidget(masterVolumeTreeWidget, 2, 0, 1, 2);
-                  masterVolumeTreeWidget->setVisible(true);
-            }
-            else {
-                  masterVolumeTreeWidget->setVisible(false);
+            h1->addWidget(mixerDetails, 0, Qt::AlignTop);
+      } else {
+            v1->addWidget(mixerDetails, 0, Qt::AlignTop);
             }
 
-            gridLayout->addWidget(mixerDetails, 0, 2, showMasterVol ? 3 : 2, 1, Qt::AlignTop);
-      }
-      else {
-            // show BELOW case
-
-            // addWidget(row, column, rowSpan, columnSpan, [Qt::Alignment])
-            gridLayout->addWidget(partOnlyCheckBox, 0, 1, 1, 1, Qt::AlignRight);
-            gridLayout->addWidget(showDetailsButton, 0, 0, 1, 1);
-            gridLayout->addWidget(mixerTreeWidget, 1, 0, 1, 2);
-            if (showMasterVol) {
-                  gridLayout->addWidget(masterVolumeTreeWidget, 2, 0, 1, 2);
-                  masterVolumeTreeWidget->setVisible(true);
-            }
-            else {
-                  masterVolumeTreeWidget->setVisible(false);
-            }
-
-            gridLayout->addWidget(mixerDetails, showMasterVol ? 3 : 2, 0, 1 , 2, Qt::AlignTop);
-
-            gridLayout->setRowStretch(1,10);
-      }
-
-      // cover case where the LOCK has changed (but there's no change in SHIFT key)
+      // cover case where the LOCK has changed (but there's no change in ctrl key)
       enterSecondarySliderMode(options->secondaryModeOn());
-}
+      }
 
-
-
-
-//---------------------------------------------------------
-//   retranslate
-//---------------------------------------------------------
-
-void Mixer::retranslate(bool firstTime)
-      {
+void Mixer::retranslate(bool firstTime) {
       setWindowTitle(tr("Mixer"));
       if (firstTime)
             return;
-
       retranslateUi(this);
       mixerDetails->retranslateUi(mixerDetails);
       mixerTreeWidget->updateHeaders();
       //TODO: retranslate instrument names (but do they have translations?)
       }
 
-
 //MARK:- listen to changes from elsewhere
-//---------------------------------------------------------
-//   synthGainChanged
-//---------------------------------------------------------
 
-void Mixer::synthGainChanged(float)
-      {
-      masterChannelWidget->volumeChanged(synti->gain());
+void Mixer::synthGainChanged(float) {
+      _masterChannelWidget->volumeChanged(synti->gain());
       }
 
-//---------------------------------------------------------
-//   masterVolumeChanged
-//---------------------------------------------------------
-
-void Mixer::masterVolumeChanged(double decibels)
-      {
+void Mixer::masterVolumeChanged(double decibels) {
       float gain = qBound(0.0f, powf(10, (float)decibels), 1.0f);
       synti->setGain(gain);
       }
-
-
-//---------------------------------------------------------
-//   midiPrefsChanged
-//---------------------------------------------------------
 
 // sent from Preferences dialogue - not clear it did anything in
 // previous version of mixer. With this design, might be better
@@ -393,26 +278,16 @@ void Mixer::masterVolumeChanged(double decibels)
 // perhaps to honour it but also disable the show/hide on the
 // dropdown menu - that seems a bit daft though.
 //
-void Mixer::midiPrefsChanged(bool)
-      {
-      updateTracks();
-      }
-
+void Mixer::midiPrefsChanged(bool) { updateTracks(); }
 
 //MARK:- window events
 
-void Mixer::closeEvent(QCloseEvent* ev)
-      {
+void Mixer::closeEvent(QCloseEvent* ev) {
       emit closed(false);
       QDockWidget::closeEvent(ev);
       }
 
-//---------------------------------------------------------
-//   showEvent
-//---------------------------------------------------------
-
-void Mixer::showEvent(QShowEvent* e)
-      {
+void Mixer::showEvent(QShowEvent* e) {
       if (e->spontaneous() && !isFloating()) {
             QDockWidget::showEvent(e);
             }
@@ -427,13 +302,7 @@ void Mixer::showEvent(QShowEvent* e)
             getAction("toggle-mixer")->setChecked(true);
       }
 
-
-//---------------------------------------------------------
-//   hideEvent
-//---------------------------------------------------------
-
-void Mixer::hideEvent(QHideEvent* e)
-      {
+void Mixer::hideEvent(QHideEvent* e) {
       QDockWidget::hideEvent(e);
       if (!e->spontaneous())
             getAction("toggle-mixer")->setChecked(false);
@@ -441,23 +310,12 @@ void Mixer::hideEvent(QHideEvent* e)
 
 //MARK:- keyboard events
 
-//---------------------------------------------------------
-//   eventFilter
-//---------------------------------------------------------
-
-bool Mixer::eventFilter(QObject* object, QEvent* event)
-      {
+bool Mixer::eventFilter(QObject* object, QEvent* event) {
       if (enablePlay->eventFilter(object, event))
             return true;
 
       return QWidget::eventFilter(object, event);
       }
-
-
-
-//---------------------------------------------------------
-//   keyPressEvent
-//---------------------------------------------------------
 
 void Mixer::keyPressEvent(QKeyEvent* ev) {
       if (ev->key() == Qt::Key_Escape && ev->modifiers() == Qt::NoModifier) {
@@ -467,9 +325,7 @@ void Mixer::keyPressEvent(QKeyEvent* ev) {
       QDockWidget::keyPressEvent(ev);
       }
 
-
-void Mixer::shiftKeyMonitor() {
-
+void Mixer::ctrlKeyMonitor() {
       // check if we or any children have the focus
       bool focus = hasFocus();
       if (!focus) {
@@ -478,146 +334,107 @@ void Mixer::shiftKeyMonitor() {
 
             // but now check if what's got the focus is some kind of text
             // box, i.e. a spinbox or a lineedit box
-
             if (dynamic_cast<QLineEdit*>(focusWidget))
                   focus = false;
-
             if (dynamic_cast<QSpinBox*>(focusWidget))
                   focus = false;
-
             if (dynamic_cast<QDoubleSpinBox*>(focusWidget))
                   focus = false;
-
       }
-
       // if not focus but secondary mode is on, turn it off
       if (!focus) {
             if (options->secondaryModeOn())
                   enterSecondarySliderMode(false);
             return;
       }
-
-      // if shift key is down enter secondary mode (if not in it already)
+      // if ctrl key is down enter secondary mode (if not in it already)
       // BUT swap this logic if secondaryModeLock() is true
-      bool shiftedModeActive = options->secondaryModeLock() ? !options->secondaryModeOn() : options->secondaryModeOn();
-
-      if (QApplication::queryKeyboardModifiers() & Qt::KeyboardModifier::ShiftModifier) {
-            if (!shiftedModeActive)
+      bool modeActive = options->secondaryModeLock() ? !options->secondaryModeOn() : options->secondaryModeOn();
+      if (QApplication::queryKeyboardModifiers() & Qt::KeyboardModifier::ControlModifier) {
+            if (!modeActive)
                   enterSecondarySliderMode(true);
             return;
       }
-
-      if (shiftedModeActive)
+      if (modeActive)
             enterSecondarySliderMode(false);
-}
+      }
 
-//---------------------------------------------------------
-//   changeEvent
-//---------------------------------------------------------
-
-void Mixer::changeEvent(QEvent *event)
-      {
+void Mixer::changeEvent(QEvent *event) {
       QDockWidget::changeEvent(event);
       if (event->type() == QEvent::LanguageChange)
             retranslate();
       }
 
-
-
-
-
-//MARK:- manage the mixer tree
-
-//---------------------------------------------------------
-//   updateTracks
-//---------------------------------------------------------
-void Mixer::updateTracks()
-      {
+void Mixer::updateTracks() {
       qDebug()<<"Mixer::updateTracks()";
       mixerTreeWidget->setScore(_score);
       }
 
-
 //MARK:- support classes
 
-MixerKeyboardControlFilter::MixerKeyboardControlFilter(Mixer* mixer) : mixer(mixer)
-      {
+MixerKeyboardControlFilter::MixerKeyboardControlFilter(Mixer* mixer) {
+      _mixer = mixer;
       }
 
-bool MixerKeyboardControlFilter::eventFilter(QObject *obj, QEvent *event)
-      {
-
-            if (event->type() != QEvent::KeyPress) {
-                  return QObject::eventFilter(obj, event);
-            }
-
-            MixerTrackItem* selectedMixerTrackItem = mixer->mixerDetails->getSelectedMixerTrackItem();
-
-            if (!selectedMixerTrackItem)
-                  return QObject::eventFilter(obj, event);
-
-            QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
-
-            bool modified = keyEvent->modifiers() == Qt::ShiftModifier;
-
-            bool secondaryLock = Mixer::getOptions()->secondaryModeLock();
-            modified = secondaryLock ? !modified : modified;
-
-            Qt::Key primaryDown = !secondaryLock ? Qt::Key_Comma : Qt::Key_Less;
-            Qt::Key primaryUp = !secondaryLock ? Qt::Key_Period : Qt::Key_Greater;
-            Qt::Key secondaryDown = !secondaryLock ? Qt::Key_Less : Qt::Key_Comma;
-            Qt::Key secondaryUp = !secondaryLock ? Qt::Key_Greater : Qt::Key_Period;
-
-
-            if (keyEvent->key() == primaryDown && !modified) {
-                  mixer->nudgeMainSlider(Mixer::NudgeDirection::Down);
-                  return true;
-            }
-            if (keyEvent->key() == primaryUp && !modified) {
-                  mixer->nudgeMainSlider(Mixer::NudgeDirection::Up);
-                  return true;
-            }
-
-
-            if (keyEvent->key() == secondaryDown && modified) {
-                  mixer->nudgeSecondarySlider(Mixer::NudgeDirection::Down);
-                  return true;
-            }
-
-            if (keyEvent->key() == secondaryUp && modified) {
-                  mixer->nudgeSecondarySlider(Mixer::NudgeDirection::Up);
-                  return true;
-            }
-
-            if (keyEvent->key() == Qt::Key_M && keyEvent->modifiers() == Qt::NoModifier) {
-                  if (selectedMixerTrackItem) {
-                        selectedMixerTrackItem->setMute(!selectedMixerTrackItem->getMute());
-                  }
-                  return true;
-            }
-
-            if (keyEvent->key() == Qt::Key_S && keyEvent->modifiers() == Qt::NoModifier) {
-                  if (selectedMixerTrackItem) {
-                        selectedMixerTrackItem->setSolo(!selectedMixerTrackItem->getSolo());
-                  }
-                  return true;
-            }
-
+bool MixerKeyboardControlFilter::eventFilter(QObject *obj, QEvent *event) {
+      if (event->type() != QEvent::KeyPress) {
             return QObject::eventFilter(obj, event);
       }
 
-      int Mixer::nudge(int currentValue, NudgeDirection direction, int lowerLimit, int upperLimit) {
+      MixerTrackItem* selectedMixerTrackItem = _mixer->mixerDetails->getSelectedMixerTrackItem();
 
-            int proposedValue = currentValue + (direction == NudgeDirection::Up ? 1 : -1);
+      if (!selectedMixerTrackItem)
+            return QObject::eventFilter(obj, event);
 
-            if (currentValue > upperLimit)
-                  proposedValue = upperLimit;
+      QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
 
-            if (currentValue < lowerLimit)
-                  proposedValue = lowerLimit;
+      bool modified = keyEvent->modifiers() == Qt::ControlModifier;
+      bool secondaryLock = Mixer::getOptions()->secondaryModeLock();
+      modified = secondaryLock ? !modified : modified;
 
-            return proposedValue;
+      Qt::Key primaryDown = !secondaryLock ? Qt::Key_Comma : Qt::Key_Less;
+      Qt::Key primaryUp = !secondaryLock ? Qt::Key_Period : Qt::Key_Greater;
+      Qt::Key secondaryDown = !secondaryLock ? Qt::Key_Less : Qt::Key_Comma;
+      Qt::Key secondaryUp = !secondaryLock ? Qt::Key_Greater : Qt::Key_Period;
+
+      if (keyEvent->key() == primaryDown && !modified) {
+            _mixer->nudgeMainSlider(Mixer::NudgeDirection::Down);
+            return true;
+            }
+      if (keyEvent->key() == primaryUp && !modified) {
+            _mixer->nudgeMainSlider(Mixer::NudgeDirection::Up);
+            return true;
+            }
+      if (keyEvent->key() == secondaryDown && modified) {
+            _mixer->nudgeSecondarySlider(Mixer::NudgeDirection::Down);
+            return true;
+            }
+      if (keyEvent->key() == secondaryUp && modified) {
+            _mixer->nudgeSecondarySlider(Mixer::NudgeDirection::Up);
+            return true;
+            }
+      if (keyEvent->key() == Qt::Key_M && keyEvent->modifiers() == Qt::NoModifier) {
+            if (selectedMixerTrackItem) {
+                  selectedMixerTrackItem->setMute(!selectedMixerTrackItem->getMute());
+                  }
+            return true;
+            }
+      if (keyEvent->key() == Qt::Key_S && keyEvent->modifiers() == Qt::NoModifier) {
+            if (selectedMixerTrackItem) {
+                  selectedMixerTrackItem->setSolo(!selectedMixerTrackItem->getSolo());
+                  }
+            return true;
+            }
+      return QObject::eventFilter(obj, event);
       }
 
+int Mixer::nudge(int currentValue, NudgeDirection direction, int lowerLimit, int upperLimit) {
+      int proposedValue = currentValue + (direction == NudgeDirection::Up ? 1 : -1);
+      if (currentValue > upperLimit)
+            proposedValue = upperLimit;
+      if (currentValue < lowerLimit)
+            proposedValue = lowerLimit;
+      return proposedValue;
+      }
 
 } // namespace Ms
