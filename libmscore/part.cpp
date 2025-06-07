@@ -35,7 +35,6 @@ namespace Ms {
 Part::Part(Score* s)
    : ScoreElement(s)
       {
-      _color   = DEFAULT_COLOR;
       _show    = true;
       _soloist = false;
       _instruments.setInstrument(new Instrument, -1);   // default instrument

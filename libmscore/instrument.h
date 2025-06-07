@@ -20,8 +20,8 @@
 #include "interval.h"
 #include "notifier.hpp"
 #include "stringdata.h"
-
 #include "audio/midi/event.h"
+#include "mscore/mixer/mixercomp.h"
 
 namespace Ms {
 
@@ -100,14 +100,11 @@ struct MidiArticulation {
 //   Channel
 //---------------------------------------------------------
 
-class Channel {
+class Channel : public MixerColorable {
       // this are the indexes of controllers which are always present in
       // Channel init EventList (maybe zero)
       QString _name;
       QString _descr;
-
-      static const int DEFAULT_COLOR = 0x3399ff;
-      int _color;  //rgb
 
       QString _synti;
 
@@ -160,7 +157,7 @@ public:
       void setDescr(const QString& value);
       QString synti() const { return _synti; }
       void setSynti(const QString& value);
-      int color() const { return _color; }
+
       void setColor(int value);
 
       char volume() const { return _volume; }
@@ -253,7 +250,7 @@ class PartChannelSettingsLink final : private ChannelListener {
 //   Instrument
 //---------------------------------------------------------
 
-class Instrument {
+class Instrument : public MixerColorable {
       StaffNameList _longNames;
       StaffNameList _shortNames;
       QString _trackName;
@@ -274,9 +271,6 @@ class Instrument {
       QList<ClefTypeList> _clefType;
 
       bool _singleNoteDynamics;
-
-      QString _mixerFolder;
-
    public:
       Instrument(QString id="");
       Instrument(const Instrument&);
@@ -365,8 +359,6 @@ class Instrument {
       void switchExpressive(MasterScore* score, Synthesizer* synth, bool expressive, bool force = false);
       QColor getNameColor() const                     { return _nameColor; }
       void setNameColor(const QColor &nameColor)      { _nameColor = nameColor; }
-
-      QString mixerFolder() const { return _mixerFolder; }
       };
 
 //---------------------------------------------------------

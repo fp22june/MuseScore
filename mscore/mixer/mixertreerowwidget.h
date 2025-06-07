@@ -17,31 +17,50 @@
 //  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //=============================================================================
 
-#ifndef __MIXERMASTERCHANNEL_H__
-#define __MIXERMASTERCHANNEL_H__
+#ifndef __MIXERTREEROWWIDGET_H__
+#define __MIXERTREEROWWIDGET_H__
 
-#include "ui_mixermasterchannel.h"
+#include "ui_mixertreerowwidget.h"
 
 namespace Ms {
+class MixerTreeRow;
+class MixerTreeWidget;
+struct controlEventParam;
 
-class MixerMasterChannel
+struct MTRViewPayload {
+      bool setName;
+      QString name;
+      bool updateCPickerVis;
+      bool updateColor;
+      bool updateSecMode;
+      bool setSlider;
+      int slider;
+      bool setToolTip;
+      QString toolTip;
+      bool setMute;
+      bool mute;
+      bool setSolo;
+      bool solo;
+      };
+class MixerTreeRowWidget
       : public QWidget,
-        public Ui::MixerMasterChannel
+        public Ui::MixerTreeRowWidget
       {
       Q_OBJECT
 
-      void update();
-
+      MixerTreeRow* _item;
+      MixerTreeWidget* _tree;      
   private slots:
-      void updateVol(float);
+      void stripMuteToggled(bool);
+      void stripSoloToggled(bool);
+      void stripSliderMoved(int);
+      void trackColorEdited(QColor);
   public slots:
-      void masterVolumeSliderMoved(int);
-      void updateUiControls(); // for showing/hiding color
-
+      void view(MTRViewPayload& payload);
+  signals:
+      void controlUiEvent(QString, MixerTreeRow*, QString, controlEventParam);
   public:
-      MixerMasterChannel();
-      void volumeChanged(float);
+      MixerTreeRowWidget(MixerTreeRow*);
       };
-
-} // namespace Ms
-#endif // __MIXERMASTERCHANNEL_H__
+}
+#endif

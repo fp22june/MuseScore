@@ -37,6 +37,7 @@
 #include "undo.h"
 #include "volta.h"
 #include "xml.h"
+#include "mscore/mixer/mixercomp.h"
 
 #include "mscore/preferences.h"
 
@@ -208,6 +209,10 @@ void Score::writeMovement(XmlWriter& xml, bool selectionOnly)
             staffEnd     = nstaves();
             measureStart = first();
             measureEnd   = 0;
+            }
+      
+      for (const MixerFolderUser* mf : qAsConst(_mixerFolders)) {
+            mf->write(xml);
             }
 
       // Let's decide: write midi mapping to a file or not

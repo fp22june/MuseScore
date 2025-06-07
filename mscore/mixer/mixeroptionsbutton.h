@@ -35,7 +35,7 @@ class MixerOptionsButton : public QPushButton
       QAction* showMidiOptions;
       QAction* showTrackColors;
       QAction* showMasterVolume;
-      QAction* secondaryModeLock;
+      QAction* sliderSecModeInvert;
 
       QAction* overallVolumeOverrideMode;
       QAction* overallVolumeRatioMode;
@@ -56,7 +56,7 @@ class MixerOptionsButton : public QPushButton
       void setupSignalsAndSlots();
 
       public slots:
-      void optionChangeRequest(bool);
+      void optionChange(bool);
 
 public:
       MixerOptionsButton(QWidget *parent = nullptr);

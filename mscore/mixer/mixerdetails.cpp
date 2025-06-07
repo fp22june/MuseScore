@@ -20,7 +20,7 @@
 #include "mixerdetails.h"
 
 #include "mixer.h"
-#include "mixertrackitem.h"
+#include "mixertreerow.h"
 #include "mixeroptions.h"
 #include "mixertreewidget.h"
 #include "libmscore/score.h"
@@ -33,7 +33,7 @@ namespace Ms {
 //MARK:- Create and setup
 MixerDetails::MixerDetails(Mixer *mixer) : QWidget(mixer)
       {
-      selectedMixerTrackItem = nullptr;
+      selectedMixerTreeRow = nullptr;
       _mixer = mixer;
 
       setupUi(this);
@@ -45,15 +45,15 @@ MixerDetails::MixerDetails(Mixer *mixer) : QWidget(mixer)
 
       updateUiOptions();                        // show or hide certain controls as per user preferences
       setupSlotsAndSignals();
-      updateDetails(selectedMixerTrackItem);    // when called with nullptr will reset and disable all controls
+      updateDetails(selectedMixerTreeRow);    // when called with nullptr will reset and disable all controls
       }
 
 void MixerDetails::partNameChanged()
       {
-      if (!selectedMixerTrackItem)
+      if (!selectedMixerTreeRow)
             return;
       QString text = partName->text();
-      Part* part = selectedMixerTrackItem->part();
+      Part* part = selectedMixerTreeRow->part();
       if (part->partName() == text)
             return;
       Score* score = part->score();
@@ -64,9 +64,9 @@ void MixerDetails::partNameChanged()
 
 void MixerDetails::channelNameChanged()
       {
-      // if (!selectedMixerTrackItem)
+      // if (!selectedMixerTreeRow)
       //       return;
-      // Instrument* instrument = selectedMixerTrackItem->instrument();
+      // Instrument* instrument = selectedMixerTreeRow->instrument();
       // const InstrumentList* instrumenList = part->instruments();
       // if (instrumenList->empty()) 
       //       return;
@@ -87,7 +87,7 @@ void MixerDetails::channelNameChanged()
 
 void MixerDetails::setupSlotsAndSignals()
       {
-      connect(_mixer->mixerTreeWidget, SIGNAL(selectedTrackChanged(MixerTrackItem*)), SLOT(updateDetails(MixerTrackItem*)));
+      connect(_mixer->mixerTreeWidget, SIGNAL(selectedTrackChanged(MixerTreeRow*)), SLOT(updateDetails(MixerTreeRow*)));
 
       connect(partName,             SIGNAL(editingFinished()),    SLOT(partNameChanged()));
       connect(channelName,          SIGNAL(editingFinished()),    SLOT(channelNameChanged()));
@@ -126,11 +126,11 @@ void MixerDetails::updateUiOptions()
       }
 
 //MARK:- Main interface
-void MixerDetails::updateDetails(MixerTrackItem* mixerTrackItem)
+void MixerDetails::updateDetails(MixerTreeRow* mixerTrackItem)
       {
-      selectedMixerTrackItem = mixerTrackItem;
+      selectedMixerTreeRow = mixerTrackItem;
 
-      if (!selectedMixerTrackItem) {
+      if (!selectedMixerTreeRow) {
             resetControls();        // return controls to default / unset state
             setEnabled(false);      // disable controls
             setNotifier(nullptr);   // stop listening to messages from current score/part
@@ -140,7 +140,7 @@ void MixerDetails::updateDetails(MixerTrackItem* mixerTrackItem)
       // setNotifier(channel) zaps previous notifiers and then calls addListener(this).
       // As a listener, this object receives propertyChanged() calls when the channel is
       // changed. This ensures the details view is synced with changes in the tree view.
-      setNotifier(selectedMixerTrackItem->channel());
+      setNotifier(selectedMixerTreeRow->channel());
 
       setEnabled(true);
 
@@ -162,7 +162,7 @@ void MixerDetails::updateDetails(MixerTrackItem* mixerTrackItem)
 // MixerTreeWidget::addTrackItem channel->addListener
 void MixerDetails::propertyChanged(Channel::Prop property)
       {
-      if (!selectedMixerTrackItem)
+      if (!selectedMixerTreeRow)
             return;
 
       blockSignals(true);
@@ -202,29 +202,29 @@ void MixerDetails::propertyChanged(Channel::Prop property)
 
 void MixerDetails::updatePartName()
       {
-      partName->setText(selectedMixerTrackItem->getPartName());
+      partName->setText(_mixer->getPartName(selectedMixerTreeRow->part()));
       }
 
 void MixerDetails::updateChannelName()
       {
-      channelName->setText(selectedMixerTrackItem->getChannelName());
+      channelName->setText(_mixer->getChannelName(selectedMixerTreeRow->channel()));
       }
 
 void MixerDetails::updatePatch()
       {
-      drumkitCheck->setChecked(selectedMixerTrackItem->getUseDrumset());
-      selectedMixerTrackItem->populatePatchCombo(patchCombo);
+      drumkitCheck->setChecked(_mixer->getUseDrumset(selectedMixerTreeRow->channel()));
+      selectedMixerTreeRow->populatePatchCombo(patchCombo);
       }
 
 void MixerDetails::updateVolume()
       {
-      //volumeSlider->setValue(selectedMixerTrackItem->getVolume());
-      volumeSpinBox->setValue(selectedMixerTrackItem->getVolume());
+      //volumeSlider->setValue(selectedMixerTreeRow->getVolume());
+      volumeSpinBox->setValue(_mixer->getChannelVolume(selectedMixerTreeRow->channel()));
       }
 
 void MixerDetails::updatePan()
       {
-      int pan = selectedMixerTrackItem->getPan();
+      int pan = _mixer->getChannelPan(selectedMixerTreeRow->channel());
       //panSlider->setValue(pan);
       panSpinBox->setValue(pan);
       }
@@ -258,7 +258,7 @@ void MixerDetails::updateMutePerVoice()
 
       voiceButtons.clear();
 
-      QList<QList<bool>> mutedStaves = selectedMixerTrackItem->getMutedVoices();
+      QList<QList<bool>> mutedStaves = _mixer->getPartMutedVoices( selectedMixerTreeRow->part());
 
       for (int staffIndex = 0; staffIndex < mutedStaves.length(); ++staffIndex) {
             QList<bool> mutedVoices = mutedStaves[staffIndex];
@@ -285,24 +285,24 @@ void MixerDetails::updateMutePerVoice()
 void MixerDetails::updateMidiChannelAndPort()
       {
       //TODO: midi code moved - needs more testing
-      portSpinBox->setValue(selectedMixerTrackItem->getMidiPort());
-      channelSpinBox->setValue(selectedMixerTrackItem->getMidiChannel());
-//      Part* part = selectedMixerTrackItem->part();
-//      Channel* channel = selectedMixerTrackItem->channel();
+      portSpinBox->setValue(_mixer->getChannelMidiPort(selectedMixerTreeRow->channel()));
+      channelSpinBox->setValue(_mixer->getChannelMidiChannel(selectedMixerTreeRow->channel()));
+//      Part* part = selectedMixerTreeRow->part();
+//      Channel* channel = selectedMixerTreeRow->channel();
 //      portSpinBox->setValue(part->masterScore()->midiMapping(channel->channel())->port() + 1);
 //      channelSpinBox->setValue(part->masterScore()->midiMapping(channel->channel())->channel() + 1);
       }
 
 void MixerDetails::updateReverb()
       {
-      reverbSlider->setValue(selectedMixerTrackItem->getReverb());
-      reverbSpinBox->setValue(selectedMixerTrackItem->getReverb());
+      reverbSlider->setValue(_mixer->getChannelReverb(selectedMixerTreeRow->channel()));
+      reverbSpinBox->setValue(_mixer->getChannelReverb(selectedMixerTreeRow->channel()));
       }
 
 void MixerDetails::updateChorus()
       {
-      chorusSlider->setValue(selectedMixerTrackItem->getChorus());
-      chorusSpinBox->setValue(selectedMixerTrackItem->getChorus());
+      chorusSlider->setValue(_mixer->getChannelChorus(selectedMixerTreeRow->channel()));
+      chorusSpinBox->setValue(_mixer->getChannelChorus(selectedMixerTreeRow->channel()));
       }
 
 //MARK:- Methods to respond to user initiated changes
@@ -310,23 +310,23 @@ void MixerDetails::updateChorus()
 //  patchChanged - process signal from patchCombo
 void MixerDetails::patchComboEdited(int comboIndex)
       {
-      if (!selectedMixerTrackItem)
+      if (!selectedMixerTreeRow)
             return;
 
       _mixer->mixerTreeWidget->saveTreeSelection();
-      selectedMixerTrackItem->changePatch(comboIndex, patchCombo);
+      selectedMixerTreeRow->changePatch(comboIndex, patchCombo);
       _mixer->mixerTreeWidget->restoreTreeSelection();
       }
 
 // drumkitToggled - process signal from drumkitCheck
 void MixerDetails::drumsetCheckboxToggled(bool useDrumset)
       {
-      if (!selectedMixerTrackItem)
+      if (!selectedMixerTreeRow)
             return;
 
       blockSignals(true);
       _mixer->mixerTreeWidget->saveTreeSelection();
-      selectedMixerTrackItem->setUseDrumset(useDrumset);
+      selectedMixerTreeRow->setUseDrumset(useDrumset);
       _mixer->mixerTreeWidget->restoreTreeSelection();
       blockSignals(false);
       }
@@ -334,22 +334,19 @@ void MixerDetails::drumsetCheckboxToggled(bool useDrumset)
 // volumeChanged - process signal from volumeSlider
 void MixerDetails::volumeSpinBoxEdited(int proposedValue)
       {
-      if (!selectedMixerTrackItem)
+      if (!selectedMixerTreeRow)
             return;
-
-      int acceptedValue = selectedMixerTrackItem->setVolume(proposedValue);
-
-      if (acceptedValue != proposedValue)
-            volumeSpinBox->setValue(acceptedValue);
+      _mixer->setChannelVolume(selectedMixerTreeRow->channel(), proposedValue);
+      volumeSpinBox->setValue(proposedValue);
       }
 
 // volumeChanged - process signal from volumeSpinBox
 //void MixerDetails::volumeSliderMoved(int proposedValue)
 //      {
-//      if (!selectedMixerTrackItem)
+//      if (!selectedMixerTreeRow)
 //            return;
 //            
-//      int acceptedValue = selectedMixerTrackItem->setVolume(proposedValue);
+//      int acceptedValue = selectedMixerTreeRow->setVolume(proposedValue);
 //
 //      if (acceptedValue != proposedValue)
 //            volumeSlider->setValue(acceptedValue);
@@ -358,22 +355,19 @@ void MixerDetails::volumeSpinBoxEdited(int proposedValue)
 // panChanged - process signal from panSlider
 void MixerDetails::panSpinBoxEdited(int proposedValue)
       {
-      if (!selectedMixerTrackItem)
+      if (!selectedMixerTreeRow)
                   return;
-
-      int acceptedValue = selectedMixerTrackItem->setPan(proposedValue);
-
-      if (acceptedValue != proposedValue)
-            panSpinBox->setValue(acceptedValue);
+      _mixer->setChannelPan(selectedMixerTreeRow->channel(), proposedValue);
+      panSpinBox->setValue(proposedValue);
       }
 
 // panChanged - process signal from panSpinBox
 //void MixerDetails::panSliderMoved(int proposedValue)
 //      {
-//      if (!selectedMixerTrackItem)
+//      if (!selectedMixerTreeRow)
 //            return;
 //
-//      int acceptedValue = selectedMixerTrackItem->setPan(proposedValue);
+//      int acceptedValue = selectedMixerTreeRow->setPan(proposedValue);
 //            
 //      if (acceptedValue != proposedValue)
 //            panSlider->setValue(acceptedValue);
@@ -382,52 +376,41 @@ void MixerDetails::panSpinBoxEdited(int proposedValue)
 // reverbChanged - process signal from reverbSlider
 void MixerDetails::reverbSliderMoved(int proposedValue)
       {
-      if (!selectedMixerTrackItem)
+      if (!selectedMixerTreeRow)
             return;
-
-      int acceptedValue = selectedMixerTrackItem->setReverb(proposedValue);
-
-      if (acceptedValue != proposedValue)
-            reverbSlider->setValue(acceptedValue);
+      _mixer->setChannelReverb(selectedMixerTreeRow->channel(), proposedValue);
+      reverbSlider->setValue(proposedValue);
       }
 
 void MixerDetails::reverbSpinBoxEdited(int proposedValue)
       {
-      if (!selectedMixerTrackItem)
+      if (!selectedMixerTreeRow)
             return;
-
-      int acceptedValue = selectedMixerTrackItem->setReverb(proposedValue);
-
-      if (acceptedValue != proposedValue)
-            reverbSpinBox->setValue(acceptedValue);
+      _mixer->setChannelReverb(selectedMixerTreeRow->channel(), proposedValue);
+      reverbSpinBox->setValue(proposedValue);
       }
 
 //  chorusChanged - process signal from chorusSlider
 void MixerDetails::chorusSliderMoved(int proposedValue)
       {
-      if (!selectedMixerTrackItem)
+      if (!selectedMixerTreeRow)
             return;
-      int acceptedValue = selectedMixerTrackItem->setChorus(proposedValue);
-
-      if (acceptedValue != proposedValue)
-            chorusSlider->setValue(acceptedValue);
+      _mixer->setChannelChorus(selectedMixerTreeRow->channel(), proposedValue);
+      chorusSlider->setValue(proposedValue);
       }
 
 void MixerDetails::chorusSpinBoxEdited(int proposedValue)
       {
-      if (!selectedMixerTrackItem)
+      if (!selectedMixerTreeRow)
             return;
-
-      int acceptedValue = selectedMixerTrackItem->setChorus(proposedValue);
-
-      if (acceptedValue != proposedValue)
-            chorusSpinBox->setValue(acceptedValue);
+      _mixer->setChannelChorus(selectedMixerTreeRow->channel(), proposedValue);
+      chorusSpinBox->setValue(proposedValue);
       }
 
 // voiceMuteButtonToggled - process button toggled (received via MixerVoiceMuteButtonHandler object)
 void MixerDetails::voiceMuteButtonToggled(int staffIndex, int voiceIndex, bool shouldMute)
       {
-      selectedMixerTrackItem->toggleMutedVoice(staffIndex, voiceIndex, shouldMute);
+      _mixer->togglePartMutedVoice(selectedMixerTreeRow->part(), staffIndex, voiceIndex, shouldMute);
       }
 
 // midiChannelChanged - process signal from either portSpinBox
@@ -435,17 +418,17 @@ void MixerDetails::voiceMuteButtonToggled(int staffIndex, int voiceIndex, bool s
 void MixerDetails::midiChannelOrPortEdited(int)
       {
       //TODO: midi code moved - needs more testing
-      if (!selectedMixerTrackItem)
+      if (!selectedMixerTreeRow)
             return;
 
-//      Part* part = selectedMixerTrackItem->part();
-//      Channel* channel = selectedMixerTrackItem->channel();
+//      Part* part = selectedMixerTreeRow->part();
+//      Channel* channel = selectedMixerTreeRow->channel();
 //
 //      seq->stopNotes(channel->channel());
 //      int p =    portSpinBox->value() - 1;
 //      int c = channelSpinBox->value() - 1;
 //
-//      MidiMapping* midiMap = selectedMixerTrackItem->midiMap();
+//      MidiMapping* midiMap = selectedMixerTreeRow->midiMap();
 //      part->masterScore()->updateMidiMapping(midiMap->articulation(), part, p, c);
 //
 //      part->score()->setInstrumentsChanged(true);

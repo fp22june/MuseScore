@@ -247,6 +247,8 @@ void Instrument::write(XmlWriter& xml, const Part* part) const
             xml.tag("useDrumset", _useDrumset);
             _drumset->save(xml);
             }
+      if (_color != DEFAULT_COLOR)
+            xml.tag("color", _color);
       for (int i = 0; i < _clefType.size(); ++i) {
             ClefTypeList ct = _clefType[i];
             if (ct._concertClef == ct._transposingClef) {
@@ -519,7 +521,6 @@ Channel::Channel()
       _pan      = 64; // actually 63.5 for center
       _chorus   = 0;
       _reverb   = 0;
-      _color = DEFAULT_COLOR;
 
       _mute     = false;
       _solo     = false;

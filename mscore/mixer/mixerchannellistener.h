@@ -16,51 +16,23 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //=============================================================================
-
-#ifndef __MIXERTRACKCHANNEL_H__
-#define __MIXERTRACKCHANNEL_H__
-
-#include "ui_mixertrackchannel.h"
-
+#ifndef __MIXERCHANNELLISTENER_H__
+#define __MIXERCHANNELLISTENER_H__
 #include "libmscore/instrument.h"   // ChannelListener
-
 namespace Ms {
-class MixerTrackItem;
-class MixerTreeWidget;
-
-class MixerTrackChannel
-      : public QWidget,
-        public Ui::MixerTrackChannel,
+class MixerChannelListener
+      : public QObject,
         public ChannelListener
       {
       Q_OBJECT
-
-      MixerTrackItem* _item;
-      MixerTreeWidget* _tree;
-
-      // void setupAdditionalUi();
-      // void setupSlotsAndSignals();
-      void update();
-      
-  public slots:
-      void stripMuteToggled(bool);
-      void stripSoloToggled(bool);
-      void stripVolumeSliderMoved(int);
-      void trackColorEdited(QColor color);
-      // void takeSelection();
-
-      void updateUiControls(); // for showing/hiding color and panning
-
-  // signals:
-  //     void selectTreeItem(MixerTrackItem*);
-
-  protected:
-      void propertyChanged(Channel::Prop property) override;      // ChannelListener method
-            
+      Channel* _channel;
+  private slots:
+      void propertyChanged(Channel::Prop property) override;
+  signals:
+      void channelPropChangeEvent(Channel*, Channel::Prop);
   public:
-      MixerTrackChannel(MixerTrackItem*);
-
+      MixerChannelListener(Channel*);
       };
 
 }
-#endif // __MIXERTRACKCHANNEL_H__
+#endif

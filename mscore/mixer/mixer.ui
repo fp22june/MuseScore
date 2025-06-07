@@ -137,7 +137,7 @@
                  <bool>true</bool>
                 </property>
                 <property name="selectionMode">
-                 <enum>QAbstractItemView::SelectionMode::ContiguousSelection</enum>
+                 <enum>QAbstractItemView::SelectionMode::ExtendedSelection</enum>
                 </property>
                 <property name="selectionBehavior">
                  <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
@@ -156,12 +156,12 @@
                 </attribute>
                 <column>
                  <property name="text">
-                  <string notr="true">Name</string>
+                  <string>1</string>
                  </property>
                 </column>
                 <column>
                  <property name="text">
-                  <string notr="true"/>
+                  <string>2</string>
                  </property>
                 </column>
                </widget>

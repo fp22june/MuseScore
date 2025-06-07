@@ -26,7 +26,7 @@
 
 namespace Ms {
 class Mixer;
-class MixerTrackItem;
+class MixerTreeRow;
 
 class MixerDetails
       : public QWidget,
@@ -36,7 +36,7 @@ class MixerDetails
       Q_OBJECT
 
       Mixer* _mixer;
-      MixerTrackItem* selectedMixerTrackItem = nullptr;
+      MixerTreeRow* selectedMixerTreeRow = nullptr;
       void setupSlotsAndSignals();
       QGridLayout* mutePerVoiceGrid;
       QList<QWidget*> voiceButtons; // used for dynamically updating tabOrder
@@ -70,7 +70,7 @@ class MixerDetails
       void reverbSpinBoxEdited(int);
       void chorusSliderMoved(int);
       void chorusSpinBoxEdited(int);
-      void updateDetails(MixerTrackItem*);
+      void updateDetails(MixerTreeRow*);
 
    public:
       MixerDetails(Mixer *mixer);
@@ -80,7 +80,7 @@ class MixerDetails
       void voiceMuteButtonToggled(int staffIndex, int voiceIndex, bool shouldMute);
       void updateUiOptions();
 
-      MixerTrackItem* getSelectedMixerTrackItem() { return selectedMixerTrackItem; };
+      MixerTreeRow* getSelectedMixerTreeRow() { return selectedMixerTreeRow; };
       };
 
 class MixerDetails;
@@ -108,4 +108,4 @@ public slots:
             }
    };
 }
-#endif // __MIXERDETAILS_H__
+#endif

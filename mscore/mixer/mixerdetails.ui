@@ -149,10 +149,10 @@
         <string>Pan</string>
        </property>
        <property name="minimum">
-        <number>-63</number>
+        <number>0</number>
        </property>
        <property name="maximum">
-        <number>63</number>
+        <number>127</number>
        </property>
       </widget>
      </item>
@@ -180,12 +180,32 @@
       <number>0</number>
      </property>
      <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>Solo</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_6">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Policy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>5</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
       <widget class="QCheckBox" name="checkBoxSolo">
        <property name="layoutDirection">
         <enum>Qt::LayoutDirection::RightToLeft</enum>
-       </property>
-       <property name="text">
-        <string>Solo</string>
        </property>
       </widget>
      </item>
@@ -233,6 +253,9 @@
      </property>
     </widget>
    </item>
+   <item row="3" column="1">
+    <layout class="QGridLayout" name="mutePerVoiceGridLayout"/>
+   </item>
    <item row="4" column="0" colspan="2">
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
@@ -275,12 +298,32 @@
    <item row="5" column="0" colspan="2">
     <layout class="QHBoxLayout" name="horizontalLayout_4">
      <item>
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Drumset</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_7">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeType">
+        <enum>QSizePolicy::Policy::Fixed</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>3</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
       <widget class="QCheckBox" name="drumkitCheck">
        <property name="layoutDirection">
         <enum>Qt::LayoutDirection::RightToLeft</enum>
-       </property>
-       <property name="text">
-        <string>Drumset</string>
        </property>
       </widget>
      </item>
@@ -576,9 +619,6 @@
      </item>
     </layout>
    </item>
-   <item row="3" column="1">
-    <layout class="QGridLayout" name="mutePerVoiceGridLayout"/>
-   </item>
   </layout>
  </widget>
  <customwidgets>
@@ -588,6 +628,22 @@
    <header>mixerslider.h</header>
   </customwidget>
  </customwidgets>
+ <tabstops>
+  <tabstop>partName</tabstop>
+  <tabstop>channelName</tabstop>
+  <tabstop>volumeSpinBox</tabstop>
+  <tabstop>panSpinBox</tabstop>
+  <tabstop>checkBoxSolo</tabstop>
+  <tabstop>checkBoxMute</tabstop>
+  <tabstop>patchCombo</tabstop>
+  <tabstop>drumkitCheck</tabstop>
+  <tabstop>portSpinBox</tabstop>
+  <tabstop>channelSpinBox</tabstop>
+  <tabstop>reverbSlider</tabstop>
+  <tabstop>reverbSpinBox</tabstop>
+  <tabstop>chorusSlider</tabstop>
+  <tabstop>chorusSpinBox</tabstop>
+ </tabstops>
  <resources>
   <include location="../musescore.qrc"/>
  </resources>

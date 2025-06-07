@@ -16,19 +16,11 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //=============================================================================
-
 #include "mixeroptions.h"
-
 namespace Ms {
-
 MixerOptions::MixerOptions() {
       readSettings();
       }
-
-bool MixerOptions::secondaryModeOn() {
-      return _secondaryModeLock ? !_secondaryMode : _secondaryMode;
-      }
-
 void MixerOptions::readSettings() {
       QSettings settings("MuseScore","Mixer");
       settings.beginGroup("MixerOptions");
@@ -37,11 +29,10 @@ void MixerOptions::readSettings() {
       _showMidiOptions = settings.value("showMidiOptions", true).toBool();
       _showingDetails = settings.value("showingDetails", true).toBool();
       _showMasterVolume = settings.value("showMasterVolume", true).toBool();
-      _mode = static_cast<MixerVolumeMode>(settings.value("sliderMode", static_cast<int>(MixerVolumeMode::Ratio)).toInt());
+      // _mode = static_cast<MixerVolumeMode>(settings.value("sliderMode", static_cast<int>(MixerVolumeMode::Ratio)).toInt());
       _secondarySlider = static_cast<MixerSecondarySlider>(settings.value("secondarySlider", static_cast<int>(MixerSecondarySlider::Pan)).toInt());
       settings.endGroup();
       }
-
 void MixerOptions::writeSettings() {
       QSettings settings("MuseScore","Mixer");
       settings.beginGroup("MixerOptions");
@@ -50,9 +41,8 @@ void MixerOptions::writeSettings() {
       settings.setValue("showMidiOptions", _showMidiOptions);
       settings.setValue("showingDetails", _showingDetails);
       settings.setValue("showMasterVolume", _showMasterVolume);
-      settings.setValue("sliderMode", static_cast<int>(_mode));
+      // settings.setValue("sliderMode", static_cast<int>(_mode));
       settings.setValue("secondarySlider", static_cast<int>(_secondarySlider));
       settings.endGroup();
       }
-
 } // namespace Ms

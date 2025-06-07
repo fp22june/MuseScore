@@ -54,7 +54,7 @@ void MixerSlider::setSecondaryMode(bool on)
 void MixerSlider::setPanMode(bool on)
 {
       panning = on;
-      setMinimum(panning ? -63 : 0);
+      setMinimum(panning ? -64 : 0);
       setMaximum(panning ? 63 : 127);
 }
 

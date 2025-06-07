@@ -26,6 +26,7 @@
 #include "sym.h"
 #include "text.h"
 #include "xml.h"
+#include "mscore/mixer/mixercomp.h"
 
 #ifdef OMR
 #include "omr/omr.h"
@@ -154,6 +155,11 @@ bool Score::read(XmlReader& e)
                   Part* part = new Part(this);
                   part->read(e);
                   _parts.push_back(part);
+                  }
+            else if (tag == "MixerFolder") {
+                  MixerFolderUser* mf = new MixerFolderUser(this);
+                  mf->read(e);
+                  _mixerFolders.push_back(mf);
                   }
             else if ((tag == "HairPin")
                 || (tag == "Ottava")
