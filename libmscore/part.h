@@ -14,6 +14,7 @@
 #define __PART_H__
 
 #include "instrument.h"
+#include "mscore/mixer/mixercomp.h"
 
 namespace Ms {
 
@@ -50,7 +51,7 @@ enum class PreferSharpFlat : char {
 //   @P volume          int
 //---------------------------------------------------------
 
-class Part final : public ScoreElement {
+class Part final : public ScoreElement, public MixerRow, public MixerDescendant, public MixerFolder {
       QString _partName;            ///< used in tracklist (mixer)
       InstrumentList _instruments;
       QList<Staff*> _staves;
@@ -58,12 +59,7 @@ class Part final : public ScoreElement {
       bool _show;                   ///< show part in partitur if true
       bool _soloist;                ///< used in score ordering
 
-      static const int DEFAULT_COLOR = 0x3399ff;
-      int _color;                   ///User specified color for helping to label parts
-
       PreferSharpFlat _preferSharpFlat;
-
-      bool _expanded = false;       // Used by the mixer
    public:
       Part(Score* = 0);
       void initFromInstrTemplate(const InstrumentTemplate*);
@@ -134,10 +130,6 @@ class Part final : public ScoreElement {
 
       QString partName() const                 { return _partName; }
       void setPartName(const QString& s)       { _partName = s; }
-      int color() const { return _color; }
-      void setColor(int value) { _color = value; }
-      bool isExpanded() const { return _expanded; }
-      void setExpanded(bool expanded) { _expanded = expanded; }
 
       QVariant getProperty(Pid) const override;
       bool setProperty(Pid, const QVariant&) override;

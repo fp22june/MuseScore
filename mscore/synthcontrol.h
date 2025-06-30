@@ -45,7 +45,6 @@ class SynthControl : public QWidget, Ui::SynthControl {
       void updateGui();
       void readSettings();
       void updateExpressivePatches();
-      void updateMixer();
       void setAllUserBankController(bool val);
 
    private slots:
@@ -68,6 +67,7 @@ class SynthControl : public QWidget, Ui::SynthControl {
    signals:
       void soundFontChanged();
       void closed(bool);
+      void updateMixer();
 
    protected:
       virtual void changeEvent(QEvent *event);

@@ -16,32 +16,13 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //=============================================================================
-
-#ifndef __MIXERMASTERCHANNEL_H__
-#define __MIXERMASTERCHANNEL_H__
-
-#include "ui_mixermasterchannel.h"
-
+#include "mixerchannellistener.h"
+#include "mixertreerow.h"
 namespace Ms {
-
-class MixerMasterChannel
-      : public QWidget,
-        public Ui::MixerMasterChannel
-      {
-      Q_OBJECT
-
-      void update();
-
-  private slots:
-      void updateVol(float);
-  public slots:
-      void masterVolumeSliderMoved(int);
-      void updateUiControls(); // for showing/hiding color
-
-  public:
-      MixerMasterChannel();
-      void volumeChanged(float);
-      };
-
-} // namespace Ms
-#endif // __MIXERMASTERCHANNEL_H__
+MixerChannelListener::MixerChannelListener(MixerTreeRow* item){
+      _item = item;
+      }
+void MixerChannelListener::propertyChanged(Channel::Prop property) {
+      emit channelPropChangeEvent(_item, property);
+      }
+}

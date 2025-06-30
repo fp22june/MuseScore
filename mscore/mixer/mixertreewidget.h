@@ -20,68 +20,75 @@
 #ifndef __MIXERTREEWIDGET__
 #define __MIXERTREEWIDGET__
 
-#include "mixertrackitem.h" //enums
+#include "mixertreerow.h" //enums
 
 namespace Ms {
 class Score;
 class Part;
 class Instrument;
 class Channel;
-class MixerTrackItem;
+class MixerTreeRow;
+class Mixer;
+class MixerFolderUser;
+struct MTRViewPayload;
+struct MTViewPayload{
+      bool updateHeaders;
+      bool refreshTree;
+      Score* score;
 
+      MTRViewPayload* rowPayload;
+      bool all;
+      MixerFolderUser* folder;
+      Part* part;
+      Instrument* instrument;
+      Channel* channel;
+};
 class MixerTreeWidget : public QTreeWidget
       {
       Q_OBJECT
 
+      Mixer* _mixer;
       int _savedSelectionTopLevelIndex;
       int _savedSelectionChildIndex;
       QTreeWidgetItem* _draggedItem;
       Score* _score;
 
-      void addCol1(MixerTrackItem*, Channel*);
-      MixerTrackItem* trackItemFolder(QString foldername, MixerTrackItem* parentItem, int sortOrder, QList<MixerTrackItem*> folders);
-      MixerTrackItem* trackItem(
-            MixerItemLevel,
-            MixerItemPartCat,
+      void addCol1(MixerTreeRow*, Channel*);
+      // MixerTreeRow* treeRowFolder(QString foldername, MixerTreeRow* parentItem, int sortOrder, QList<MixerTreeRow*>& folders);
+      MixerTreeRow* treeRow(
+            FPIC,
+            AdditionFilterFlag,
             Channel*,
             Instrument*,
             Part*,
-            MixerTrackItem*,
-            int,
-            QList<MixerTrackItem*>);
-      void populateTree(Score* score);
-
-      void resetAll();
-      void resetAllSettingVolume(int volume);
+            MixerTreeRow*,
+            int);
 
       void dragEnterEvent(QDragEnterEvent* event) override;
       void dragMoveEvent(QDragMoveEvent* event) override;
       void dropEvent(QDropEvent* event) override;
 
+      void requestSliderUpdate(MixerTreeRow*);
+      void arRecursive(MixerTreeRow* rr);
+      void rowViewRecursive(MixerTreeRow*, MTViewPayload&);
   private slots:
-      void itemCollapsedOrExpanded(MixerTrackItem* item);
-      void selectedItemChanged();
-
-  public slots:
-      void selectTreeItem(MixerTrackItem* item);
-
+      void itemCollapsedOrExpanded(MixerTreeRow* item);
+      // void selectedItemChanged();
+  // public slots:
+  //     void selectTreeItem(MixerTreeRow* item);
   public:
       MixerTreeWidget(QWidget* parent);
-      void emitHeaderWidthChange();
+      void setMixer(Mixer* x) { _mixer = x; };
+      MixerTreeRow* topLevelItem(int topLevelIndex){ return static_cast<MixerTreeRow*>(__super::topLevelItem(topLevelIndex)); };
+
+      void view(MTViewPayload&);
+      void allRowSendSliderUpdateRequest();
+
       void saveTreeSelection();
       void restoreTreeSelection();
-      void setSecondaryMode(bool secondaryMode);
-      void updateSliders();
-      void updateHeaders();
-      void setScore(Score* score);
-
-      void updateTree();
-
   signals:
-      void selectedTrackChanged(MixerTrackItem* trackItem);
+      // void selectedTrackChanged(MixerTreeRow* treeRow);
       void headerWidthChanged(QHeaderView*);
-
       };
-
-} // namespace Ms
-#endif /* __MIXERTREEWIDGET__ */
+}
+#endif

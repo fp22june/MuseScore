@@ -26,8 +26,48 @@
 
 namespace Ms {
 class Mixer;
-class MixerTrackItem;
+class MixerTreeRow;
 
+struct DetailsViewPayload{
+      QList<QTreeWidgetItem*> selectedRows;
+
+      bool updateVis;
+
+      bool setEnableWidget;
+      bool enableWidget;
+
+      bool setAll;
+      bool setPartName;
+      bool setChannelName;
+      bool setVolumeSpinBox;
+      bool setPanSpinBox;
+      bool setCheckBoxSolo;
+      bool setCheckBoxMute;
+      bool setPatchCombo;
+      bool clearPatchCombo;
+      bool setDrumkitCheck;
+      bool setPortSpinBox;
+      bool setChannelSpinBox;
+      bool setReverbSlider;
+      bool setReverbSpinBox;
+      bool setChorusSlider;
+      bool setChorusSpinBox;
+
+      QString partName;
+      QString channelName;
+      int volumeSpinBox;
+      int panSpinBox;
+      bool checkBoxSolo;
+      bool checkBoxMute;
+      // QString patchCombo;
+      bool drumkitCheck;
+      int portSpinBox;
+      int channelSpinBox;
+      int reverbSlider;
+      int reverbSpinBox;
+      int chorusSlider;
+      int chorusSpinBox;
+};
 class MixerDetails
       : public QWidget,
         public Ui::MixerDetails,
@@ -36,51 +76,34 @@ class MixerDetails
       Q_OBJECT
 
       Mixer* _mixer;
-      MixerTrackItem* selectedMixerTrackItem = nullptr;
-      void setupSlotsAndSignals();
+      MixerTreeRow* selectedMixerTreeRow = nullptr;
       QGridLayout* mutePerVoiceGrid;
       QList<QWidget*> voiceButtons; // used for dynamically updating tabOrder
 
-      void updatePartName();
-      void updateChannelName();
-      void updatePatch();
-      void updateVolume();
-      void updatePan();
-      void updateMutePerVoice();
+      // void updatePartName();
+      // void updateChannelName();
+      // void updatePatch();
+      // void updateVolume();
+      // void updatePan();
+      // void updateMutePerVoice();
       QPushButton* makeMuteButton(int staff, int voice);
-      void updateMidiChannelAndPort();
-      void updateReverb();
-      void updateChorus();
+      // void updateMidiChannelAndPort();
+      // void updateReverb();
+      // void updateChorus();
 
       void blockSignals(bool);
-      void updateTabOrder();
             
    public slots:
-      void partNameChanged();
-      void channelNameChanged();
-      
-      void drumsetCheckboxToggled(bool);
-      void patchComboEdited(int);
-      // void volumeSliderMoved(int);
-      void volumeSpinBoxEdited(int);
-      // void panSliderMoved(int);
-      void panSpinBoxEdited(int);
       void midiChannelOrPortEdited(int);
-      void reverbSliderMoved(int);
-      void reverbSpinBoxEdited(int);
-      void chorusSliderMoved(int);
-      void chorusSpinBoxEdited(int);
-      void updateDetails(MixerTrackItem*);
 
    public:
       MixerDetails(Mixer *mixer);
-      void propertyChanged(Channel::Prop property) override;
+      void view(DetailsViewPayload);
+      // void propertyChanged(Channel::Prop property) override;
 
-      void resetControls(); // apply default (0 or empty) values for when no track is selected
       void voiceMuteButtonToggled(int staffIndex, int voiceIndex, bool shouldMute);
-      void updateUiOptions();
 
-      MixerTrackItem* getSelectedMixerTrackItem() { return selectedMixerTrackItem; };
+      MixerTreeRow* getSelectedMixerTreeRow() { return selectedMixerTreeRow; };
       };
 
 class MixerDetails;
@@ -108,4 +131,4 @@ public slots:
             }
    };
 }
-#endif // __MIXERDETAILS_H__
+#endif

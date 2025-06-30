@@ -89,6 +89,7 @@ class Volta;
 class XmlWriter;
 class Channel;
 class ScoreOrder;
+class MixerFolder;
 struct Interval;
 struct TEvent;
 struct LayoutContext;
@@ -439,6 +440,8 @@ class Score : public QObject, public ScoreElement {
       MeasureBaseList _measures;          // here are the notes
       QList<Part*> _parts;
       QList<Staff*> _staves;
+
+      QList<MixerFolderUser*> _mixerFolders;
 
       SpannerMap _spanner;
       std::set<Spanner*> _unmanagedSpanner;
@@ -796,6 +799,11 @@ class Score : public QObject, public ScoreElement {
       void colorItem(Element*);
       QList<Part*>& parts()                { return _parts; }
       const QList<Part*>& parts() const    { return _parts; }
+
+      QList<MixerFolderUser*>& mixerFolders()                { return _mixerFolders; }
+      const QList<MixerFolderUser*>& mixerFolders() const    { return _mixerFolders; }
+      void appendMixerFolder(MixerFolderUser* x) { _mixerFolders.append(x); };
+      void removeMixerFolder(MixerFolderUser* x) { _mixerFolders.removeOne(x); };
 
       void appendPart(Part* p);
       void appendPart(const InstrumentTemplate*);

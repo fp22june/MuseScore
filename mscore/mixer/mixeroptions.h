@@ -16,31 +16,22 @@
 //  along with this program; if not, write to the Free Software
 //  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 //=============================================================================
-
-
 #ifndef __MIXEROPTIONS_H__
 #define __MIXEROPTIONS_H__
-
 namespace Ms {
-
-class MixerOptions
-{
+class MixerOptions {
    public:
       enum class MixerSecondarySlider : int { Pan = 1, Reverb, Chorus };
-      enum class MixerVolumeMode : int { Ratio = 1, Override, PrimaryInstrument };
-
    private:
-
       bool _showTrackColors;
       bool _detailsOnTheSide;
       bool _showMidiOptions;
       bool _showingDetails;
       bool _showMasterVolume;
-      MixerVolumeMode _mode;
+      // MixerVolumeMode _mode;
       MixerSecondarySlider _secondarySlider;
       bool _secondaryMode = false;
-      bool _secondaryModeLock = false;
-
+      bool _sliderSecModeInvert = false;
    public:
       MixerOptions();
       bool showTrackColors() { return _showTrackColors; };
@@ -48,8 +39,8 @@ class MixerOptions
       bool showMidiOptions() { return _showMidiOptions; };
       bool showingDetails() { return _showingDetails; };
       bool showMasterVolume() { return _showMasterVolume; };
-      bool secondaryModeLock() {return _secondaryModeLock; };
-      MixerVolumeMode mode() { return _mode; };
+      bool sliderSecModeInvert() {return _sliderSecModeInvert; };
+      // MixerVolumeMode mode() { return _mode; };
       MixerSecondarySlider secondarySlider() { return _secondarySlider; };
 
       void setTrackColors(bool show) { _showTrackColors = show; writeSettings(); };
@@ -57,16 +48,13 @@ class MixerOptions
       void setMidiOptions(bool show) { _showMidiOptions = show; writeSettings(); };
       void setShowingDetails(bool show) { _showingDetails = show; writeSettings(); }
       void setShowMasterVolume(bool show) { _showMasterVolume = show; writeSettings(); };
-      void setMode(MixerVolumeMode mode) { _mode = mode; writeSettings(); };
+      // void setMode(MixerVolumeMode mode) { _mode = mode; writeSettings(); };
       void setSecondarySlider(MixerSecondarySlider secondary) { _secondarySlider = secondary; }
-      void setSecondaryModeLock(bool lock) { _secondaryModeLock = lock; };
-      bool secondaryModeOn();
-      void setSecondaryModeOn(bool on) {_secondaryMode = on;};
+      void setsliderSecModeInvert(bool x) { _sliderSecModeInvert = x; };
+      bool secondaryMode() { return _sliderSecModeInvert ? !_secondaryMode : _secondaryMode; };
+      void setsecondaryMode(bool on) {_secondaryMode = on;};
       void readSettings();
       void writeSettings();
-
-};
-
-
-} // namespace Ms
-#endif /* __MIXEROPTIONS_H__ */
+      };
+}
+#endif

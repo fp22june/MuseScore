@@ -35,11 +35,15 @@ namespace Ms {
 Part::Part(Score* s)
    : ScoreElement(s)
       {
-      _color   = DEFAULT_COLOR;
       _show    = true;
       _soloist = false;
       _instruments.setInstrument(new Instrument, -1);   // default instrument
       _preferSharpFlat = PreferSharpFlat::DEFAULT;
+
+      _mixerVolume = Channel::defaultVolume;
+      _mixerPan = 64;
+      _mixerSolo = false;
+      _mixerMute = false;
       }
 
 //---------------------------------------------------------
@@ -116,8 +120,6 @@ bool Part::readProperties(XmlReader& e)
             }
       else if (tag == "name")
             instrument()->setLongName(e.readElementText());
-      else if (tag == "color")
-            _color = e.readInt();
       else if (tag == "shortName")
             instrument()->setShortName(e.readElementText());
       else if (tag == "trackName")
@@ -129,9 +131,10 @@ bool Part::readProperties(XmlReader& e)
       else if (tag == "preferSharpFlat")
             _preferSharpFlat =
                e.readElementText() == "sharps" ? PreferSharpFlat::SHARPS : PreferSharpFlat::FLATS;
-      else
-            return false;
-      return true;
+       else
+            return MixerRow::readProperties(tag, e);
+      //       return false;
+       return true;
       }
 
 //---------------------------------------------------------
@@ -162,11 +165,12 @@ void Part::write(XmlWriter& xml) const
       if (_soloist)
             xml.tag("soloist", _soloist);
       xml.tag("trackName", _partName);
-      if (_color != DEFAULT_COLOR)
-            xml.tag("color", _color);
+      // if (_color != DEFAULT_COLOR)
+      //       xml.tag("color", _color);
       if (_preferSharpFlat != PreferSharpFlat::DEFAULT)
             xml.tag("preferSharpFlat",
                _preferSharpFlat == PreferSharpFlat::SHARPS ? "sharps" : "flats");
+      MixerRow::write(xml);
       instrument()->write(xml, this);
       xml.etag();
       }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>MixerTrackChannel</class>
- <widget class="QWidget" name="MixerTrackChannel">
+ <class>MixerTreeRowWidget</class>
+ <widget class="QWidget" name="MixerTreeRowWidget">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -172,12 +172,6 @@
        <width>18</width>
        <height>18</height>
       </size>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">QPushButton{
-background: red;
-border-radius: 3px;
-}</string>
      </property>
     </widget>
    </item>

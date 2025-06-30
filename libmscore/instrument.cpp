@@ -109,6 +109,11 @@ Instrument::Instrument(QString id)
       _drumset     = 0;
       _singleNoteDynamics = true;
       _nameColor = MScore::defaultColor;
+
+      _mixerVolume = Channel::defaultVolume;
+      _mixerPan = 64;
+      _mixerSolo = false;
+      _mixerMute = false;
       }
 
 Instrument::Instrument(const Instrument& i)
@@ -247,6 +252,9 @@ void Instrument::write(XmlWriter& xml, const Part* part) const
             xml.tag("useDrumset", _useDrumset);
             _drumset->save(xml);
             }
+      // if (_color != DEFAULT_COLOR)
+      //       xml.tag("color", _color);
+      MixerRow::write(xml);
       for (int i = 0; i < _clefType.size(); ++i) {
             ClefTypeList ct = _clefType[i];
             if (ct._concertClef == ct._transposingClef) {
@@ -477,10 +485,10 @@ bool Instrument::readProperties(XmlReader& e, Part* part, bool* customDrumset)
             QString val(e.readElementText());
             setClefType(idx, ClefTypeList(clefType(idx)._concertClef, Clef::clefType(val)));
             }
-      else
-            return false;
-
-      return true;
+      else 
+            return MixerRow::readProperties(tag, e);
+      //       return false;
+       return true;
       }
 
 //---------------------------------------------------------
@@ -519,11 +527,15 @@ Channel::Channel()
       _pan      = 64; // actually 63.5 for center
       _chorus   = 0;
       _reverb   = 0;
-      _color = DEFAULT_COLOR;
 
       _mute     = false;
       _solo     = false;
       _soloMute = false;
+
+      _mixerVolume = defaultVolume;
+      _mixerPan = 64;
+      _mixerSolo = false;
+      _mixerMute = false;
 
 //      qDebug("construct Channel ");
       }
@@ -739,9 +751,9 @@ void Channel::write(XmlWriter& xml, const Part* part) const
             xml.stag(QString("Channel name=\"%1\"").arg(_name));
       if (!_descr.isEmpty())
             xml.tag("descr", _descr);
-      if (_color != DEFAULT_COLOR)
-            xml.tag("color", _color);
-
+      // if (_color != DEFAULT_COLOR)
+      //       xml.tag("color", _color);
+      MixerRow::write(xml);
       for (const MidiCoreEvent& e : initList()) {
             if (e.type() == ME_INVALID)
                   continue;
@@ -795,6 +807,11 @@ void Channel::read(XmlReader& e, Part* part)
 
       int midiPort = -1;
       int midiChannel = -1;
+
+      int mixerVolumeExist = false;
+      int mixerPanExist = false;
+      int mixerSoloExist = false;
+      int mixerMuteExist = false;
 
       while (e.readNextStartElement()) {
             const QStringRef& tag(e.name());
@@ -868,6 +885,12 @@ void Channel::read(XmlReader& e, Part* part)
             else if (tag == "midiChannel") {
                   midiChannel = e.readInt();
                   }
+            else if (MixerRow::readProperties(tag, e)) {
+                  if (tag == "mixerVolume") mixerVolumeExist = true;
+                  if (tag == "mixerPan") mixerPanExist = true;
+                  if (tag == "mixerSolo") mixerSoloExist = true;
+                  if (tag == "mixerMute") mixerMuteExist = true;
+                  }
             else
                   e.unknown();
             }
@@ -875,6 +898,11 @@ void Channel::read(XmlReader& e, Part* part)
             _bank = 0;
 
       _mustUpdateInit = true;
+
+      if (!mixerVolumeExist) _mixerVolume = _volume;
+      if (!mixerPanExist) _mixerPan = _pan;
+      if (!mixerSoloExist) _mixerSolo = _solo;
+      if (!mixerMuteExist) _mixerMute = _mute;
 
       if ((midiPort != -1 || midiChannel != -1) && part && part->score()->isMaster())
             part->masterScore()->addMidiMapping(this, part, midiPort, midiChannel);
