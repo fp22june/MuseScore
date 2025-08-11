@@ -70,21 +70,23 @@ if [ "$PACKTYPE" == "7z" ]; then
 fi
 
 if [ "$PACKTYPE" == "appimage" ]; then
-    # To enable automatic updates for AppImages, set UPDATE_INFORMATION according to
-    # https://github.com/AppImage/AppImageSpec/blob/master/draft.md#update-information
-    case "${BUILD_MODE}" in
-    "stable")  export UPDATE_INFORMATION="gh-releases-zsync|musescore|MuseScore|latest|MuseScore-*${PACKARCH}.AppImage.zsync";;
-    "nightly") export UPDATE_INFORMATION="zsync|https://ftp.osuosl.org/pub/musescore-nightlies/linux/${MAJOR_VERSION}x/nightly/MuseScoreNightly-latest-${PACKARCH}.AppImage.zsync";;
-    *) unset UPDATE_INFORMATION;; # disable updates for other build modes
-    esac
+    if [[ "$PACKARCH" == "x86_64" ]]; then
+        # To enable automatic updates for AppImages, set UPDATE_INFORMATION according to
+        # https://github.com/AppImage/AppImageSpec/blob/master/draft.md#update-information
+        case "${BUILD_MODE}" in
+            "stable")  export UPDATE_INFORMATION="gh-releases-zsync|musescore|MuseScore|latest|MuseScore-*${PACKARCH}.AppImage.zsync";;
+            "nightly") export UPDATE_INFORMATION="zsync|https://ftp.osuosl.org/pub/musescore-nightlies/linux/${MAJOR_VERSION}x/nightly/MuseScoreNightly-latest-${PACKARCH}.AppImage.zsync";;
+            *) unset UPDATE_INFORMATION;; # disable updates for other build modes
+        esac
+    fi
 
     bash ./build/ci/linux/tools/make_appimage.sh "${INSTALL_DIR}" "${ARTIFACT_NAME}.AppImage" "${PACKARCH}"
-    mv "${BUILD_DIR}/${ARTIFACT_NAME}.AppImage" "${ARTIFACTS_DIR}/"
+    mv "${INSTALL_DIR}/../${ARTIFACT_NAME}.AppImage" "${ARTIFACTS_DIR}/"
     bash ./build/ci/tools/make_artifact_name_env.sh $ARTIFACT_NAME.AppImage
 
     if [ -v UPDATE_INFORMATION ]; then
         # zsync file contains data for automatic delta updates
-        mv "${BUILD_DIR}/${ARTIFACT_NAME}.AppImage.zsync" "${ARTIFACTS_DIR}/"
+        mv "${INSTALL_DIR}/../${ARTIFACT_NAME}.AppImage.zsync" "${ARTIFACTS_DIR}/"
     fi
 fi
 
