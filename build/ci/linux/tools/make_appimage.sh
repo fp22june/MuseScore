@@ -285,23 +285,17 @@ for fb_lib in "${fallback_libraries[@]}"; do
   fallback_library "${fb_lib}"
 done
 
-for name in "${extracted_appimages[@]}"; do
-  symlink="$(which "${name}")"
-  apprun="$(dirname "${symlink}")/$(readlink "${symlink}")"
-  if [[ ! -L "${symlink}" || ! -f "${apprun}" ]]; then
-    echo "$0: Warning: Unable to find AppImage for '${name}'. Will not bundle." >&2
-    continue
-  fi
-  extracted_appdir_path="$(dirname "${apprun}")"
-  extracted_appdir_name="$(basename "${extracted_appdir_path}")"
-  cp -r "${extracted_appdir_path}" "${appdir}/"
-  cat >"${appdir}/bin/${name}" <<EOF
+for binary_name in "${extracted_appimages[@]}"; do
+  binary_appdir="./$BUILD_TOOLS/${binary_name}-${PACKARCH}.AppDir"
+  realbin="$(readlink -f "${binary_appdir}/AppRun")"
+  cp -r "${realbin}" "${appdir}/"
+  cat >"${appdir}/bin/${binary_name}" <<EOF
 #!/bin/sh
 unset APPDIR APPIMAGE # clear outer values before running inner AppImage
 HERE="\$(dirname "\$(readlink -f "\$0")")"
-exec "\${HERE}/../${extracted_appdir_name}/AppRun" "\$@"
+exec "\${HERE}/../${binary_name}-${PACKARCH}.AppDir/AppRun" "\$@"
 EOF
-  chmod +x "${appdir}/bin/${name}"
+  chmod +x "${appdir}/bin/${binary_name}"
 done
 
 # METHOD OF LAST RESORT
