@@ -228,9 +228,17 @@ void Knob::paintEvent(QPaintEvent* /*ev*/)
       //knob image
       if (!_knobIcon.isNull()) {
             QRect r((int)dialArea.x(), (int)dialArea.y(), (int)dialArea.width(), (int)dialArea.height());
-            _knobIcon.paint(&p, r);
+            p.save();
+            p.translate(r.center());
+            double frac = (val - minVal) / span;
+            if (_center) {
+                  frac -= 0.5;
+                  }
+            p.rotate(frac * _spanDegrees);
+            QRect centeredRect(-r.width() / 2, -r.height() / 2, r.width(), r.height());
+            _knobIcon.paint(&p, centeredRect, Qt::AlignCenter);
+            p.restore();
             }
-
       //indicator line
       p.setPen(QPen(dialCol, _scaleWidth));
       double r1 = double(_spanDegrees) * (_value - _minValue) / span + 90.0

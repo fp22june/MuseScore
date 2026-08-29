@@ -41,6 +41,7 @@ class Q_DECL_EXPORT Knob : public AbstractSlider {
       Q_PROPERTY(int markSize READ markSize WRITE setMarkSize)
       Q_PROPERTY(int border READ border WRITE setBorder)
       Q_PROPERTY(QString text READ text WRITE setText)
+      Q_PROPERTY(QIcon knobIcon READ knobIcon WRITE setKnobIcon)
 
       double _spanDegrees;         //! scale size in degrees
 

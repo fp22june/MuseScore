@@ -98,8 +98,9 @@ MixerTrackChannel::MixerTrackChannel(QWidget *parent, MixerTrackItemPtr mti) :
       volumeSlider->setMaxValue(127);
       volumeSlider->setMinValue(0);
       volumeSlider->setDoubleClickValue(Channel::defaultVolume);
-      volumeSlider->setNumMajorTicks(10);
-      volumeSlider->setNumMinorTicks(5);
+      // = mixertrackpart.cpp
+      volumeSlider->setNumMajorTicks(13); // 128/13 ~ 10
+      volumeSlider->setNumMinorTicks(2); // 128/13/2 ~ 5
 
       QIcon iconSliderHead;
       iconSliderHead.addFile(QStringLiteral(":/data/icons/mixer-slider-handle-vertical.svg"), QSize(), QIcon::Normal, QIcon::Off);
@@ -109,6 +110,7 @@ MixerTrackChannel::MixerTrackChannel(QWidget *parent, MixerTrackItemPtr mti) :
       panSlider->setToolTip(tr("Pan: %1").arg(QString::number(chan->pan())));
       panSlider->setMaxValue(127);
       panSlider->setMinValue(0);
+      panSlider->setDclickValue1(64);
 
       connect(volumeSlider, SIGNAL(valueChanged(double)),      SLOT(volumeChanged(double)));
       connect(panSlider,    SIGNAL(valueChanged(double, int)), SLOT(panChanged(double)));
@@ -158,12 +160,12 @@ void MixerTrackChannel::updateNameLabel()
 
       MidiPatch* mp = synti->getPatchInfo(chan->synti(), chan->bank(), chan->program());
 
-      QString tooltip = tr("Part Name: %1\n"
-                           "Instrument: %2\n"
-                           "Channel: %3\n"
-                           "Bank: %4\n"
-                           "Program: %5\n"
-                           "Sound: %6")
+      QString tooltip = tr(
+                        "Channel: %3\n"
+                        "Sound: %6\n"
+                        "   (Bank: %4, Program: %5)\n"
+                        "MixerInstrName: %1\n"
+                        "InstrName: %2")
                   .arg(part->partName(),
                        instr->trackName(),
                        qApp->translate("InstrumentsXML", chan->name().toUtf8().data()),
@@ -178,11 +180,10 @@ void MixerTrackChannel::updateNameLabel()
       int val = bgCol.value();
 
       QString trackStyle = QString(".QLabel {"
-                 "border: 2px solid black;"
-                 "background: %1;"
-                 "color: %2;"
-                 "padding: 6px 0px;"
-             "}").arg(trackColorName, val > 128 ? "black" : "white");
+                  "background: %1;"
+                  "color: %2;"
+                  "padding: 2px;"
+            "}").arg(trackColorName, val > 128 ? "black" : "white");
 
       trackLabel->setStyleSheet(trackStyle);
 
@@ -194,14 +195,13 @@ void MixerTrackChannel::updateNameLabel()
       partLabel->setText(part->partName());
 
       QString partStyle = QString(".QLabel {"
-                 "border: 2px solid black;"
-                 "background: %1;"
-                 "color: %2;"
-                 "padding: 6px 0px;"
-             "}").arg(partColorName, val > 128 ? "black" : "white");
+                  "background: %1;"
+                  "color: %2;"
+                  "padding: 2px;"
+            "}").arg(partColorName, val > 128 ? "black" : "white");
 
       partLabel->setStyleSheet(partStyle);
-      partLabel->setToolTip(tr("This channel is a child of part %1").arg(part->partName()));
+      partLabel->setToolTip(tr("This channel is a child of %1").arg(part->partName()));
 
 
 

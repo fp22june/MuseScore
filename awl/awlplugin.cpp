@@ -27,9 +27,14 @@
 #include "denomspinbox.h"
 #include "pitchedit.h"
 #include "pitchlabel.h"
+#include "rotatedlabel.h"
 
 #include <QtCore/QtPlugin>
 
+QWidget* RotatedLabelPlugin::createWidget(QWidget* parent)
+      {
+      return new Awl::RotatedLabel(parent);
+      }
 QWidget* KnobPlugin::createWidget(QWidget* parent)
 	{
       return new Awl::Knob(parent);
@@ -89,6 +94,7 @@ QList<QDesignerCustomWidgetInterface*> AwlPlugins::customWidgets() const
                << new PanKnobPlugin
                << new MidiPanKnobPlugin
                << new KnobPlugin
+               << new RotatedLabelPlugin
                << new SliderPlugin
                << new VolSliderPlugin
                << new MeterSliderPlugin

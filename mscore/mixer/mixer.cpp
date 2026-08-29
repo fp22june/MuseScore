@@ -85,7 +85,7 @@ Mixer::Mixer(QWidget* parent)
       enablePlay = new EnablePlayForWidget(this);
 
       setupUi(this);
-      setAllowedAreas(Qt::DockWidgetAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea));
+      setAllowedAreas(Qt::DockWidgetAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea | Qt::BottomDockWidgetArea ));
 
       trackAreaLayout = new QHBoxLayout;
       trackAreaLayout->setMargin(0);
@@ -103,10 +103,10 @@ Mixer::Mixer(QWidget* parent)
       float minDecibels = synti->minGainAsDecibels;
       float maxDecibels = synti->maxGainAsDecibels;
       float currentDecibels = synti->gainAsDecibels();
-      masterSlider->setMaxValue(maxDecibels);
-      masterSlider->setMinValue(minDecibels);
-      masterSlider->setNumMinorTicks(4);
-      masterSlider->setNumMajorTicks(3);
+      masterSlider->setMaxValue(maxDecibels); // 0   msynthesizer.h
+      masterSlider->setMinValue(minDecibels); //-80  msynthesizer.h
+      masterSlider->setNumMajorTicks(27); //80/27 ~3
+      masterSlider->setNumMinorTicks(2); //80/27/2 ~1.5
       masterSlider->setHilightColor(QColor(51, 153, 255));
       masterSlider->setValue(currentDecibels);
       masterSlider->setDoubleClickValue(synti->defaultGainAsDecibels);

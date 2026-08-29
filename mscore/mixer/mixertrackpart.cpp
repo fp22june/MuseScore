@@ -116,8 +116,9 @@ MixerTrackPart::MixerTrackPart(QWidget *parent, MixerTrackItemPtr mti, bool expa
       volumeSlider->setMaxValue(127);
       volumeSlider->setMinValue(0);
       volumeSlider->setDoubleClickValue(Channel::defaultVolume);
-      volumeSlider->setNumMajorTicks(10);
-      volumeSlider->setNumMinorTicks(4);
+      // = mixertrackchannel.cpp
+      volumeSlider->setNumMajorTicks(13); // 128/13 ~ 10
+      volumeSlider->setNumMinorTicks(2); // 128/13/2 ~ 5
 
       QIcon iconSliderHead;
       iconSliderHead.addFile(QStringLiteral(":/data/icons/mixer-slider-handle-vertical.svg"), QSize(), QIcon::Normal, QIcon::Off);
@@ -178,11 +179,11 @@ void MixerTrackPart::updateNameLabel()
       MidiPatch* mp = synti->getPatchInfo(chan->synti(), chan->bank(), chan->program());
 
 
-      QString tooltip = tr("Part Name: %1\n"
-                                "Primary Instrument: %2\n"
-                                "Bank: %3\n"
-                                "Program: %4\n"
-                                "Sound: %5")
+      QString tooltip = tr(
+                        "MixerInstrName: %1\n"
+                        "InstrName: %2\n"
+                        "FirstChnSound: %5\n"
+                        "   (Bank: %3, Program: %4)")
                   .arg(part->partName(),
                        part->longName().replace("&amp;", "&"),
                        QString::number(chan->bank()),
@@ -196,11 +197,10 @@ void MixerTrackPart::updateNameLabel()
       int val = bgCol.value();
 
       QString ss = QString(".QLabel {"
-                 "border: 2px solid black;"
-                 "background: %1;"
-                "color: %2;"
-                 "padding: 6px 0px;"
-             "}").arg(colName, val > 128 ? "black" : "white");
+                  "background: %1;"
+                  "color: %2;"
+                  "padding: 2px;"
+            "}").arg(colName, val > 128 ? "black" : "white");
 
       trackLabel->setStyleSheet(ss);
 

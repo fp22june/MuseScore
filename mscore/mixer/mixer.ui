@@ -1,43 +1,55 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>Mixer</class>
+ <comment>
+tracks_scrollArea minimumSize calc
+
+"QPushButton" name="expandBn"
+32
+"QPushButton" name="soloBn"
+32
+"QPushButton" name="muteBn"
+32
+"Awl::Knob" name="panSlider"
+32
+"Awl::StyledSlider" name="volumeSlider"
+64
+"Awl::RotatedLabel" name="trackLabel"
+40
+ </comment>
  <widget class="QDockWidget" name="Mixer">
   <property name="enabled">
    <bool>true</bool>
-  </property>
-  <property name="floating">
-   <bool>false</bool>
-  </property>
-  <property name="features">
-   <set>QDockWidget::DockWidgetClosable|QDockWidget::DockWidgetMovable|QDockWidget::DockWidgetFloatable</set>
   </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>648</width>
-    <height>431</height>
+    <width>100</width>
+    <height>100</height>
    </rect>
   </property>
   <property name="focusPolicy">
-   <enum>Qt::ClickFocus</enum>
+   <enum>Qt::FocusPolicy::ClickFocus</enum>
+  </property>
+  <property name="floating">
+   <bool>false</bool>
+  </property>
+  <property name="features">
+   <set>QDockWidget::DockWidgetFeature::DockWidgetClosable|QDockWidget::DockWidgetFeature::DockWidgetFloatable|QDockWidget::DockWidgetFeature::DockWidgetMovable</set>
   </property>
   <property name="windowTitle">
    <string>Mixer</string>
   </property>
   <widget class="QWidget" name="dockWidgetContents">
    <layout class="QVBoxLayout" name="verticalLayout">
-    <item>
-     <widget class="QCheckBox" name="partOnlyCheckBox">
-      <property name="text">
-       <string>Play part only</string>
-      </property>
-     </widget>
-    </item>
+    <property name="spacing">
+     <number>0</number>
+    </property>
     <item>
      <widget class="QWidget" name="detailsArea" native="true">
       <property name="sizePolicy">
-       <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
         <horstretch>0</horstretch>
         <verstretch>0</verstretch>
        </sizepolicy>
@@ -45,86 +57,132 @@
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="toggleDetailsButton">
-      <property name="toolTip">
-       <string>Show/hide details</string>
+     <layout class="QHBoxLayout">
+      <property name="spacing">
+       <number>0</number>
       </property>
-      <property name="styleSheet">
-       <string notr="true">padding: 2px</string>
-      </property>
-      <property name="text">
-       <string/>
-      </property>
-      <property name="icon">
-       <iconset resource="musescore.qrc">
-        <normaloff>:/data/icons/triangleDown.svg</normaloff>
-        <normalon>:/data/icons/triangleUp.svg</normalon>:/data/icons/triangleDown.svg</iconset>
-      </property>
-      <property name="iconSize">
-       <size>
-        <width>10</width>
-        <height>10</height>
-       </size>
-      </property>
-      <property name="checkable">
-       <bool>true</bool>
-      </property>
-      <property name="checked">
-       <bool>true</bool>
-      </property>
-     </widget>
-    </item>
-    <item>
-     <layout class="QHBoxLayout" name="horizontalLayout">
       <item>
-       <widget class="QWidget" name="widgetMaster" native="true">
-        <layout class="QVBoxLayout" name="verticalLayout_2">
-         <property name="leftMargin">
-          <number>0</number>
-         </property>
-         <property name="topMargin">
-          <number>0</number>
-         </property>
-         <property name="rightMargin">
-          <number>9</number>
-         </property>
-         <property name="bottomMargin">
-          <number>0</number>
-         </property>
-         <item>
-          <widget class="Awl::StyledSlider" name="masterSlider" native="true">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QLabel" name="label">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="text">
-            <string>Master Gain</string>
-           </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QDoubleSpinBox" name="masterSpin">
-           <property name="suffix">
-            <string extracomment="decibel">dB</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
+       <widget class="QCheckBox" name="partOnlyCheckBox">
+        <property name="text">
+         <string>Play Part only</string>
+        </property>
+        <property name="toolTip">
+         <string>To configure Parts, open File > Parts ...</string>
+        </property>
        </widget>
       </item>
       <item>
+       <widget class="QPushButton" name="toggleDetailsButton">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="toolTip">
+         <string>Show/hide details</string>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">#toggleDetailsButton{padding: 2px}</string>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="icon">
+         <iconset>
+          <normaloff>:/data/icons/triangleDown.svg</normaloff>
+          <normalon>:/data/icons/triangleUp.svg</normalon>:/data/icons/triangleDown.svg</iconset>
+        </property>
+        <property name="iconSize">
+         <size>
+          <width>10</width>
+          <height>10</height>
+         </size>
+        </property>
+        <property name="checkable">
+         <bool>true</bool>
+        </property>
+        <property name="checked">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <layout class="QGridLayout" name="gridLayout">
+      <property name="spacing">
+       <number>0</number>
+      </property>
+      <item row="0" column="0">
+       <widget class="Awl::StyledSlider" name="masterSlider" native="true">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>32</width>
+          <height>64</height>
+         </size>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>32</width>
+          <height>16777215</height>
+         </size>
+        </property>
+       </widget>
+      </item>
+      <item row="1" column="0" colspan="2">
+       <layout class="QHBoxLayout">
+        <property name="spacing">
+         <number>0</number>
+        </property>
+        <property name="leftMargin">
+         <number>0</number>
+        </property>
+        <property name="topMargin">
+         <number>0</number>
+        </property>
+        <property name="rightMargin">
+         <number>0</number>
+        </property>
+        <property name="bottomMargin">
+         <number>0</number>
+        </property>
+        <item>
+         <widget class="QLabel" name="label">
+          <property name="sizePolicy">
+           <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+            <horstretch>0</horstretch>
+            <verstretch>0</verstretch>
+           </sizepolicy>
+          </property>
+          <property name="text">
+           <string>Master</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QDoubleSpinBox" name="masterSpin">
+          <property name="suffix">
+           <string extracomment="decibel">dB</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Orientation::Horizontal</enum>
+          </property>
+         </spacer>
+        </item>
+       </layout>
+      </item>
+      <item row="0" column="1">
        <widget class="QScrollArea" name="tracks_scrollArea">
         <property name="sizePolicy">
          <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
@@ -134,20 +192,23 @@
         </property>
         <property name="minimumSize">
          <size>
-          <width>0</width>
-          <height>0</height>
+          <width>32</width>
+          <height>232</height>
          </size>
         </property>
         <property name="widgetResizable">
          <bool>true</bool>
         </property>
-        <widget class="QWidget" name="scrollAreaWidgetContents">
+        <property name="styleSheet">
+         <string notr="true">#tracks_scrollArea{border: none}</string>
+        </property>
+        <widget class="QWidget" name="tracksscrollAreaWidgetContents">
          <property name="geometry">
           <rect>
            <x>0</x>
            <y>0</y>
-           <width>554</width>
-           <height>371</height>
+           <width>106</width>
+           <height>240</height>
           </rect>
          </property>
          <layout class="QHBoxLayout" name="horizontalLayout_2">
@@ -194,7 +255,6 @@
   </customwidget>
  </customwidgets>
  <resources>
-  <include location="musescore.qrc"/>
   <include location="musescore.qrc"/>
  </resources>
  <connections/>
