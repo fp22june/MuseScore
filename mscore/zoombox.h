@@ -30,7 +30,7 @@ class ScoreView;
 //---------------------------------------------------------
 
 enum class ZoomIndex : char {
-       ZOOM_25, ZOOM_50, ZOOM_75, ZOOM_100, ZOOM_150, ZOOM_200, ZOOM_400, ZOOM_800, ZOOM_1600,
+       ZOOM_1600, ZOOM_800, ZOOM_400, ZOOM_200, ZOOM_150, ZOOM_100, ZOOM_75, ZOOM_50, ZOOM_25,
        ZOOM_PAGE_WIDTH, ZOOM_WHOLE_PAGE, ZOOM_TWO_PAGES,
        ZOOM_FREE
       };
