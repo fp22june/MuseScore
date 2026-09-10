@@ -407,20 +407,6 @@ void ScoreView::measurePopup(QContextMenuEvent* ev, Measure* obj)
       popup->setSeparatorsCollapsible(false);
 
       QAction* a = popup->addSeparator();
-      a->setText(tr("Staff"));
-      a = popup->addAction(tr("Edit Drumset…"));
-      a->setData("edit-drumset");
-      a->setEnabled(staff->part()->instrument(obj->tick())->drumset() != 0);
-
-      a = popup->addAction(tr("Piano Roll Editor…"));
-      a->setData("pianoroll");
-
-      a = popup->addAction(tr("Staff/Part Properties…"));
-      a->setData("staff-properties");
-      a = popup->addAction(tr("Split Staff…"));
-      a->setData("staff-split");
-
-      a = popup->addSeparator();
       a->setText(tr("Measure"));
       popup->addAction(getAction("cut"));
       popup->addAction(getAction("copy"));
@@ -443,12 +429,23 @@ void ScoreView::measurePopup(QContextMenuEvent* ev, Measure* obj)
       menuAdd->addAction(getAction("insert-vbox"));
       menuAdd->addAction(getAction("insert-textframe"));
 
-      popup->addSeparator();
-
       a = popup->addAction(tr("Measure Properties…"));
       a->setData("props");
       a->setEnabled(!obj->isMMRest());
-      popup->addSeparator();
+
+      a = popup->addSeparator();
+      a->setText(tr("Staff"));
+      a = popup->addAction(tr("Edit Drumset…"));
+      a->setData("edit-drumset");
+      a->setEnabled(staff->part()->instrument(obj->tick())->drumset() != 0);
+
+      a = popup->addAction(tr("Piano Roll Editor…"));
+      a->setData("pianoroll");
+
+      a = popup->addAction(tr("Instrument/Staff Properties…"));
+      a->setData("staff-properties");
+      a = popup->addAction(tr("Split Staff…"));
+      a->setData("staff-split");
 
       popup->addAction("Object Debugger")->setData("list");
 
@@ -2402,6 +2399,90 @@ void ScoreView::cmd(const char* s)
             {{"sticking-text"}, [](ScoreView* cv, const QByteArray&) {
                   cv->cmdAddText(Tid::STICKING);
                   }},
+
+            {{"pedal-straight-hooks"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Lines", "Pedal (straight hooks)"); //share\workspaces\Basic.xml name field
+                  }},
+            {{"pedal-angled-end-hook"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Lines", "Pedal (angled end hook)");
+                  }},
+            {{"pedal-both-hooks-angled"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Lines", "Pedal (both hooks angled)");
+                  }},
+            {{"pedal-angled-start-hook"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Lines", "Pedal (angled start hook)");
+                  }},
+            {{"dynamics-symbol-ppp"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Dynamics", "ppp");
+                  }},
+            {{"dynamics-symbol-pp"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Dynamics", "pp");
+                  }},
+            {{"dynamics-symbol-p"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Dynamics", "p");
+                  }},
+            {{"dynamics-symbol-mp"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Dynamics", "mp");
+                  }},
+            {{"dynamics-symbol-mf"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Dynamics", "mf");
+                  }},
+            {{"dynamics-symbol-f"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Dynamics", "f");
+                  }},
+            {{"dynamics-symbol-ff"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Dynamics", "ff");
+                  }},
+            {{"dynamics-symbol-fff"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Dynamics", "fff");
+                  }},
+
+            {{"key-signature-g-major-e-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "G major, E minor");
+                  }},
+            {{"key-signature-d-major-b-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "D major, B minor");
+                  }},
+            {{"key-signature-a-major-f#-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "A major, F♯ minor");
+                  }},
+            {{"key-signature-e-major-c#-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "E major, C♯ minor");
+                  }},
+            {{"key-signature-b-major-g#-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "B major, G♯ minor");
+                  }},
+            {{"key-signature-f#-major-d#-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "F♯ major, D♯ minor");
+                  }},
+            {{"key-signature-c#-major-a#-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "C♯ major, A♯ minor");
+                  }},
+            {{"key-signature-cb-major-ab-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "C♭ major, A♭ minor");
+                  }},
+            {{"key-signature-gb-major-eb-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "G♭ major, E♭ minor");
+                  }},
+            {{"key-signature-db-major-bb-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "D♭ major, B♭ minor");
+                  }},
+            {{"key-signature-ab-major-f-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "A♭ major, F minor");
+                  }},
+            {{"key-signature-eb-major-c-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "E♭ major, C minor");
+                  }},
+            {{"key-signature-bb-major-g-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "B♭ major, G minor");
+                  }},
+            {{"key-signature-f-major-d-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "F major, D minor");
+                  }},
+            {{"key-signature-c-major-a-minor"}, [](ScoreView* cv, const QByteArray&) {
+                  mscore->cmdApplyPaletteCell("Key Signatures", "C major, A minor");
+                  }},
+
             {{"edit-element"}, [](ScoreView* cv, const QByteArray&) {
                   Element* e = cv->score()->selection().element();
                   if (e && e->isEditable() && !cv->popupActive) {

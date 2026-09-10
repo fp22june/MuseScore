@@ -95,6 +95,7 @@ class MsQmlEngine;
 class PluginManager;
 class QmlPluginEngine;
 #endif
+class QmlPlugin;
 class MasterSynthesizer;
 class SynthesizerState;
 class Driver;
@@ -344,8 +345,6 @@ class MuseScore : public QMainWindow, public MuseScoreCore {
 
       QPushButton* showMidiImportButton {0};
 
-      QList<QString> plugins;
-      QString pluginPath;
 
 #ifdef SCRIPT_INTERFACE
       void createMenuEntry(PluginDescription*);
@@ -669,6 +668,10 @@ class MuseScore : public QMainWindow, public MuseScoreCore {
       PianorollEditor* getPianorollEditor() const { return pianorollEditor; }
       DrumrollEditor* getDrumrollEditor() const   { return drumrollEditor; }
       PianoTools* pianoTools() const              { return _pianoTools; }
+
+      QList<QString> plugins;
+      QMap<QString, QmlPlugin*> runningplugins;
+      QString pluginPath;
 #ifdef SCRIPT_INTERFACE
       PluginManager* getPluginManager() const     { return pluginManager; }
       QmlPluginEngine* getPluginEngine();
@@ -800,6 +803,7 @@ class MuseScore : public QMainWindow, public MuseScoreCore {
       /////////////////////////////////////////////////
 
       void scoreUnrolled(MasterScore* original);
+      void cmdApplyPaletteCell(QString n, QString nn, bool firstmatchany = false);
       
       virtual void closeScore(Score* score) override;
 

@@ -197,10 +197,34 @@ Score* PluginAPI::newScore(const QString& name, const QString& part, int measure
 void PluginAPI::cmd(const QString& s)
       {
       Shortcut* sc = Shortcut::getShortcut(qPrintable(s));
-      if (sc)
+      if (sc){
             msc()->cmd(sc->action());
-      else
-            qDebug("PluginAPI:cmd: not found <%s>", qPrintable(s));
+            return;
+      }else if(s.contains("run-plugin-")){
+            QString s2 = s;
+            s2.remove("run-plugin-");
+            for (int i = 0; i < mscore->plugins.size(); i++) {
+                QFileInfo f(mscore->plugins.at(i));
+                if(s2 == f.completeBaseName()){
+                    mscore->pluginTriggered(mscore->plugins.at(i));
+                    return;
+              }
+            }                  
+            qDebug("PluginAPI:cmd run-plugin: plugin not found <%s>", qPrintable(s));
+            return;
+      }else if(s.contains("stop-plugin-")){
+            QString s2 = s;
+            s2.remove("stop-plugin-");
+            QmlPlugin* p = mscore->runningplugins.value(s2, nullptr);
+            if(p){
+                  delete p;
+                  mscore->runningplugins.remove(s2);
+                  return;
+                  }
+            qDebug("PluginAPI:cmd stop-plugin: plugin not found <%s>", qPrintable(s));
+            return;
+            }
+      qDebug("PluginAPI:cmd: not found <%s>", qPrintable(s));
       }
 
 //---------------------------------------------------------
@@ -313,6 +337,8 @@ void PluginAPI::registerQmlTypes()
       qmlRegisterType<Note>();
       qmlRegisterType<Segment>();
       qmlRegisterType<Measure>();
+      qmlRegisterType<SpannerSegment>();
+      qmlRegisterType<System>();
       qmlRegisterType<Part>();
       qmlRegisterType<Staff>();
       qmlRegisterType<Instrument>();
@@ -329,6 +355,8 @@ void PluginAPI::registerQmlTypes()
       qmlRegisterAnonymousType<Note>("MuseScore", 3);
       qmlRegisterAnonymousType<Segment>("MuseScore", 3);
       qmlRegisterAnonymousType<Measure>("MuseScore", 3);
+      qmlRegisterAnonymousType<SpannerSegment>("MuseScore", 3);
+      qmlRegisterAnonymousType<System>("MuseScore", 3);
       qmlRegisterAnonymousType<Part>("MuseScore", 3);
       qmlRegisterAnonymousType<Staff>("MuseScore", 3);
       qmlRegisterAnonymousType<Instrument>("MuseScore", 3);
