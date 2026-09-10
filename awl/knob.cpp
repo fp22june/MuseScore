@@ -228,20 +228,28 @@ void Knob::paintEvent(QPaintEvent* /*ev*/)
       //knob image
       if (!_knobIcon.isNull()) {
             QRect r((int)dialArea.x(), (int)dialArea.y(), (int)dialArea.width(), (int)dialArea.height());
-            _knobIcon.paint(&p, r);
+            p.save();
+            p.translate(r.center());
+            double frac = (val - minVal) / span;
+            if (_center) {
+                  frac -= 0.5;
+                  }
+            p.rotate(frac * _spanDegrees);
+            QRect centeredRect(-r.width() / 2, -r.height() / 2, r.width(), r.height());
+            _knobIcon.paint(&p, centeredRect, Qt::AlignCenter);
+            p.restore();
             }
-
       //indicator line
-      p.setPen(QPen(dialCol, _scaleWidth));
-      double r1 = double(_spanDegrees) * (_value - _minValue) / span + 90.0
-            + double(emptyDegrees / 2);
-      r1     = r1 / 180.0 * M_PI;   // convert to radians
-      int rd = w/2;
-      int x1 = x + rd;
-      int y1 = y + rd;
-      int x2 = x1 + (int)lrint(cos(r1) * double(rd));
-      int y2 = y1 + (int)lrint(sin(r1) * double(rd));
-      p.drawLine(x1, y1, x2, y2);
+      // p.setPen(QPen(dialCol, _scaleWidth));
+      // double r1 = double(_spanDegrees) * (_value - _minValue) / span + 90.0
+      //       + double(emptyDegrees / 2);
+      // r1     = r1 / 180.0 * M_PI;   // convert to radians
+      // int rd = w/2;
+      // int x1 = x + rd;
+      // int y1 = y + rd;
+      // int x2 = x1 + (int)lrint(cos(r1) * double(rd));
+      // int y2 = y1 + (int)lrint(sin(r1) * double(rd));
+      // p.drawLine(x1, y1, x2, y2);
 
 
       //-----------------------------------------
