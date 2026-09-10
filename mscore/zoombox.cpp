@@ -32,15 +32,15 @@ namespace Ms {
 //---------------------------------------------------------
 
 const std::array<ZoomEntry, 13> zoomEntries { {
-     {  ZoomIndex::ZOOM_25,           25, "25%"   },
-     {  ZoomIndex::ZOOM_50,           50, "50%"   },
-     {  ZoomIndex::ZOOM_75,           75, "75%"   },
-     {  ZoomIndex::ZOOM_100,         100, "100%"  },
-     {  ZoomIndex::ZOOM_150,         150, "150%"  },
-     {  ZoomIndex::ZOOM_200,         200, "200%"  },
-     {  ZoomIndex::ZOOM_400,         400, "400%"  },
-     {  ZoomIndex::ZOOM_800,         800, "800%"  },
      {  ZoomIndex::ZOOM_1600,       1600, "1600%" },
+     {  ZoomIndex::ZOOM_800,         800, "800%"  },
+     {  ZoomIndex::ZOOM_400,         400, "400%"  },
+     {  ZoomIndex::ZOOM_200,         200, "200%"  },
+     {  ZoomIndex::ZOOM_150,         150, "150%"  },
+     {  ZoomIndex::ZOOM_100,         100, "100%"  },
+     {  ZoomIndex::ZOOM_75,           75, "75%"   },
+     {  ZoomIndex::ZOOM_50,           50, "50%"   },
+     {  ZoomIndex::ZOOM_25,           25, "25%"   },
      {  ZoomIndex::ZOOM_PAGE_WIDTH,    0, QT_TRANSLATE_NOOP("magTable", "Page Width") },
      {  ZoomIndex::ZOOM_WHOLE_PAGE,    0, QT_TRANSLATE_NOOP("magTable", "Whole Page") },
      {  ZoomIndex::ZOOM_TWO_PAGES,     0, QT_TRANSLATE_NOOP("magTable", "Two Pages") },
