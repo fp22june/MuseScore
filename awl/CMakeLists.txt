@@ -37,6 +37,7 @@ add_library (awl STATIC
       knob.h midipanknob.h mslider.h panknob.h pitchedit.h pitchlabel.h
       poslabel.h slider.h styledslider.h
       utils.h volknob.h volslider.h
+      rotatedlabel.h
       )
 
 add_library (awlplugin SHARED

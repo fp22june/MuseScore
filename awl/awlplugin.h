@@ -46,6 +46,16 @@ class AwlPlugin : public QDesignerCustomWidgetInterface {
 		}
       };
 
+class RotatedLabelPlugin : public QObject, public AwlPlugin {
+      Q_OBJECT
+
+   public:
+      RotatedLabelPlugin(QObject* parent = 0) : QObject(parent) {}
+      QString includeFile() const { return QString("awl/rotatedlabel.h"); }
+      QString name() const        { return "Awl::RotatedLabel"; }
+      QWidget* createWidget(QWidget* parent);
+      };
+
 //---------------------------------------------------------
 //   KnobPlugin
 //---------------------------------------------------------

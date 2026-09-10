@@ -141,44 +141,59 @@ void StyledSlider::paintEvent(QPaintEvent *ev)
     double midPtPix = w / 2.0;
 
     //Ticks
-    p.setPen(QPen(_tickColor));
-
-//    for (qreal yVal = _minValue; yVal <= _maxValue + .00001; yVal += _numMinorTicks) {
-//          qreal yPix = (yVal - _minValue) / valueSpan;
-//          yPix = (1.0 - yPix) * barLength + _margin;
-//          QLineF line(midPtPix - _minorTickWidth, yPix, midPtPix + _minorTickWidth, yPix);
-//          p.drawLine(line);
-//          }
-
-//    for (qreal yVal = _minValue; yVal <= _maxValue + .00001; yVal += _numMajorTicks) {
-//          qreal yPix = (yVal - _minValue) / valueSpan;
-//          yPix = (1.0 - yPix) * barLength + _margin;
-//          QLineF line(midPtPix - _majorTickWidth, yPix, midPtPix + _majorTickWidth, yPix);
-//          p.drawLine(line);
-
-//          for (int i = 1; i < _numMinorTicks; ++i) {
-//              qreal yyPix = yPix + (i * _numMajorTicks) / _numMinorTicks;
-//              QLineF line(midPtPix - _minorTickWidth, yyPix, midPtPix + _minorTickWidth, yyPix);
-//              p.drawLine(line);
-//              }
-
-//          }
-
-    for (int i = 0; i <= _numMajorTicks; ++i) {
-          qreal yVal = i * barLength / _numMajorTicks + _margin;
-          QLineF line(midPtPix - _majorTickWidth, yVal, midPtPix + _majorTickWidth, yVal);
-          p.drawLine(line);
-
-          if (i < _numMajorTicks) {
-                qreal yValNext = (i + 1) * barLength / _numMajorTicks + _margin;
-                for (int j = 1; j < _numMinorTicks; ++j) {
-                      qreal yyVal = yVal + j * (yValNext - yVal) / _numMinorTicks;
-
-                      QLineF line1(midPtPix - _minorTickWidth, yyVal, midPtPix + _minorTickWidth, yyVal);
-                      p.drawLine(line1);
-                  }
-              }
-          }
+    QPen minorpen(_tickColor);
+    QPen majorpen(_backgroundColor);
+    QPen doubleclickpen(_backgroundColor);
+    doubleclickpen.setWidth(3);
+    const double yc = _margin + barLength * (1- (_doubleClickValue - _minValue) / (_maxValue - _minValue) );
+    const double minordist = barLength / _numMajorTicks / _numMinorTicks;
+    const double lowerdrawend = _margin;
+    const double higherdrawend = _margin + barLength;
+    //doubleclick
+    QLineF line(midPtPix - _majorTickWidth, yc, midPtPix + _majorTickWidth, yc);
+    p.setPen(doubleclickpen);
+    p.drawLine(line);
+    //_maxValue side
+    int minordrawn = 0;
+    qreal y = yc - minordist; //draw minor
+    do {
+        if (minordrawn < _numMinorTicks-1){
+            //draw minor
+            QLineF line(midPtPix - _minorTickWidth, y, midPtPix + _minorTickWidth, y);
+            p.setPen(minorpen);
+            p.drawLine(line);
+            minordrawn++;
+            }
+        else {
+            //draw major
+            QLineF line(midPtPix - _majorTickWidth, y, midPtPix + _majorTickWidth, y);
+            p.setPen(majorpen);
+            p.drawLine(line);
+            minordrawn = 0;
+            }
+        y -= minordist;
+        } while (y >= lowerdrawend);
+    //_minValue side
+    minordrawn = 0;
+    y = yc + minordist; //draw minor
+    do {
+        if (minordrawn < _numMinorTicks-1) {
+            //draw minor
+            QLineF line(midPtPix - _minorTickWidth, y, midPtPix + _minorTickWidth, y);
+            p.setPen(minorpen);
+            p.drawLine(line);
+            minordrawn++;
+            }
+        else {
+            //draw major
+            QLineF line(midPtPix - _majorTickWidth, y, midPtPix + _majorTickWidth, y);
+            p.setPen(majorpen);
+            p.drawLine(line);
+            minordrawn = 0;
+            }
+        y += minordist;
+        } while (y <= higherdrawend);
+    p.setPen(minorpen);
 
     //Marks
 //    p.setPen(QPen(_tickColor, 2));
