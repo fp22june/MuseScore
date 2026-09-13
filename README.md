@@ -27,6 +27,12 @@ macOS
 - Intel.dmg
 
 ### Develope
+
+\*  [temp104](https://github.com/fp22june/MuseScore/tree/temp104), [temp105](https://github.com/fp22june/MuseScore/tree/temp105)  <br>
+\* Applied: temp5, temp11/13, temp14/15, temp37/38, [temp101](https://github.com/fp22june/MuseScore/tree/temp101)(UI only: mixer [demo](mixer.gif), slimer strips, pan knob, bottom dock, bugfix), [temp106](https://github.com/fp22june/MuseScore/tree/temp106)(UI only: top toolbar page zoom dropdown menu invert order - scroll up to zoom in) <br>
+\* b6d81d (Tue, 8 Sep, 2026 [Jojo-Schmitz/3.x](https://github.com/Jojo-Schmitz/MuseScore/tree/3.x)) <br>
+| ... <br>
+<hr>
  
 \* [temp37](https://github.com/fp22june/MuseScore/tree/temp37), [temp38](https://github.com/fp22june/MuseScore/tree/temp38) UI: right click menu, instrument/staff properties window <br>
 \* temp5, temp11/13, temp14/15 applied <br>
